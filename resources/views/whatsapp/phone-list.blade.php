@@ -772,7 +772,8 @@ function updatePreview() {
 // Send broadcast
 function sendBroadcast() {
     if (selectedPhones.length === 0) {
-        alert('Pilih minimal 1 nomor HP untuk broadcast');
+        // Sweet alert style
+        showAlert('error', 'Tidak Ada Penerima', 'Pilih minimal 1 nomor HP untuk broadcast');
         return;
     }
     
@@ -787,19 +788,28 @@ function submitBroadcast() {
     const templateId = document.getElementById('broadcastTemplate').value;
     
     if (!message) {
-        alert('Pesan tidak boleh kosong');
+        showAlert('warning', 'Pesan Kosong', 'Pesan broadcast tidak boleh kosong');
         return;
     }
     
     if (selectedPhones.length === 0) {
-        alert('Tidak ada nomor HP yang dipilih');
+        showAlert('error', 'Tidak Ada Penerima', 'Tidak ada nomor HP yang dipilih');
         return;
     }
     
-    if (!confirm(`Kirim broadcast ke ${selectedPhones.length} nomor HP?`)) {
-        return;
-    }
-    
+    // Show custom confirm dialog
+    showConfirmDialog(
+        'Kirim Broadcast?',
+        `Kirim broadcast ke <strong>${selectedPhones.length} nomor HP</strong>?<br><small class="text-muted">Proses ini tidak dapat dibatalkan</small>`,
+        () => {
+            // On confirm
+            executeBroadcast(message, templateId);
+        }
+    );
+}
+
+// Execute broadcast (separated for cleaner code)
+function executeBroadcast(message, templateId) {
     // Close broadcast modal
     bootstrap.Modal.getInstance(document.getElementById('broadcastModal')).hide();
     
@@ -855,13 +865,122 @@ function submitBroadcast() {
             }, 1000);
         } else {
             progressModal.hide();
-            alert('Gagal mengirim broadcast: ' + (data.message || 'Unknown error'));
+            showAlert('error', 'Broadcast Gagal', data.message || 'Terjadi kesalahan saat mengirim broadcast');
         }
     })
     .catch(error => {
         console.error('Error:', error);
         progressModal.hide();
-        alert('Terjadi kesalahan: ' + error.message);
+        showAlert('error', 'Terjadi Kesalahan', error.message || 'Gagal menghubungi server');
+    });
+}
+
+// Helper: Show alert (replaces alert())
+function showAlert(type, title, message) {
+    const iconMap = {
+        success: 'fa-check-circle',
+        error: 'fa-times-circle',
+        warning: 'fa-exclamation-triangle',
+        info: 'fa-info-circle'
+    };
+    
+    const colorMap = {
+        success: 'success',
+        error: 'danger',
+        warning: 'warning',
+        info: 'info'
+    };
+    
+    const icon = iconMap[type] || 'fa-info-circle';
+    const color = colorMap[type] || 'info';
+    
+    // Create modal HTML
+    const modalHtml = `
+        <div class="modal fade" id="alertModal" tabindex="-1" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body text-center py-4">
+                        <i class="fas ${icon} fa-3x text-${color} mb-3"></i>
+                        <h5 class="mb-2">${title}</h5>
+                        <p class="text-muted mb-0">${message}</p>
+                    </div>
+                    <div class="modal-footer border-0 justify-content-center">
+                        <button type="button" class="btn btn-${color}" data-bs-dismiss="modal">Oke</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing alert modal if any
+    const existingModal = document.getElementById('alertModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add to body
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Show modal
+    const alertModal = new bootstrap.Modal(document.getElementById('alertModal'));
+    alertModal.show();
+    
+    // Remove from DOM after hidden
+    document.getElementById('alertModal').addEventListener('hidden.bs.modal', function() {
+        this.remove();
+    });
+}
+
+// Helper: Show confirm dialog (replaces confirm())
+function showConfirmDialog(title, message, onConfirm, onCancel) {
+    // Create modal HTML
+    const modalHtml = `
+        <div class="modal fade" id="confirmModal" tabindex="-1" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body text-center py-4">
+                        <i class="fas fa-question-circle fa-3x text-primary mb-3"></i>
+                        <h5 class="mb-2">${title}</h5>
+                        <p class="text-muted mb-0">${message}</p>
+                    </div>
+                    <div class="modal-footer border-0 justify-content-center">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="confirmCancel">Batal</button>
+                        <button type="button" class="btn btn-primary" id="confirmOk">Oke</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing confirm modal if any
+    const existingModal = document.getElementById('confirmModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add to body
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Show modal
+    const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    confirmModal.show();
+    
+    // Handle confirm
+    document.getElementById('confirmOk').addEventListener('click', function() {
+        confirmModal.hide();
+        if (onConfirm) onConfirm();
+    });
+    
+    // Handle cancel
+    if (onCancel) {
+        document.getElementById('confirmCancel').addEventListener('click', function() {
+            onCancel();
+        });
+    }
+    
+    // Remove from DOM after hidden
+    document.getElementById('confirmModal').addEventListener('hidden.bs.modal', function() {
+        this.remove();
     });
 }
 
@@ -920,7 +1039,7 @@ function exportPhones() {
     const checkboxes = document.querySelectorAll('.phone-checkbox:checked');
     
     if (checkboxes.length === 0) {
-        alert('Pilih minimal 1 nomor HP untuk export');
+        showAlert('warning', 'Tidak Ada Data', 'Pilih minimal 1 nomor HP untuk export');
         return;
     }
     
@@ -945,6 +1064,9 @@ function exportPhones() {
     a.download = 'nomor-hp-pendaftar-' + new Date().toISOString().split('T')[0] + '.csv';
     a.click();
     window.URL.revokeObjectURL(url);
+    
+    // Show success message
+    showAlert('success', 'Export Berhasil', `${phones.length} nomor HP berhasil di-export ke file CSV`);
 }
 
 // Initialize
