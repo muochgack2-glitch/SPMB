@@ -252,8 +252,8 @@
                                        data-name="{{ $pendaftar->nama_lengkap }}"
                                        data-no-reg="{{ $pendaftar->no_registrasi }}"
                                        data-jurusan="{{ $pendaftar->masterJurusan->nama_jurusan ?? $pendaftar->jurusan }}"
-                                       data-nisn="{{ $pendaftar->nisn }}"
-                                       data-asal-sekolah="{{ $pendaftar->asal_sekolah }}"
+                                       data-nisn="{{ $pendaftar->nisn ?? '-' }}"
+                                       data-asal-sekolah="{{ $pendaftar->asal_sekolah ?? '-' }}"
                                        onchange="updateSelectedCount()">
                                 @else
                                 <i class="fas fa-minus text-muted"></i>
@@ -599,11 +599,11 @@ function updateSelectedCount() {
     selectedPhones = Array.from(checkboxes).map(cb => ({
         phone: cb.value,
         id: cb.dataset.id,
-        name: cb.dataset.name,
-        no_reg: cb.dataset.noReg,
-        jurusan: cb.dataset.jurusan,
-        nisn: cb.dataset.nisn,
-        asal_sekolah: cb.dataset.asalSekolah
+        name: cb.dataset.name || '-',
+        no_reg: cb.dataset.noReg || '-',
+        jurusan: cb.dataset.jurusan || '-',
+        nisn: cb.dataset.nisn || '-',
+        asal_sekolah: cb.dataset.asalSekolah || '-'
     }));
     
     // Null checks for elements that might not exist in all tabs

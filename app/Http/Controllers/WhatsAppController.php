@@ -1044,13 +1044,13 @@ class WhatsAppController extends Controller
         $settings = SettingSystem::instance()->toSettingsArray();
         
         $replacements = [
-            '{nama}' => $data['name'] ?? '',
-            '{nama_lengkap}' => $data['name'] ?? '',
-            '{no_pendaftaran}' => $data['no_reg'] ?? '',
-            '{no_registrasi}' => $data['no_reg'] ?? '',
-            '{jurusan}' => $data['jurusan'] ?? '',
-            '{nisn}' => $data['nisn'] ?? '',
-            '{asal_sekolah}' => $data['asal_sekolah'] ?? '',
+            '{nama}' => $data['name'] ?? '-',
+            '{nama_lengkap}' => $data['name'] ?? '-',
+            '{no_pendaftaran}' => $data['no_reg'] ?? '-',
+            '{no_registrasi}' => $data['no_reg'] ?? '-',
+            '{jurusan}' => $data['jurusan'] ?? '-',
+            '{nisn}' => $data['nisn'] ?? '-',
+            '{asal_sekolah}' => $data['asal_sekolah'] ?? '-',
             '{portal_url}' => url('/'),
             '{sekolah}' => $settings['school_name'] ?? 'SMK PGRI BLORA',
             '{tanggal}' => now()->format('d-m-Y'),
