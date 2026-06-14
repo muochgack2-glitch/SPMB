@@ -206,7 +206,7 @@
             </div>
             <div class="modal-body">
                 <h6 class="fw-bold">Anda akan membuat tahun pelajaran baru:</h6>
-                <div class="alert alert-secondary">
+                <div class="alert alert-secondary" style="background-color: var(--bg-secondary); border-color: var(--border-light);">
                     <h4 class="mb-0 text-center" id="confirmTahun"></h4>
                 </div>
 
@@ -220,7 +220,7 @@
                     @endif
                 </ul>
 
-                <div class="alert alert-info mt-3 mb-0">
+                <div class="alert alert-info mt-3 mb-0" style="background-color: rgba(13, 202, 240, 0.1); border-color: var(--border-light); color: var(--text-primary);">
                     <small><i class="fas fa-shield-alt me-2"></i>Data existing tetap aman dan bisa diakses kapan saja</small>
                 </div>
             </div>

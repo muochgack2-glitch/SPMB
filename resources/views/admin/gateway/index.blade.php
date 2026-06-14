@@ -365,7 +365,7 @@
                                 <i class="fas fa-clock me-1"></i>
                                 Last updated: <span x-text="lastUpdated" class="fw-bold"></span>
                             </div>
-                            <button class="btn btn-light" @click="refreshAll()" :disabled="isRefreshing" style="font-weight: 600;">
+                            <button class="btn btn-light" @click="refreshAll()" :disabled="isRefreshing" style="font-weight: 600; color: #000 !important; background-color: #fff;">
                                 <i class="fas fa-sync-alt me-2" :class="{'fa-spin': isRefreshing}"></i>
                                 <span x-text="isRefreshing ? 'Refreshing...' : 'Refresh All'"></span>
                             </button>
