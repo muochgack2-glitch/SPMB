@@ -2,7 +2,14 @@
 
 ## Overview
 
-Sistem Absensi Siswa adalah aplikasi berbasis WhatsApp untuk mencatat kehadiran siswa dengan notifikasi real-time kepada orang tua. Sistem ini menggunakan Laravel 11 + Livewire dengan WhatsApp Gateway terpisah pada port 3001.
+Sistem Absensi Siswa adalah aplikasi berbasis QR Code Scanner dengan foto capture otomatis untuk mencatat kehadiran siswa dan memberikan notifikasi real-time kepada orang tua via WhatsApp. Sistem ini menggunakan Laravel 11 + Livewire untuk backend dan admin dashboard, serta JavaScript library untuk QR scanning dan webcam capture di sisi client. WhatsApp Gateway pada port 3001 digunakan khusus untuk mengirim notifikasi ke orang tua.
+
+**Konsep Utama:**
+- Siswa menunjukkan QR Code (kartu/HP) ke scanner
+- Scanner otomatis capture foto siswa saat scan
+- Sistem simpan data absensi + foto ke database
+- Orang tua dapat notifikasi WhatsApp real-time
+- Admin monitor dashboard dengan preview foto
 
 ## System Architecture
 
@@ -11,42 +18,51 @@ Sistem Absensi Siswa adalah aplikasi berbasis WhatsApp untuk mencatat kehadiran 
 │                         User Layer                               │
 ├──────────────┬───────────────────────┬─────────────────────────┤
 │   Siswa      │    Orang Tua         │    Admin/Guru           │
-│  (WhatsApp)  │    (WhatsApp)        │   (Web Browser)         │
+│ (QR Code)    │    (WhatsApp)        │   (Web Browser)         │
 └──────┬───────┴───────────┬───────────┴──────────┬──────────────┘
        │                   │                      │
-       │ "ABSEN MASUK"     │  Notifikasi         │  Dashboard
+       │ Show QR Code      │  Notifikasi         │  Dashboard
        ↓                   ↑                      ↓
 ┌──────────────────────────────────────────────────────────────────┐
-│           WhatsApp Gateway (Port 3001)                           │
-│           - whatsapp-web.js                                      │
-│           - PM2 Process Manager                                  │
+│           QR Scanner Station (Browser + Webcam)                  │
+│           - HTML5 QR Code Scanner (jsQR library)                 │
+│           - Webcam API untuk photo capture                       │
+│           - Display scan result + confirmation                   │
+│           - Petugas interface dengan tombol REJECT               │
 └──────────────────┬───────────────────────────────────────────────┘
-                   │ HTTP POST /api/attendance/webhook
+                   │ HTTP POST /api/attendance/scan
+                   │ (dengan foto base64)
                    ↓
 ┌──────────────────────────────────────────────────────────────────┐
 │           Laravel 11 Application                                 │
 │  ┌────────────────────────────────────────────────────────┐    │
 │  │  Controllers Layer                                      │    │
-│  │  - AttendanceWebhookController                          │    │
+│  │  - AttendanceScanController (handle QR scan)            │    │
+│  │  - AttendanceQRController (generate QR Code)            │    │
 │  │  - AttendanceDashboardController                        │    │
 │  │  - AttendanceStudentController                          │    │
 │  │  - AttendanceClassController                            │    │
+│  │  - AttendanceReportController                           │    │
+│  │  - AttendanceSettingController                          │    │
 │  └────────────────────────┬───────────────────────────────┘    │
 │                           ↓                                      │
 │  ┌────────────────────────────────────────────────────────┐    │
 │  │  Service Layer                                          │    │
-│  │  - AttendanceService                                    │    │
-│  │  - AttendanceWhatsAppService                            │    │
-│  │  - AttendanceNotificationService                        │    │
-│  │  - AttendanceStatusService                              │    │
-│  │  - AttendanceExportService                              │    │
+│  │  - AttendanceService (core business logic)              │    │
+│  │  - QRCodeService (generate QR Code)                     │    │
+│  │  - PhotoCaptureService (save photos)                    │    │
+│  │  - AttendanceWhatsAppService (send WA)                  │    │
+│  │  - AttendanceNotificationService (format messages)      │    │
+│  │  - AttendanceStatusService (determine status)           │    │
+│  │  - AttendanceExportService (export to Excel)            │    │
 │  └────────────────────────┬───────────────────────────────┘    │
 │                           ↓                                      │
 │  ┌────────────────────────────────────────────────────────┐    │
-│  │  Livewire Components (Real-time)                        │    │
+│  │  Livewire Components (Real-time UI)                     │    │
 │  │  - AttendanceDashboard                                  │    │
 │  │  - AttendanceStudentTable                               │    │
 │  │  - AttendanceReportGenerator                            │    │
+│  │  - QRScannerInterface                                   │    │
 │  └────────────────────────┬───────────────────────────────┘    │
 │                           ↓                                      │
 │  ┌────────────────────────────────────────────────────────┐    │
@@ -55,44 +71,41 @@ Sistem Absensi Siswa adalah aplikasi berbasis WhatsApp untuk mencatat kehadiran 
 │  │  - AttendanceClass                                      │    │
 │  │  - AttendanceRecord                                     │    │
 │  │  - AttendanceSetting                                    │    │
+│  │  - AttendanceLog                                        │    │
 │  └────────────────────────┬───────────────────────────────┘    │
 └───────────────────────────┼────────────────────────────────────┘
                            ↓
 ┌──────────────────────────────────────────────────────────────────┐
 │                    MySQL Database                                 │
-│  - attendance_students                                           │
+│  - attendance_students (dengan qr_code_path)                     │
 │  - attendance_classes                                            │
-│  - attendance_records                                            │
+│  - attendance_records (dengan check_in_photo, check_out_photo)  │
 │  - attendance_settings                                           │
 │  - attendance_logs                                               │
 └──────────────────────────────────────────────────────────────────┘
+                           │
+                           ↓
+┌──────────────────────────────────────────────────────────────────┐
+│                File Storage (Laravel Storage)                    │
+│  storage/app/attendance/                                         │
+│    ├── qrcodes/{NIS}.png                                         │
+│    └── photos/{NIS}/{date}/                                      │
+│         ├── checkin_{timestamp}.jpg                              │
+│         └── checkout_{timestamp}.jpg                             │
+└──────────────────────────────────────────────────────────────────┘
+                           │
+                           ↓ (async notification)
+┌──────────────────────────────────────────────────────────────────┐
+│           WhatsApp Gateway (Port 3001) - Notifikasi Only        │
+│           - whatsapp-web.js                                      │
+│           - PM2 Process Manager                                  │
+│           - Hanya untuk KIRIM notifikasi, bukan terima pesan     │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
+---
 
 ## Database Schema
-
-### Table: attendance_students
-```sql
-CREATE TABLE attendance_students (
-    id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    nis VARCHAR(50) UNIQUE NOT NULL,
-    nama VARCHAR(255) NOT NULL,
-    kelas_id BIGINT UNSIGNED NOT NULL,
-    no_hp_siswa VARCHAR(20),
-    no_hp_ortu VARCHAR(20),
-    foto VARCHAR(255),
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
-    INDEX idx_nis (nis),
-    INDEX idx_kelas (kelas_id),
-    INDEX idx_no_hp_siswa (no_hp_siswa),
-    INDEX idx_active (is_active),
-    
-    FOREIGN KEY (kelas_id) REFERENCES attendance_classes(id) ON DELETE RESTRICT
-);
-```
 
 ### Table: attendance_classes
 ```sql
@@ -112,6 +125,28 @@ CREATE TABLE attendance_classes (
 );
 ```
 
+### Table: attendance_students
+```sql
+CREATE TABLE attendance_students (
+    id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    nis VARCHAR(50) UNIQUE NOT NULL,
+    nama VARCHAR(255) NOT NULL,
+    kelas_id BIGINT UNSIGNED NOT NULL,
+    no_hp_ortu VARCHAR(20),              -- Nomor HP orang tua untuk notifikasi
+    qr_code_path VARCHAR(255),            -- Path to QR Code image file
+    foto_profil VARCHAR(255),             -- Student profile photo
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    INDEX idx_nis (nis),
+    INDEX idx_kelas (kelas_id),
+    INDEX idx_active (is_active),
+    
+    FOREIGN KEY (kelas_id) REFERENCES attendance_classes(id) ON DELETE RESTRICT
+);
+```
+
 ### Table: attendance_records
 ```sql
 CREATE TABLE attendance_records (
@@ -120,6 +155,8 @@ CREATE TABLE attendance_records (
     date DATE NOT NULL,
     check_in_time TIME,
     check_out_time TIME,
+    check_in_photo VARCHAR(255),          -- Path to check-in photo
+    check_out_photo VARCHAR(255),         -- Path to check-out photo
     status ENUM('hadir', 'terlambat', 'alpha') NOT NULL,
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -134,14 +171,13 @@ CREATE TABLE attendance_records (
 );
 ```
 
-
 ### Table: attendance_settings
 ```sql
 CREATE TABLE attendance_settings (
     id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     key VARCHAR(100) UNIQUE NOT NULL,
     value TEXT NOT NULL,
-    group_name VARCHAR(50) NOT NULL,     -- 'time', 'tolerance', 'notification'
+    group_name VARCHAR(50) NOT NULL,     -- 'time', 'tolerance', 'notification', 'general'
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -157,6 +193,7 @@ INSERT INTO attendance_settings (key, value, group_name, description) VALUES
 ('tolerance_minutes', '15', 'tolerance', 'Toleransi keterlambatan (menit)'),
 ('cutoff_time', '09:00', 'time', 'Batas waktu absen masuk (setelah ini = alpha)'),
 ('enable_parent_notification', 'true', 'notification', 'Aktifkan notifikasi orang tua'),
+('include_photo_in_notification', 'false', 'notification', 'Sertakan foto dalam notifikasi WA'),
 ('school_name', 'SMK PGRI BLORA', 'general', 'Nama sekolah');
 ```
 
@@ -165,15 +202,13 @@ INSERT INTO attendance_settings (key, value, group_name, description) VALUES
 CREATE TABLE attendance_logs (
     id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     student_id BIGINT UNSIGNED,
-    phone VARCHAR(20) NOT NULL,
-    action ENUM('check_in', 'check_out', 'notification', 'error') NOT NULL,
+    action ENUM('qr_scan', 'check_in', 'check_out', 'notification', 'reject', 'error') NOT NULL,
     message TEXT,
     response TEXT,
     status ENUM('success', 'failed') NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
     INDEX idx_student (student_id),
-    INDEX idx_phone (phone),
     INDEX idx_action (action),
     INDEX idx_date (created_at),
     
@@ -181,7 +216,7 @@ CREATE TABLE attendance_logs (
 );
 ```
 
-## Data Relationships
+### Data Relationships
 
 ```
 attendance_classes (1) ----< (N) attendance_students
@@ -189,91 +224,162 @@ attendance_students (1) ----< (N) attendance_records
 attendance_students (1) ----< (N) attendance_logs
 ```
 
+---
 
 ## Service Layer Design
 
 ### AttendanceService
-**Purpose:** Core business logic untuk proses absensi
+**Purpose:** Core business logic untuk proses absensi dari QR scan
 
 ```php
 class AttendanceService
 {
-    public function processCheckIn(string $phone): array
+    public function processScan(string $nis, string $photoBase64, string $action = 'checkin'): array
     {
-        // 1. Find student by phone
-        // 2. Validate: belum absen hari ini?
-        // 3. Validate: dalam waktu check-in?
-        // 4. Determine status (hadir/terlambat)
-        // 5. Create attendance record
-        // 6. Log the action
-        // 7. Trigger parent notification
-        // 8. Return confirmation message
-    }
-    
-    public function processCheckOut(string $phone): array
-    {
-        // 1. Find student by phone
-        // 2. Validate: sudah check-in hari ini?
-        // 3. Validate: belum check-out hari ini?
-        // 4. Update attendance record
-        // 5. Log the action
-        // 6. Trigger parent notification
-        // 7. Return confirmation message
+        // 1. Find student by NIS
+        // 2. Validate: student exists and active
+        // 3. Save photo using PhotoCaptureService
+        // 4. If checkin:
+        //    - Validate: belum absen hari ini
+        //    - Validate: dalam waktu check-in window (05:00 - cutoff)
+        //    - Determine status (hadir/terlambat) using AttendanceStatusService
+        //    - Create AttendanceRecord with check_in_time, check_in_photo, status
+        // 5. If checkout:
+        //    - Validate: sudah check-in hari ini
+        //    - Validate: belum check-out hari ini
+        //    - Update AttendanceRecord with check_out_time, check_out_photo
+        // 6. Log the action to attendance_logs
+        // 7. Queue parent notification job (async)
+        // 8. Return success response with student info, time, status, photo path
     }
     
     public function markAbsentStudents(): int
     {
         // Called by scheduler at cutoff time
-        // 1. Get all students who haven't checked in today
-        // 2. Create attendance records with status 'alpha'
+        // 1. Get all active students who haven't checked in today
+        // 2. Create attendance records with status 'alpha' and no photos
         // 3. Return count of marked students
     }
     
     public function getTodayAttendance(?int $classId = null): Collection
     {
-        // Get today's attendance records
+        // Get today's attendance records with student, class, and photo data
         // Filter by class if provided
+        // Order by class name, student name
     }
     
     public function getAttendanceStats(string $date): array
     {
         // Return: total_hadir, total_terlambat, total_alpha, total_belum
     }
+    
+    public function getAttendanceWithPhotos(int $recordId): AttendanceRecord
+    {
+        // Get attendance record with full photo URLs for display
+    }
+}
+```
+
+### QRCodeService
+**Purpose:** Generate and manage QR Codes untuk siswa
+
+```php
+class QRCodeService
+{
+    public function generateQRCode(string $nis): string
+    {
+        // 1. Use library: SimpleSoftwareIO/simple-qrcode
+        // 2. Generate QR Code containing NIS as plain text
+        // 3. Save as PNG image: storage/app/attendance/qrcodes/{NIS}.png
+        // 4. Return file path
+    }
+    
+    public function regenerateQRCode(string $nis): string
+    {
+        // Delete old QR Code if exists
+        // Generate new QR Code
+        // Return new file path
+    }
+    
+    public function getQRCodeUrl(string $nis): string
+    {
+        // Return public URL for QR Code image
+        // E.g., /storage/attendance/qrcodes/{NIS}.png
+    }
+    
+    public function generateBatchQRCodes(array $students): array
+    {
+        // Generate QR Codes for multiple students
+        // Return array of [nis => file_path]
+    }
+}
+```
+
+### PhotoCaptureService
+**Purpose:** Handle photo storage dan management
+
+```php
+class PhotoCaptureService
+{
+    public function savePhoto(string $base64Photo, string $nis, string $type = 'checkin'): string
+    {
+        // 1. Decode base64 photo
+        // 2. Compress image (max 500KB, min 640x480)
+        // 3. Generate filename: {type}_{timestamp}.jpg
+        // 4. Create directory if not exists: storage/app/attendance/photos/{NIS}/{date}/
+        // 5. Save file
+        // 6. Return relative path: attendance/photos/{NIS}/{date}/{filename}
+    }
+    
+    public function getPhotoUrl(string $path): string
+    {
+        // Convert storage path to public URL
+        // Return full URL for photo display
+    }
+    
+    public function deletePhoto(string $path): bool
+    {
+        // Delete photo file from storage
+    }
+    
+    public function getPhotosForDate(string $nis, string $date): array
+    {
+        // Get all photos for a student on specific date
+        // Return array of photo paths
+    }
 }
 ```
 
 ### AttendanceWhatsAppService
-**Purpose:** Handle WhatsApp communication untuk absensi
+**Purpose:** Handle WhatsApp communication untuk notifikasi
 
 ```php
 class AttendanceWhatsAppService
 {
     protected $baseUrl = 'http://localhost:3001';  // Port 3001
     
-    public function sendConfirmation(string $phone, string $message): array
-    {
-        // Send confirmation to student
-        // POST {baseUrl}/api/send
-    }
-    
-    public function sendParentNotification(string $phone, string $message): array
+    public function sendParentNotification(string $phone, string $message, ?string $photoPath = null): array
     {
         // Send notification to parent
-        // POST {baseUrl}/api/send
+        // If photoPath provided and setting enabled, send with media
+        // POST {baseUrl}/api/send or {baseUrl}/api/send-media
+        // Body: {phone, message, media_path (optional)}
+        // Return: {success, messageId}
     }
     
     public function normalizePhone(string $phone): string
     {
         // Convert to international format: 628xxx
+        // Handle various input formats: 08xxx, +628xxx, 628xxx
     }
     
     public function getGatewayStatus(): array
     {
         // GET {baseUrl}/api/status
+        // Return: {connected, phone_number, battery, etc}
     }
 }
 ```
-
 
 ### AttendanceNotificationService
 **Purpose:** Format dan kirim notifikasi ke orang tua
@@ -284,26 +390,43 @@ class AttendanceNotificationService
     public function notifyCheckIn(AttendanceStudent $student, AttendanceRecord $record): void
     {
         $message = $this->formatCheckInMessage($student, $record);
-        $this->send($student->no_hp_ortu, $message);
+        $phone = $student->no_hp_ortu;
+        $photoPath = $this->shouldIncludePhoto() ? $record->check_in_photo : null;
+        
+        $this->whatsappService->sendParentNotification($phone, $message, $photoPath);
     }
     
     public function notifyCheckOut(AttendanceStudent $student, AttendanceRecord $record): void
     {
         $message = $this->formatCheckOutMessage($student, $record);
-        $this->send($student->no_hp_ortu, $message);
+        $phone = $student->no_hp_ortu;
+        $photoPath = $this->shouldIncludePhoto() ? $record->check_out_photo : null;
+        
+        $this->whatsappService->sendParentNotification($phone, $message, $photoPath);
     }
     
     private function formatCheckInMessage($student, $record): string
     {
-        return "[ABSENSI]\n" .
-               "Ananda {$student->nama} telah absen masuk pada {$record->check_in_time}.\n" .
-               "Status: " . ucfirst($record->status);
+        $schoolName = AttendanceSetting::get('school_name', 'Sekolah');
+        return "[ABSENSI {$schoolName}]\n" .
+               "Ananda {$student->nama} telah tiba di sekolah pada " .
+               $record->check_in_time->format('H:i') . " WIB.\n" .
+               "Status: " . ucfirst($record->status) . "\n" .
+               "Tanggal: " . $record->date->format('d/m/Y');
     }
     
     private function formatCheckOutMessage($student, $record): string
     {
-        return "[ABSENSI]\n" .
-               "Ananda {$student->nama} telah absen pulang pada {$record->check_out_time}.";
+        $schoolName = AttendanceSetting::get('school_name', 'Sekolah');
+        return "[ABSENSI {$schoolName}]\n" .
+               "Ananda {$student->nama} telah pulang dari sekolah pada " .
+               $record->check_out_time->format('H:i') . " WIB.\n" .
+               "Tanggal: " . $record->date->format('d/m/Y');
+    }
+    
+    private function shouldIncludePhoto(): bool
+    {
+        return AttendanceSetting::get('include_photo_in_notification', 'false') === 'true';
     }
 }
 ```
@@ -335,6 +458,15 @@ class AttendanceStatusService
         
         return $time->between($start, $end);
     }
+    
+    private function getSettings()
+    {
+        return (object) [
+            'check_in_time' => AttendanceSetting::get('check_in_time', '07:00'),
+            'tolerance_minutes' => AttendanceSetting::get('tolerance_minutes', 15),
+            'cutoff_time' => AttendanceSetting::get('cutoff_time', '09:00'),
+        ];
+    }
 }
 ```
 
@@ -346,32 +478,70 @@ class AttendanceExportService
 {
     public function exportToExcel(array $filters): string
     {
-        // Use Laravel Excel package
-        // 1. Query attendance records with filters
-        // 2. Format data
-        // 3. Generate Excel file
-        // 4. Return file path
+        // Use Laravel Excel package (maatwebsite/excel)
+        // 1. Query attendance records with filters (date range, class, status)
+        // 2. Include: Tanggal, NIS, Nama, Kelas, Jam Masuk, Jam Pulang, Status
+        // 3. Format data into Excel rows
+        // 4. Generate filename: Absensi_{StartDate}_to_{EndDate}.xlsx
+        // 5. Return download response
     }
 }
 ```
 
+---
 
 ## Controllers & Routes
 
-### AttendanceWebhookController
-**Purpose:** Handle incoming WhatsApp messages
+### AttendanceScanController
+**Purpose:** Handle QR scan dan foto capture dari scanner interface
 
 ```php
-// Route: POST /api/attendance/webhook
-class AttendanceWebhookController extends Controller
+// Route: POST /api/attendance/scan
+class AttendanceScanController extends Controller
 {
-    public function handleIncoming(Request $request)
+    public function scan(Request $request)
     {
-        // 1. Extract: phone, message, timestamp
-        // 2. Normalize phone number
-        // 3. Detect keyword: "ABSEN MASUK" or "ABSEN PULANG"
-        // 4. Route to appropriate service method
-        // 5. Return response for WhatsApp gateway
+        // 1. Validate request: nis, photo_base64, action (checkin/checkout)
+        // 2. Call AttendanceService::processScan()
+        // 3. Return JSON response: {success, message, student_info, time, status, photo_url}
+        // 4. Handle errors gracefully with appropriate messages
+    }
+    
+    public function reject(Request $request)
+    {
+        // Manual reject by petugas
+        // 1. Validate request: nis, reason
+        // 2. Log rejection to attendance_logs
+        // 3. Return success message
+    }
+}
+```
+
+### AttendanceQRController
+**Purpose:** Generate dan manage QR Codes
+
+```php
+// Routes:
+// GET  /attendance/qr/{nis}           - Display QR Code for student
+// GET  /attendance/qr/{nis}/download  - Download QR Code PNG
+// POST /attendance/qr/regenerate/{nis} - Regenerate QR Code
+
+class AttendanceQRController extends Controller
+{
+    public function show($nis)
+    {
+        // Display QR Code page (for students to show on mobile)
+        // Large QR Code + student info
+    }
+    
+    public function download($nis)
+    {
+        // Download QR Code as PNG file
+    }
+    
+    public function regenerate($nis)
+    {
+        // Regenerate QR Code (admin only)
     }
 }
 ```
@@ -406,92 +576,30 @@ class AttendanceDashboardController extends Controller
 
 class AttendanceStudentController extends Controller
 {
-    public function index()
-    {
-        // List students with search, filter, pagination
-    }
-    
     public function store(Request $request)
     {
-        // Create new student
-        // Validate phone numbers
+        // 1. Validate: nis unique, nama, kelas_id, no_hp_ortu
+        // 2. Create student
+        // 3. Generate QR Code using QRCodeService
+        // 4. Save qr_code_path to student record
+        // 5. Return success
     }
     
     public function importExcel(Request $request)
     {
-        // Validate Excel file
-        // Parse and create students
-        // Return success/error report
+        // 1. Validate Excel file
+        // 2. Parse rows (NIS, Nama, Kelas, No HP Ortu)
+        // 3. Create students in bulk
+        // 4. Generate QR Codes for all
+        // 5. Return success/error report
     }
 }
 ```
 
-### AttendanceClassController
-**Purpose:** CRUD for classes
+### AttendanceClassController, AttendanceReportController, AttendanceSettingController
+(sama seperti design lama, tidak ada perubahan signifikan)
 
-```php
-// Routes:
-// GET    /attendance/classes
-// POST   /attendance/classes
-// PUT    /attendance/classes/{id}
-// DELETE /attendance/classes/{id}
-
-class AttendanceClassController extends Controller
-{
-    public function destroy($id)
-    {
-        // Prevent deletion if class has students
-    }
-}
-```
-
-
-### AttendanceReportController
-**Purpose:** Generate reports and exports
-
-```php
-// Routes:
-// GET  /attendance/reports
-// POST /attendance/reports/export
-
-class AttendanceReportController extends Controller
-{
-    public function index()
-    {
-        // Show report page with filters
-    }
-    
-    public function export(Request $request)
-    {
-        // Get filters: date_from, date_to, class_id
-        // Generate Excel
-        // Download file
-    }
-}
-```
-
-### AttendanceSettingController
-**Purpose:** Manage attendance settings
-
-```php
-// Routes:
-// GET  /attendance/settings
-// POST /attendance/settings
-
-class AttendanceSettingController extends Controller
-{
-    public function index()
-    {
-        // Show settings form
-    }
-    
-    public function update(Request $request)
-    {
-        // Update check_in_time, check_out_time, etc.
-        // Validate cutoff_time > (check_in_time + tolerance)
-    }
-}
-```
+---
 
 ## Route Registration
 
@@ -503,37 +611,85 @@ Route::prefix('attendance')->middleware(['auth'])->group(function () {
     Route::get('/dashboard', [AttendanceDashboardController::class, 'index'])
         ->name('attendance.dashboard');
     
+    // QR Scanner Interface
+    Route::get('/scanner', [AttendanceScanController::class, 'showScanner'])
+        ->name('attendance.scanner');
+    
     // Students
     Route::resource('students', AttendanceStudentController::class);
     Route::post('students/import', [AttendanceStudentController::class, 'importExcel'])
         ->name('attendance.students.import');
     
-    // Classes
-    Route::resource('classes', AttendanceClassController::class)
-        ->except(['show']);
+    // QR Code Management
+    Route::get('qr/{nis}', [AttendanceQRController::class, 'show'])
+        ->name('attendance.qr.show');
+    Route::get('qr/{nis}/download', [AttendanceQRController::class, 'download'])
+        ->name('attendance.qr.download');
+    Route::post('qr/regenerate/{nis}', [AttendanceQRController::class, 'regenerate'])
+        ->name('attendance.qr.regenerate');
     
-    // Reports
-    Route::get('reports', [AttendanceReportController::class, 'index'])
-        ->name('attendance.reports');
-    Route::post('reports/export', [AttendanceReportController::class, 'export'])
-        ->name('attendance.reports.export');
-    
-    // Settings
-    Route::get('settings', [AttendanceSettingController::class, 'index'])
-        ->name('attendance.settings');
-    Route::post('settings', [AttendanceSettingController::class, 'update'])
-        ->name('attendance.settings.update');
+    // Classes, Reports, Settings (sama seperti sebelumnya)
+    Route::resource('classes', AttendanceClassController::class)->except(['show']);
+    Route::get('reports', [AttendanceReportController::class, 'index'])->name('attendance.reports');
+    Route::post('reports/export', [AttendanceReportController::class, 'export'])->name('attendance.reports.export');
+    Route::get('settings', [AttendanceSettingController::class, 'index'])->name('attendance.settings');
+    Route::post('settings', [AttendanceSettingController::class, 'update'])->name('attendance.settings.update');
 });
 
-// Webhook (no auth, from WhatsApp Gateway)
-Route::post('/api/attendance/webhook', [AttendanceWebhookController::class, 'handleIncoming']);
+// API Routes (no auth middleware)
+Route::post('/api/attendance/scan', [AttendanceScanController::class, 'scan']);
+Route::post('/api/attendance/reject', [AttendanceScanController::class, 'reject']);
 ```
 
+---
 
 ## Livewire Components
 
+### QRScannerInterface
+**Purpose:** Real-time QR scanner interface untuk petugas
+
+```php
+// File: app/Livewire/QRScannerInterface.php
+class QRScannerInterface extends Component
+{
+    public $scanResult = null;
+    public $showResult = false;
+    public $action = 'checkin'; // or 'checkout'
+    
+    protected $listeners = ['qrScanned' => 'handleScan'];
+    
+    public function handleScan($nis, $photoBase64)
+    {
+        // Called from JavaScript when QR is scanned
+        // 1. Call AttendanceService::processScan()
+        // 2. Set $scanResult with response data
+        // 3. Set $showResult = true
+        // 4. Auto-hide after 3 seconds
+    }
+    
+    public function reject($nis)
+    {
+        // Manual reject by petugas
+        // Log and display rejection message
+    }
+    
+    public function render()
+    {
+        return view('livewire.qr-scanner-interface');
+    }
+}
+
+// View will include:
+// - Webcam video feed
+// - jsQR library for QR detection
+// - Photo capture on successful scan
+// - Display scan result (student name, time, status, photo)
+// - REJECT button
+// - Audio feedback (beep on success/error)
+```
+
 ### AttendanceDashboard
-**Purpose:** Real-time dashboard untuk monitoring hari ini
+**Purpose:** Real-time dashboard dengan preview foto
 
 ```php
 // File: app/Livewire/AttendanceDashboard.php
@@ -542,6 +698,7 @@ class AttendanceDashboard extends Component
     public $selectedClass = null;
     public $stats = [];
     public $students = [];
+    public $selectedPhoto = null; // For lightbox
     
     protected $listeners = ['refreshDashboard' => '$refresh'];
     
@@ -556,9 +713,10 @@ class AttendanceDashboard extends Component
         $this->students = $this->attendanceService->getTodayAttendance($this->selectedClass);
     }
     
-    public function updatedSelectedClass()
+    public function viewPhoto($photoPath)
     {
-        $this->loadData();
+        // Open photo in lightbox/modal
+        $this->selectedPhoto = $photoPath;
     }
     
     public function render()
@@ -567,178 +725,222 @@ class AttendanceDashboard extends Component
     }
 }
 
-// Polling every 30 seconds
-// In view: wire:poll.30s="loadData"
+// View includes:
+// - Stats cards (Hadir, Terlambat, Alpha, Belum)
+// - Student table with photo thumbnails
+// - Photo lightbox modal
+// - Auto-refresh every 30 seconds
 ```
 
-### AttendanceStudentTable
-**Purpose:** Manage students with search, filter, CRUD
+### AttendanceStudentTable, AttendanceReportGenerator
+(sama seperti design lama dengan minor updates)
 
-```php
-// File: app/Livewire/AttendanceStudentTable.php
-class AttendanceStudentTable extends Component
-{
-    public $search = '';
-    public $classFilter = null;
-    public $perPage = 20;
-    
-    protected $queryString = ['search', 'classFilter'];
-    
-    public function updatingSearch()
-    {
-        $this->resetPage();
-    }
-    
-    public function delete($id)
-    {
-        AttendanceStudent::findOrFail($id)->delete();
-        session()->flash('message', 'Siswa berhasil dihapus');
-    }
-    
-    public function render()
-    {
-        $students = AttendanceStudent::query()
-            ->when($this->search, fn($q) => $q->where('nama', 'like', "%{$this->search}%"))
-            ->when($this->classFilter, fn($q) => $q->where('kelas_id', $this->classFilter))
-            ->with('kelas')
-            ->paginate($this->perPage);
-        
-        return view('livewire.attendance-student-table', compact('students'));
-    }
-}
-```
+---
 
-### AttendanceReportGenerator
-**Purpose:** Generate reports with filters
-
-```php
-// File: app/Livewire/AttendanceReportGenerator.php
-class AttendanceReportGenerator extends Component
-{
-    public $dateFrom;
-    public $dateTo;
-    public $classId = null;
-    public $status = null;
-    public $preview = [];
-    
-    public function mount()
-    {
-        $this->dateFrom = today()->format('Y-m-d');
-        $this->dateTo = today()->format('Y-m-d');
-    }
-    
-    public function generatePreview()
-    {
-        $this->preview = AttendanceRecord::query()
-            ->whereBetween('date', [$this->dateFrom, $this->dateTo])
-            ->when($this->classId, fn($q) => $q->whereHas('student', fn($sq) => $sq->where('kelas_id', $this->classId)))
-            ->when($this->status, fn($q) => $q->where('status', $this->status))
-            ->with(['student.kelas'])
-            ->get();
-    }
-    
-    public function export()
-    {
-        return $this->exportService->exportToExcel([
-            'date_from' => $this->dateFrom,
-            'date_to' => $this->dateTo,
-            'class_id' => $this->classId,
-            'status' => $this->status
-        ]);
-    }
-}
-```
-
-
-## WhatsApp Message Flow
-
-### Check-In Flow (Absen Masuk)
+## QR Scan Flow (Check-In)
 
 ```
-1. Student sends "ABSEN MASUK" via WhatsApp
+1. Siswa datang ke pos piket/scanner
    ↓
-2. WhatsApp Gateway (port 3001) receives message
-   - whatsapp-web.js detects incoming message
+2. Siswa tunjukkan QR Code (kartu/HP) ke kamera scanner
    ↓
-3. Gateway sends HTTP POST to Laravel
-   POST /api/attendance/webhook
+3. JavaScript QR Scanner Interface:
+   - Webcam streaming di browser
+   - jsQR library detect QR Code
+   - Extract NIS from QR Code
+   - Capture photo dari webcam (canvas.toDataURL())
+   ↓
+4. JavaScript sends AJAX POST to Laravel:
+   POST /api/attendance/scan
    Body: {
-     "phone": "628123456789",
-     "message": "ABSEN MASUK",
-     "timestamp": "2024-01-15 07:10:00"
+     nis: "12345",
+     photo_base64: "data:image/jpeg;base64,/9j/4AAQ...",
+     action: "checkin"
    }
    ↓
-4. AttendanceWebhookController::handleIncoming()
-   - Normalize phone: 628123456789
-   - Detect keyword: "ABSEN MASUK"
+5. AttendanceScanController::scan()
+   - Validate input
+   - Call AttendanceService::processScan()
    ↓
-5. AttendanceService::processCheckIn("628123456789")
-   ├─ Find student by phone (no_hp_siswa)
-   ├─ Validate: Student exists?
-   │   NO → Return error message "Nomor tidak terdaftar"
+6. AttendanceService::processScan()
+   ├─ Find student by NIS
+   ├─ Validate: student exists and active
+   │   NO → Return error "NIS tidak terdaftar"
    │   YES → Continue
-   ├─ Validate: Already checked in today?
-   │   YES → Return "Anda sudah absen masuk hari ini"
-   │   NO → Continue
-   ├─ Validate: Within check-in window (05:00 - cutoff)?
-   │   NO → Return "Waktu absensi masuk telah berakhir"
+   ├─ Validate: belum check-in hari ini
+   │   ALREADY → Return error "Sudah absen masuk hari ini"
+   │   NOT YET → Continue
+   ├─ Validate: within check-in window (05:00 - cutoff)
+   │   NO → Return error "Waktu absensi masuk telah berakhir"
    │   YES → Continue
-   ├─ Determine status (AttendanceStatusService)
+   ├─ Save photo using PhotoCaptureService
+   │   - Decode base64
+   │   - Compress to max 500KB
+   │   - Save to: storage/app/attendance/photos/{NIS}/{date}/checkin_{timestamp}.jpg
+   │   - Return path: attendance/photos/{NIS}/{date}/checkin_{timestamp}.jpg
+   ├─ Determine status using AttendanceStatusService
    │   ├─ Time <= 07:15 → status = 'hadir'
    │   └─ Time > 07:15 → status = 'terlambat'
    ├─ Create AttendanceRecord
-   │   INSERT INTO attendance_records (student_id, date, check_in_time, status)
-   ├─ Log action
-   │   INSERT INTO attendance_logs (student_id, phone, action='check_in', status='success')
-   ├─ Send parent notification (async via Queue)
-   │   Queue: SendParentNotification
+   │   INSERT INTO attendance_records 
+   │   (student_id, date, check_in_time, check_in_photo, status)
+   ├─ Log action to attendance_logs
+   │   INSERT INTO attendance_logs 
+   │   (student_id, action='check_in', status='success')
+   ├─ Queue parent notification (async via Laravel Queue)
+   │   Job: SendParentNotification
    │   → AttendanceNotificationService::notifyCheckIn()
    │   → AttendanceWhatsAppService::sendParentNotification()
-   └─ Return confirmation message
+   │   → POST http://localhost:3001/api/send
+   │   → Parent receives WhatsApp message
+   └─ Return success response
    ↓
-6. Return response to Gateway
-   Response: {
+7. Return JSON to JavaScript:
+   {
      "success": true,
-     "reply": "✅ Absen masuk tercatat pada 07:10 WIB\nStatus: Hadir\nSelamat belajar!"
+     "message": "Absen masuk berhasil",
+     "data": {
+       "student_name": "Budi Santoso",
+       "nis": "12345",
+       "class": "12 RPL",
+       "time": "07:10",
+       "status": "Hadir",
+       "photo_url": "/storage/attendance/photos/12345/2024-01-15/checkin_071000.jpg"
+     }
    }
    ↓
-7. Gateway sends reply to student
-   Student receives confirmation in WhatsApp
+8. JavaScript displays result on scanner screen:
+   - Student photo (captured)
+   - Student name & class
+   - Time & status with color coding
+   - Play success beep sound
+   - Auto-hide after 3 seconds
    
-TOTAL TIME: < 3 seconds
+TOTAL TIME: < 2 seconds
 ```
 
-### Check-Out Flow (Absen Pulang)
+---
 
+## QR Code Generation
+
+### Library
+- **SimpleSoftwareIO/simple-qrcode** - Laravel package for QR generation
+
+### Format
+- QR Code berisi: NIS siswa (plain text)
+- Size: 300x300 pixels
+- Format: PNG
+- Error correction: High (30%)
+
+### Storage
 ```
-1. Student sends "ABSEN PULANG"
-   ↓
-2-4. Same as check-in flow (webhook → controller → service)
-   ↓
-5. AttendanceService::processCheckOut("628123456789")
-   ├─ Find student by phone
-   ├─ Validate: Has checked in today?
-   │   NO → Return "Anda belum absen masuk hari ini"
-   │   YES → Continue
-   ├─ Validate: Already checked out today?
-   │   YES → Return "Anda sudah absen pulang hari ini"
-   │   NO → Continue
-   ├─ Update AttendanceRecord
-   │   UPDATE attendance_records SET check_out_time = '15:30:00'
-   │   WHERE student_id = X AND date = today()
-   ├─ Log action
-   ├─ Send parent notification (async)
-   └─ Return confirmation message
-   ↓
-6. Return response
-   Response: {
-     "success": true,
-     "reply": "✅ Absen pulang tercatat pada 15:30 WIB\nHati-hati di jalan!"
-   }
-   ↓
-7. Gateway sends reply to student
+storage/app/attendance/qrcodes/
+  ├── 12345.png
+  ├── 12346.png
+  └── ...
 ```
 
+### Access
+- Public URL: `/storage/attendance/qrcodes/{NIS}.png`
+- Symlink: `php artisan storage:link`
+
+---
+
+## Photo Storage
+
+### Directory Structure
+```
+storage/app/attendance/photos/
+  ├── 12345/                    (NIS)
+  │   ├── 2024-01-15/
+  │   │   ├── checkin_071000.jpg
+  │   │   └── checkout_153000.jpg
+  │   └── 2024-01-16/
+  │       ├── checkin_070500.jpg
+  │       └── checkout_152000.jpg
+  └── 12346/
+      └── ...
+```
+
+### Specifications
+- Format: JPEG
+- Max size: 500KB (compressed)
+- Min resolution: 640x480
+- Compression quality: 85%
+
+### Access
+- Public URL: `/storage/attendance/photos/{NIS}/{date}/{filename}`
+- Symlink: `php artisan storage:link`
+
+---
+
+## Frontend Technologies
+
+### QR Scanner
+- **jsQR** - Pure JavaScript QR Code reader
+- Usage: Decode QR from video stream
+
+### Webcam Access
+- **HTML5 getUserMedia API**
+- Capture video stream from webcam
+- Canvas API for photo capture
+
+### JavaScript Flow
+```javascript
+// 1. Initialize webcam
+navigator.mediaDevices.getUserMedia({ video: true })
+  .then(stream => {
+    videoElement.srcObject = stream;
+  });
+
+// 2. Continuous QR scanning
+function scanQR() {
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0);
+  
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const code = jsQR(imageData.data, imageData.width, imageData.height);
+  
+  if (code) {
+    handleQRDetected(code.data); // NIS
+  }
+  
+  requestAnimationFrame(scanQR);
+}
+
+// 3. Capture photo when QR detected
+function handleQRDetected(nis) {
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0);
+  
+  const photoBase64 = canvas.toDataURL('image/jpeg', 0.85);
+  
+  sendToServer(nis, photoBase64);
+}
+
+// 4. Send to Laravel
+function sendToServer(nis, photoBase64) {
+  fetch('/api/attendance/scan', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      nis: nis,
+      photo_base64: photoBase64,
+      action: 'checkin'
+    })
+  })
+  .then(response => response.json())
+  .then(data => displayResult(data));
+}
+```
+
+---
 
 ## Scheduled Tasks
 
@@ -749,32 +951,27 @@ TOTAL TIME: < 3 seconds
 
 protected function schedule(Schedule $schedule)
 {
-    // Mark absent students as Alpha at cutoff time (09:00)
+    // Mark absent students as Alpha at cutoff time
+    $cutoffTime = AttendanceSetting::get('cutoff_time', '09:00');
+    
     $schedule->call(function () {
         $service = app(AttendanceService::class);
         $count = $service->markAbsentStudents();
         
         Log::info("Auto-marked {$count} students as Alpha");
-    })->dailyAt('09:00');
+    })->dailyAt($cutoffTime);
     
-    // Optional: Send summary to admin
+    // Optional: Daily summary at 4pm
     $schedule->call(function () {
         $service = app(AttendanceService::class);
         $stats = $service->getAttendanceStats(today());
         
-        // Send WA to admin/principal with daily summary
+        // Send summary to admin via WhatsApp
     })->dailyAt('16:00');
 }
 ```
 
-### Livewire Polling
-
-```blade
-{{-- In dashboard view --}}
-<div wire:poll.30s="loadData">
-    {{-- Dashboard content auto-refreshes every 30 seconds --}}
-</div>
-```
+---
 
 ## Configuration
 
@@ -783,7 +980,7 @@ protected function schedule(Schedule $schedule)
 ```env
 # .env file additions
 
-# Attendance WhatsApp Gateway
+# Attendance WhatsApp Gateway (notifikasi only)
 ATTENDANCE_WA_GATEWAY_URL=http://localhost:3001
 
 # Attendance Time Settings (defaults, can be changed in UI)
@@ -794,9 +991,13 @@ ATTENDANCE_CUTOFF_TIME=09:00
 
 # Notification Settings
 ATTENDANCE_ENABLE_PARENT_NOTIFICATION=true
+ATTENDANCE_INCLUDE_PHOTO_IN_NOTIFICATION=false
 
 # School Info
 ATTENDANCE_SCHOOL_NAME="SMK PGRI BLORA"
+
+# Storage
+FILESYSTEM_DISK=local
 ```
 
 ### Config File
@@ -816,14 +1017,21 @@ return [
     
     'notification' => [
         'enabled' => env('ATTENDANCE_ENABLE_PARENT_NOTIFICATION', true),
+        'include_photo' => env('ATTENDANCE_INCLUDE_PHOTO_IN_NOTIFICATION', false),
     ],
     
     'school' => [
         'name' => env('ATTENDANCE_SCHOOL_NAME', 'SMK PGRI BLORA'),
     ],
+    
+    'storage' => [
+        'qr_path' => 'attendance/qrcodes',
+        'photo_path' => 'attendance/photos',
+    ],
 ];
 ```
 
+---
 
 ## Laravel Models
 
@@ -835,8 +1043,8 @@ namespace App\Models;
 class AttendanceStudent extends Model
 {
     protected $fillable = [
-        'nis', 'nama', 'kelas_id', 'no_hp_siswa', 
-        'no_hp_ortu', 'foto', 'is_active'
+        'nis', 'nama', 'kelas_id', 'no_hp_ortu', 
+        'qr_code_path', 'foto_profil', 'is_active'
     ];
     
     protected $casts = [
@@ -857,6 +1065,14 @@ class AttendanceStudent extends Model
     public function logs()
     {
         return $this->hasMany(AttendanceLog::class, 'student_id');
+    }
+    
+    // Accessors
+    public function getQrCodeUrlAttribute()
+    {
+        return $this->qr_code_path 
+            ? Storage::url($this->qr_code_path)
+            : null;
     }
     
     // Helper methods
@@ -885,43 +1101,6 @@ class AttendanceStudent extends Model
 }
 ```
 
-### AttendanceClass Model
-
-```php
-namespace App\Models;
-
-class AttendanceClass extends Model
-{
-    protected $fillable = [
-        'nama_kelas', 'tingkat', 'jurusan', 
-        'wali_kelas_id', 'is_active'
-    ];
-    
-    protected $casts = [
-        'is_active' => 'boolean',
-    ];
-    
-    // Relationships
-    public function students()
-    {
-        return $this->hasMany(AttendanceStudent::class, 'kelas_id');
-    }
-    
-    // Scopes
-    public function scopeActive($query)
-    {
-        return $query->where('is_active', true);
-    }
-    
-    // Helper
-    public function getStudentCount()
-    {
-        return $this->students()->where('is_active', true)->count();
-    }
-}
-```
-
-
 ### AttendanceRecord Model
 
 ```php
@@ -930,8 +1109,8 @@ namespace App\Models;
 class AttendanceRecord extends Model
 {
     protected $fillable = [
-        'student_id', 'date', 'check_in_time', 
-        'check_out_time', 'status', 'notes'
+        'student_id', 'date', 'check_in_time', 'check_out_time',
+        'check_in_photo', 'check_out_photo', 'status', 'notes'
     ];
     
     protected $casts = [
@@ -946,23 +1125,21 @@ class AttendanceRecord extends Model
         return $this->belongsTo(AttendanceStudent::class, 'student_id');
     }
     
-    // Scopes
-    public function scopeToday($query)
-    {
-        return $query->whereDate('date', today());
-    }
-    
-    public function scopeByStatus($query, string $status)
-    {
-        return $query->where('status', $status);
-    }
-    
-    public function scopeByClass($query, int $classId)
-    {
-        return $query->whereHas('student', fn($q) => $q->where('kelas_id', $classId));
-    }
-    
     // Accessors
+    public function getCheckInPhotoUrlAttribute()
+    {
+        return $this->check_in_photo 
+            ? Storage::url($this->check_in_photo)
+            : null;
+    }
+    
+    public function getCheckOutPhotoUrlAttribute()
+    {
+        return $this->check_out_photo 
+            ? Storage::url($this->check_out_photo)
+            : null;
+    }
+    
     public function getStatusLabelAttribute(): string
     {
         return match($this->status) {
@@ -975,344 +1152,107 @@ class AttendanceRecord extends Model
 }
 ```
 
-### AttendanceSetting Model
-
-```php
-namespace App\Models;
-
-class AttendanceSetting extends Model
-{
-    protected $fillable = ['key', 'value', 'group_name', 'description'];
-    
-    // Static helper to get setting value
-    public static function get(string $key, $default = null)
-    {
-        $setting = static::where('key', $key)->first();
-        return $setting ? $setting->value : $default;
-    }
-    
-    // Static helper to set setting value
-    public static function set(string $key, $value)
-    {
-        return static::updateOrCreate(
-            ['key' => $key],
-            ['value' => $value]
-        );
-    }
-}
-```
-
-### AttendanceLog Model
-
-```php
-namespace App\Models;
-
-class AttendanceLog extends Model
-{
-    protected $fillable = [
-        'student_id', 'phone', 'action', 
-        'message', 'response', 'status'
-    ];
-    
-    public $timestamps = false; // Only created_at
-    
-    // Relationships
-    public function student()
-    {
-        return $this->belongsTo(AttendanceStudent::class, 'student_id');
-    }
-}
-```
-
-## Testing Strategy
-
-### Unit Tests
-
-```php
-// tests/Unit/AttendanceServiceTest.php
-class AttendanceServiceTest extends TestCase
-{
-    public function test_can_process_check_in_for_valid_student()
-    {
-        // Given: A student with phone number
-        // When: ProcessCheckIn is called
-        // Then: Attendance record is created with correct status
-    }
-    
-    public function test_cannot_check_in_twice_same_day()
-    {
-        // Given: Student already checked in today
-        // When: ProcessCheckIn is called again
-        // Then: Returns error message
-    }
-    
-    public function test_determines_late_status_correctly()
-    {
-        // Given: Check-in time after tolerance period
-        // When: Determining status
-        // Then: Status is 'terlambat'
-    }
-}
-```
-
-### Feature Tests
-
-```php
-// tests/Feature/AttendanceWebhookTest.php
-class AttendanceWebhookTest extends TestCase
-{
-    public function test_webhook_handles_absen_masuk()
-    {
-        // Given: Valid webhook payload with "ABSEN MASUK"
-        // When: POST /api/attendance/webhook
-        // Then: Response contains success and confirmation message
-    }
-    
-    public function test_webhook_rejects_unregistered_phone()
-    {
-        // Given: Webhook payload with unregistered phone
-        // When: POST /api/attendance/webhook
-        // Then: Response contains error "Nomor tidak terdaftar"
-    }
-}
-```
-
-### Integration Tests
-
-```php
-// tests/Integration/WhatsAppNotificationTest.php
-class WhatsAppNotificationTest extends TestCase
-{
-    public function test_parent_receives_notification_after_check_in()
-    {
-        // Given: Student checks in
-        // When: Notification is triggered
-        // Then: WhatsApp service is called with parent's phone
-        // And: Message contains student name and time
-    }
-}
-```
-
+---
 
 ## Security Considerations
 
-### Webhook Authentication
+1. **Photo Storage**
+   - Store in private storage (storage/app), not public
+   - Serve via Laravel route with authentication check
+   - OR use symlink with proper permissions
 
-```php
-// Add middleware to verify requests from WhatsApp Gateway
-// Option 1: API Token
-Route::post('/api/attendance/webhook', [AttendanceWebhookController::class, 'handleIncoming'])
-    ->middleware('verify.gateway.token');
+2. **QR Code Validation**
+   - Validate NIS exists in database
+   - Check student is active
+   - Prevent SQL injection (use parameterized queries)
 
-// Option 2: IP Whitelist
-// Only allow localhost:3001 for now
-```
+3. **API Endpoints**
+   - Rate limiting on /api/attendance/scan
+   - CSRF protection for web routes
+   - Validate photo base64 format and size
 
-### Data Validation
+4. **Photo File Security**
+   - Validate image format (JPEG/PNG only)
+   - Limit file size (max 5MB upload, compress to 500KB)
+   - Sanitize filenames
+   - Prevent directory traversal
 
-```php
-// Always validate phone numbers
-public function processCheckIn(string $phone)
-{
-    $phone = $this->normalizePhone($phone);
-    
-    if (!$this->isValidPhone($phone)) {
-        throw new InvalidPhoneException();
-    }
-    
-    // Continue...
-}
-```
-
-### Rate Limiting
-
-```php
-// Prevent abuse - limit webhook calls
-Route::post('/api/attendance/webhook', [AttendanceWebhookController::class, 'handleIncoming'])
-    ->middleware('throttle:60,1'); // 60 requests per minute
-```
+---
 
 ## Performance Optimization
 
-### Database Indexes
+1. **Database Indexes**
+   - Already defined in schema (see above)
 
-```sql
--- Already included in schema, but emphasizing importance:
-CREATE INDEX idx_student_date ON attendance_records(student_id, date);
-CREATE INDEX idx_phone_lookup ON attendance_students(no_hp_siswa);
-CREATE INDEX idx_date_filter ON attendance_records(date);
-```
+2. **Photo Compression**
+   - Compress on upload (85% quality)
+   - Lazy load thumbnails in dashboard
 
-### Query Optimization
+3. **Caching**
+   - Cache attendance settings
+   - Cache QR Code URLs
 
-```php
-// Use eager loading to prevent N+1 queries
-$students = AttendanceStudent::with(['kelas', 'attendanceRecords'])
-    ->get();
+4. **Queued Jobs**
+   - Parent notifications via queue
+   - Batch QR Code generation via queue
 
-// Use select only needed columns
-$records = AttendanceRecord::select('id', 'student_id', 'date', 'status')
-    ->today()
-    ->get();
-```
-
-### Caching
-
-```php
-// Cache settings to avoid repeated DB queries
-public function getSettings()
-{
-    return Cache::remember('attendance_settings', 3600, function () {
-        return AttendanceSetting::all()->pluck('value', 'key');
-    });
-}
-
-// Cache today's stats for dashboard
-public function getAttendanceStats()
-{
-    return Cache::remember('attendance_stats_' . today(), 60, function () {
-        return [
-            'total_hadir' => AttendanceRecord::today()->byStatus('hadir')->count(),
-            'total_terlambat' => AttendanceRecord::today()->byStatus('terlambat')->count(),
-            'total_alpha' => AttendanceRecord::today()->byStatus('alpha')->count(),
-        ];
-    });
-}
-```
-
+---
 
 ## Deployment Notes
 
-### WhatsApp Gateway Setup (Port 3001)
+1. **Storage Symlink**
+   ```bash
+   php artisan storage:link
+   ```
 
-```bash
-# 1. Copy SPMB's whatsapp-server to new folder
-cp -r whatsapp-server whatsapp-server-absensi
+2. **Directories Permission**
+   ```bash
+   chmod -R 775 storage/app/attendance
+   chown -R www-data:www-data storage/app/attendance
+   ```
 
-# 2. Update port in whatsapp-server-absensi/server.js
-const PORT = 3001;
+3. **WhatsApp Gateway**
+   - Run on separate port (3001)
+   - PM2 process manager for auto-restart
+   - Separate from SPMB gateway (port 3000)
 
-# 3. Update webhook URL to Laravel attendance endpoint
-const WEBHOOK_URL = 'http://localhost/api/attendance/webhook';
+4. **Cron Job for Scheduler**
+   ```bash
+   * * * * * cd /path-to-project && php artisan schedule:run >> /dev/null 2>&1
+   ```
 
-# 4. Start with PM2
-cd whatsapp-server-absensi
-pm2 start server.js --name "whatsapp-absensi" --watch
+5. **Dependencies**
+   ```bash
+   composer require simplesoftwareio/simple-qrcode
+   composer require maatwebsite/excel
+   npm install jsqr
+   ```
 
-# 5. Save PM2 configuration
-pm2 save
-```
+---
 
-### Laravel Setup
+## Future Enhancements
 
-```bash
-# 1. Run migrations
-php artisan migrate
+1. **Face Recognition**
+   - Auto-validate captured photo vs profile photo
+   - Alert if confidence score low
 
-# 2. Seed default settings
-php artisan db:seed --class=AttendanceSettingsSeeder
+2. **Multi-Scanner Support**
+   - Multiple scanner stations
+   - Load balancing
 
-# 3. Create storage link (for student photos)
-php artisan storage:link
+3. **Offline Mode**
+   - PWA dengan service worker
+   - Sync data when back online
 
-# 4. Set up scheduled tasks (crontab)
-* * * * * cd /path-to-app && php artisan schedule:run >> /dev/null 2>&1
-```
+4. **Analytics Dashboard**
+   - Attendance trends
+   - Per-student attendance rate
+   - Class comparison
 
-### Environment Configuration
+5. **Mobile App**
+   - Native Android/iOS app
+   - Better camera integration
 
-```env
-# Add to .env
-ATTENDANCE_WA_GATEWAY_URL=http://localhost:3001
-ATTENDANCE_CHECKIN_TIME=07:00
-ATTENDANCE_CHECKOUT_TIME=15:00
-ATTENDANCE_TOLERANCE_MINUTES=15
-ATTENDANCE_CUTOFF_TIME=09:00
-```
+---
 
-## Future Enhancements (Out of MVP Scope)
-
-### QR Code Integration
-
-```
-When implementing QR Code:
-1. Add qr_tokens table (already in schema)
-2. Generate QR with token per day or per student
-3. Student scans QR → redirect to /attendance/qr-scan/{token}
-4. Validate token + optionally check GPS
-5. Process check-in via AttendanceService
-```
-
-### GPS/Location Validation
-
-```
-When implementing GPS:
-1. Add lat/lng columns to attendance_records
-2. Store school coordinates in settings
-3. Calculate distance using Haversine formula
-4. Flag suspicious attendance (far from school)
-5. Admin can review and approve/reject
-```
-
-### Leave (Izin/Sakit) Management
-
-```
-When implementing leave:
-1. Add attendance_leaves table
-2. Allow student/parent to submit leave request
-3. Upload supporting document (surat)
-4. Admin approval workflow
-5. Automatic status update to 'izin' or 'sakit'
-```
-
-### Reminder Scheduler
-
-```
-When implementing reminders:
-1. Add scheduled jobs for 06:30, 07:15, 14:00, 15:00
-2. Query students who haven't checked in/out
-3. Bulk send WhatsApp reminders
-4. Track reminder delivery status
-```
-
-## Implementation Priority
-
-### Phase 1: Core Setup (Day 1-2)
-- [x] Requirements document ✅
-- [x] Design document ✅
-- [ ] Database migrations
-- [ ] Models with relationships
-- [ ] Basic service layer
-
-### Phase 2: WhatsApp Integration (Day 3-4)
-- [ ] WhatsApp Gateway setup on port 3001
-- [ ] Webhook controller
-- [ ] Message processing logic
-- [ ] Confirmation replies
-
-### Phase 3: Business Logic (Day 4-5)
-- [ ] Check-in/check-out processing
-- [ ] Status determination
-- [ ] Parent notifications
-- [ ] Alpha auto-marking (scheduler)
-
-### Phase 4: Admin Interface (Day 6-7)
-- [ ] Dashboard (Livewire)
-- [ ] Student CRUD + Excel import
-- [ ] Class management
-- [ ] Settings page
-
-### Phase 5: Reports & Polish (Day 7-8)
-- [ ] Excel export
-- [ ] Report filters
-- [ ] Dark mode styling
-- [ ] Mobile responsive
-
-### Phase 6: Testing & Deployment (Day 8-9)
-- [ ] Unit tests
-- [ ] Feature tests
-- [ ] Deploy to aaPanel
-- [ ] End-to-end testing
-
-**Total Estimated Time: 8-9 days for MVP** 🎯
-
+**End of Design Document**
