@@ -44,16 +44,23 @@ Route::middleware('admin')->group(function () {
         // Get active tahun ajaran
         $activeTahun = \App\Models\SettingSystem::get('active_tahun_ajaran', '2026/2027');
         
-        // Recent pendaftar - FILTER BY ACTIVE YEAR ONLY
+        // Check if tahun_ajaran column exists (for backward compatibility with old backups)
+        $hasTahunAjaranColumn = \Schema::hasColumn('pendaftar', 'tahun_ajaran');
+        
+        // Recent pendaftar - FILTER BY ACTIVE YEAR ONLY (if column exists)
         $recentPendaftars = \App\Models\Pendaftar::with('logistik')
-            ->where('tahun_ajaran', $activeTahun)
+            ->when($hasTahunAjaranColumn, function($query) use ($activeTahun) {
+                return $query->where('tahun_ajaran', $activeTahun);
+            })
             ->latest('id_pendaftar')
             ->take(8)
             ->get();
 
-        // Per Jaringan - FILTER BY ACTIVE YEAR ONLY
+        // Per Jaringan - FILTER BY ACTIVE YEAR ONLY (if column exists)
         $perJaringanDashboard = \App\Models\Pendaftar::query()
-            ->where('tahun_ajaran', $activeTahun)
+            ->when($hasTahunAjaranColumn, function($query) use ($activeTahun) {
+                return $query->where('tahun_ajaran', $activeTahun);
+            })
             ->selectRaw("UPPER(TRIM(COALESCE(nama_jaringan, ''))) as nama_jaringan_normalized, COUNT(*) as total")
             ->groupByRaw("UPPER(TRIM(COALESCE(nama_jaringan, '')))")
             ->orderByDesc('total')
@@ -138,6 +145,27 @@ Route::middleware('admin')->group(function () {
         Route::post('/settings/jurusan', [SettingsController::class, 'storeJurusan'])->name('settings.jurusan.store');
         Route::put('/settings/jurusan/{jurusan}', [SettingsController::class, 'updateJurusan'])->name('settings.jurusan.update');
         Route::delete('/settings/jurusan/{jurusan}', [SettingsController::class, 'destroyJurusan'])->name('settings.jurusan.destroy');
+
+        // Backup & Restore - Only for Administrator
+        Route::prefix('admin/backups')->name('admin.backups.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\BackupController::class, 'index'])->name('index');
+            Route::post('/create', [\App\Http\Controllers\Admin\BackupController::class, 'create'])->name('create');
+            Route::post('/upload', [\App\Http\Controllers\Admin\BackupController::class, 'upload'])->name('upload');
+            Route::get('/{id}/preview', [\App\Http\Controllers\Admin\BackupController::class, 'preview'])->name('preview');
+            Route::get('/{id}/download', [\App\Http\Controllers\Admin\BackupController::class, 'download'])->name('download');
+            Route::post('/{id}/restore', [\App\Http\Controllers\Admin\BackupController::class, 'restore'])->name('restore');
+            Route::delete('/{id}', [\App\Http\Controllers\Admin\BackupController::class, 'delete'])->name('delete');
+            Route::post('/{id}/verify', [\App\Http\Controllers\Admin\BackupController::class, 'verify'])->name('verify');
+            Route::get('/activity-logs', [\App\Http\Controllers\Admin\BackupController::class, 'activityLogs'])->name('activity-logs');
+            
+            // Google Drive Integration
+            Route::get('/google-drive/settings', [\App\Http\Controllers\Admin\GoogleDriveController::class, 'settings'])->name('google-drive.settings');
+            Route::post('/google-drive/test', [\App\Http\Controllers\Admin\GoogleDriveController::class, 'testConnection'])->name('google-drive.test');
+            Route::post('/google-drive/save-settings', [\App\Http\Controllers\Admin\GoogleDriveController::class, 'saveSettings'])->name('google-drive.save-settings');
+            Route::post('/{id}/upload-to-drive', [\App\Http\Controllers\Admin\GoogleDriveController::class, 'uploadToDrive'])->name('google-drive.upload');
+            Route::get('/google-drive/list', [\App\Http\Controllers\Admin\GoogleDriveController::class, 'listFiles'])->name('google-drive.list');
+            Route::post('/google-drive/{fileId}/delete', [\App\Http\Controllers\Admin\GoogleDriveController::class, 'deleteFromDrive'])->name('google-drive.delete');
+        });
 
         // Tahun Ajaran Management - Only for Administrator
         Route::prefix('admin/tahun-ajaran')->name('admin.tahun-ajaran.')->group(function () {

@@ -50,3 +50,8 @@ absensi/whatsapp-server-absensi/spmb-wa-session-backup/
 absensi/whatsapp-server-absensi/*.log
 absensi/whatsapp-server-absensi/logs/
 spmb-laravel.sql
+
+# Google Drive Backup Credentials (IMPORTANT: DO NOT COMMIT!)
+/storage/app/google/*.json
+google-drive-credentials.json
+{1F32E5EC-96C1-4066-A2F4-C8AA0437ADDA}.png

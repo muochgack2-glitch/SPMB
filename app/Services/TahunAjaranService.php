@@ -190,71 +190,16 @@ class TahunAjaranService
      */
     private function autoBackup()
     {
-        $timestamp = now()->format('Y-m-d_His');
-        $filename = "backup_before_new_year_{$timestamp}.sql";
-        $backupDir = storage_path('app/backups');
-        $path = "{$backupDir}/{$filename}";
+        // Use new BackupService
+        $backupService = app(\App\Services\BackupService::class);
         
-        // Create backups directory if not exists
-        if (!file_exists($backupDir)) {
-            mkdir($backupDir, 0755, true);
-        }
+        $activeTahun = SettingSystem::get('active_tahun_ajaran', '2026/2027');
+        $notes = "Auto backup before creating new academic year";
+        $sourceContext = "before_new_year_{$activeTahun}";
         
-        // Database config
-        $host = config('database.connections.mysql.host');
-        $database = config('database.connections.mysql.database');
-        $username = config('database.connections.mysql.username');
-        $password = config('database.connections.mysql.password');
+        $backup = $backupService->createBackup($notes, 'auto', $sourceContext);
         
-        // mysqldump command (Windows compatible)
-        $command = sprintf(
-            'mysqldump --host=%s --user=%s --password=%s %s > "%s" 2>&1',
-            escapeshellarg($host),
-            escapeshellarg($username),
-            escapeshellarg($password),
-            escapeshellarg($database),
-            $path
-        );
-        
-        // Execute
-        exec($command, $output, $returnCode);
-        
-        if ($returnCode !== 0) {
-            throw new \Exception('Backup database gagal: ' . implode("\n", $output));
-        }
-        
-        // Verify backup file exists and not empty
-        if (!file_exists($path) || filesize($path) < 1000) {
-            throw new \Exception('Backup file tidak valid atau kosong');
-        }
-        
-        // Cleanup old backups (keep last 10)
-        $this->cleanupOldBackups($backupDir, 10);
-        
-        return $path;
-    }
-    
-    /**
-     * Cleanup old backups, keep only N latest
-     */
-    private function cleanupOldBackups($backupDir, $keepCount = 10)
-    {
-        $files = glob($backupDir . '/backup_before_new_year_*.sql');
-        
-        if (count($files) <= $keepCount) {
-            return;
-        }
-        
-        // Sort by modification time, oldest first
-        usort($files, function($a, $b) {
-            return filemtime($a) - filemtime($b);
-        });
-        
-        // Delete oldest files
-        $toDelete = array_slice($files, 0, count($files) - $keepCount);
-        foreach ($toDelete as $file) {
-            @unlink($file);
-        }
+        return $backup->path;
     }
     
     /**

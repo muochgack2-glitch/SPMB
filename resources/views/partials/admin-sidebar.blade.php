@@ -193,6 +193,11 @@
                 <i class="fas fa-server"></i> <span class="nav-text">Gateway Management</span>
             </a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('admin.backups.*') ? 'active' : '' }}" href="{{ route('admin.backups.index') }}" data-bs-toggle="tooltip" data-bs-placement="right" title="Backup & Restore">
+                <i class="fas fa-database"></i> <span class="nav-text">Backup & Restore</span>
+            </a>
+        </li>
         @endif
         
     </ul>
