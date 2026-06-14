@@ -7,6 +7,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "google/apiclient": "2.15.0",
         "laravel/framework": "^13.8",
         "laravel/tinker": "^3.0"
     },
@@ -79,6 +80,14 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": true
+        },
+        "audit": {
+            "abandoned": "ignore"
+        },
+        "policy": {
+            "advisories": {
+                "ignore": ["PKSA-y2cr-5h3j-g3ys"]
+            }
         }
     },
     "minimum-stability": "stable",
