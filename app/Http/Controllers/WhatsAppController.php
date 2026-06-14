@@ -757,9 +757,6 @@ class WhatsAppController extends Controller
         $messageStats = $this->getMessageStatistics();
         $tabCounts = $this->getTabCounts();
 
-        // Add external tab count
-        $tabCounts['external'] = ExternalBroadcastRecipient::count();
-
         $activeTab = 'external';
         $jurusans = Jurusan::where('aktif', true)->orderBy('nama')->get();
         $gelombangs = collect();
@@ -1501,12 +1498,16 @@ class WhatsAppController extends Controller
               ->whereRaw('whatsapp_logs.id = (SELECT MAX(id) FROM whatsapp_logs AS wl WHERE wl.pendaftar_id = whatsapp_logs.pendaftar_id)');
         })->count();
         
+        // External: total recipient eksternal
+        $external = \App\Models\ExternalBroadcastRecipient::count();
+        
         return [
             'all' => $total,
             'sent' => $sent,
             'not-sent' => $notSent,
             'failed' => $failed,
-            'no-phone' => $noPhone
+            'no-phone' => $noPhone,
+            'external' => $external
         ];
     }
 
