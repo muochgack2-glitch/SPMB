@@ -11,6 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Check if table exists first
+        if (!Schema::hasTable('database_backups')) {
+            // Table doesn't exist yet, skip this migration
+            // It will be created by 2026_06_14_140000_create_database_backups_table.php
+            return;
+        }
+        
         Schema::table('database_backups', function (Blueprint $table) {
             // Check if columns don't exist before adding (for backward compatibility)
             if (!Schema::hasColumn('database_backups', 'google_drive_file_id')) {
