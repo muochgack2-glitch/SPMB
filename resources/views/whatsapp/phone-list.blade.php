@@ -411,6 +411,102 @@
     </div>
 </div>
 
+<!-- Broadcast Progress Modal -->
+<div class="modal fade" id="progressModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-spinner fa-spin me-2"></i>Mengirim Broadcast...
+                </h5>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Progress:</span>
+                        <span><strong id="progressText">0 / 0</strong></span>
+                    </div>
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" 
+                             id="progressBar" 
+                             role="progressbar" 
+                             style="width: 0%">
+                            0%
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border rounded p-3" style="background-color: rgba(40, 167, 69, 0.1);">
+                            <h3 class="text-success mb-0" id="successCount">0</h3>
+                            <small class="text-muted">Berhasil</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-3" style="background-color: rgba(220, 53, 69, 0.1);">
+                            <h3 class="text-danger mb-0" id="failedCount">0</h3>
+                            <small class="text-muted">Gagal</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-light mt-3 mb-0">
+                    <small>
+                        <i class="fas fa-info-circle me-2"></i>
+                        Mohon tunggu, proses broadcast sedang berjalan...
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Broadcast Result Modal -->
+<div class="modal fade" id="resultModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-check-circle me-2"></i>Broadcast Selesai
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row text-center mb-4">
+                    <div class="col-4">
+                        <div class="p-3 border rounded">
+                            <h2 class="mb-0" id="resultTotal">0</h2>
+                            <small class="text-muted">Total</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-3 border rounded bg-success bg-opacity-10">
+                            <h2 class="text-success mb-0" id="resultSuccess">0</h2>
+                            <small class="text-muted">Berhasil</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-3 border rounded bg-danger bg-opacity-10">
+                            <h2 class="text-danger mb-0" id="resultFailed">0</h2>
+                            <small class="text-muted">Gagal</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="resultDetails" style="max-height: 300px; overflow-y: auto;">
+                    <!-- Details akan diisi via JavaScript -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                    <i class="fas fa-check me-2"></i>OK
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <style>
 /* Message Preview Styling */
@@ -704,6 +800,20 @@ function submitBroadcast() {
         return;
     }
     
+    // Close broadcast modal
+    bootstrap.Modal.getInstance(document.getElementById('broadcastModal')).hide();
+    
+    // Show progress modal
+    const progressModal = new bootstrap.Modal(document.getElementById('progressModal'));
+    progressModal.show();
+    
+    // Initialize progress
+    document.getElementById('progressBar').style.width = '0%';
+    document.getElementById('progressBar').textContent = '0%';
+    document.getElementById('progressText').textContent = '0 / ' + selectedPhones.length;
+    document.getElementById('successCount').textContent = '0';
+    document.getElementById('failedCount').textContent = '0';
+    
     // Prepare data
     const data = {
         phones: selectedPhones,
@@ -711,12 +821,6 @@ function submitBroadcast() {
         template_id: templateId || null,
         _token: '{{ csrf_token() }}'
     };
-    
-    // Show loading
-    const btn = event.target;
-    const originalText = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Mengirim...';
     
     // Send request
     fetch('{{ route("whatsapp.broadcast.send-bulk") }}', {
@@ -730,26 +834,85 @@ function submitBroadcast() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert(`Broadcast berhasil!\n\nTerkirim: ${data.success_count}\nGagal: ${data.failed_count}`);
-            bootstrap.Modal.getInstance(document.getElementById('broadcastModal')).hide();
+            // Update progress to 100%
+            updateBroadcastProgress(selectedPhones.length, selectedPhones.length, data.success_count, data.failed_count);
             
-            // Reset form
-            document.getElementById('broadcastMessage').value = '';
-            document.getElementById('broadcastTemplate').value = '';
-            document.querySelectorAll('.phone-checkbox').forEach(cb => cb.checked = false);
-            updateSelectedCount();
+            // Hide progress modal and show result after short delay
+            setTimeout(() => {
+                progressModal.hide();
+                showBroadcastResult(data);
+                
+                // Reset form
+                document.getElementById('broadcastMessage').value = '';
+                document.getElementById('broadcastTemplate').value = '';
+                document.querySelectorAll('.phone-checkbox').forEach(cb => cb.checked = false);
+                updateSelectedCount();
+                
+                // Reload page to refresh status
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            }, 1000);
         } else {
+            progressModal.hide();
             alert('Gagal mengirim broadcast: ' + (data.message || 'Unknown error'));
         }
     })
     .catch(error => {
         console.error('Error:', error);
+        progressModal.hide();
         alert('Terjadi kesalahan: ' + error.message);
-    })
-    .finally(() => {
-        btn.disabled = false;
-        btn.innerHTML = originalText;
     });
+}
+
+// Update broadcast progress
+function updateBroadcastProgress(current, total, success, failed) {
+    const percent = Math.round((current / total) * 100);
+    
+    document.getElementById('progressBar').style.width = percent + '%';
+    document.getElementById('progressBar').textContent = percent + '%';
+    document.getElementById('progressText').textContent = current + ' / ' + total;
+    document.getElementById('successCount').textContent = success;
+    document.getElementById('failedCount').textContent = failed;
+}
+
+// Show broadcast result
+function showBroadcastResult(data) {
+    document.getElementById('resultTotal').textContent = data.total;
+    document.getElementById('resultSuccess').textContent = data.success_count;
+    document.getElementById('resultFailed').textContent = data.failed_count;
+    
+    // Build details
+    let detailsHtml = '';
+    if (data.results && data.results.length > 0) {
+        detailsHtml = '<div class="list-group">';
+        data.results.forEach(result => {
+            const iconClass = result.success ? 'fa-check-circle text-success' : 'fa-times-circle text-danger';
+            const statusText = result.success ? 'Terkirim' : 'Gagal';
+            const errorMsg = result.message && !result.success ? `<br><small class="text-muted">${result.message}</small>` : '';
+            
+            detailsHtml += `
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <i class="fas ${iconClass} me-2"></i>
+                            <strong>${result.name}</strong>
+                            <br><small class="text-muted">${result.phone}</small>
+                            ${errorMsg}
+                        </div>
+                        <span class="badge ${result.success ? 'bg-success' : 'bg-danger'}">${statusText}</span>
+                    </div>
+                </div>
+            `;
+        });
+        detailsHtml += '</div>';
+    }
+    
+    document.getElementById('resultDetails').innerHTML = detailsHtml;
+    
+    // Show result modal
+    const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
+    resultModal.show();
 }
 
 // Export phones
