@@ -556,8 +556,20 @@ class WhatsAppController extends Controller
                 });
                 break;
             case 'not-sent':
-                // No messages sent yet
-                $query->whereDoesntHave('whatsappLogs');
+                // No messages sent yet BUT has phone number
+                $query->whereDoesntHave('whatsappLogs')
+                    ->where(function($q) {
+                        // Harus punya minimal 1 nomor HP
+                        $q->whereNotNull('no_hp_wali')
+                          ->orWhereNotNull('no_hp_ortu')
+                          ->orWhereNotNull('no_telepon');
+                    })
+                    ->where(function($q) {
+                        // Dan nomor tidak boleh empty string semua
+                        $q->where('no_hp_wali', '!=', '')
+                          ->orWhere('no_hp_ortu', '!=', '')
+                          ->orWhere('no_telepon', '!=', '');
+                    });
                 break;
             case 'failed':
                 // Latest message failed
@@ -1457,13 +1469,7 @@ class WhatsAppController extends Controller
             $q->where('status', 'sent');
         })->count();
         
-        $notSent = Pendaftar::whereDoesntHave('whatsappLogs')->count();
-        
-        $failed = Pendaftar::whereHas('whatsappLogs', function($q) {
-            $q->where('status', 'failed')
-              ->whereRaw('whatsapp_logs.id = (SELECT MAX(id) FROM whatsapp_logs AS wl WHERE wl.pendaftar_id = whatsapp_logs.pendaftar_id)');
-        })->count();
-        
+        // No phone: tidak punya nomor HP sama sekali
         $noPhone = Pendaftar::where(function($q) {
             $q->whereNull('no_hp_wali')
               ->whereNull('no_hp_ortu')
@@ -1472,6 +1478,27 @@ class WhatsAppController extends Controller
             $q->where('no_hp_wali', '')
               ->where('no_hp_ortu', '')
               ->where('no_telepon', '');
+        })->count();
+        
+        // Not sent: PUNYA nomor HP tapi belum pernah dikirim pesan
+        $notSent = Pendaftar::whereDoesntHave('whatsappLogs')
+            ->where(function($q) {
+                // Harus punya minimal 1 nomor HP
+                $q->whereNotNull('no_hp_wali')
+                  ->orWhereNotNull('no_hp_ortu')
+                  ->orWhereNotNull('no_telepon');
+            })
+            ->where(function($q) {
+                // Dan nomor tidak boleh empty string semua
+                $q->where('no_hp_wali', '!=', '')
+                  ->orWhere('no_hp_ortu', '!=', '')
+                  ->orWhere('no_telepon', '!=', '');
+            })
+            ->count();
+        
+        $failed = Pendaftar::whereHas('whatsappLogs', function($q) {
+            $q->where('status', 'failed')
+              ->whereRaw('whatsapp_logs.id = (SELECT MAX(id) FROM whatsapp_logs AS wl WHERE wl.pendaftar_id = whatsapp_logs.pendaftar_id)');
         })->count();
         
         return [
