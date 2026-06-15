@@ -488,8 +488,76 @@ class PendaftarController extends Controller
             'status_data' => $pendaftar->status_data === 'awal' ? 'lengkap' : $pendaftar->status_data,
         ]);
 
-        // Notify applicant via WhatsApp after daftar ulang verification
+        // Notify admin via WhatsApp
         $this->sendWhatsApp(env('ADMIN_WHATSAPP'), "✅ Daftar ulang berhasil untuk pendaftar ID: {$id}");
+
+        // Auto-send welcome WhatsApp to student/parent/guardian (CASCADE PRIORITY)
+        $phoneToSend = null;
+        $phoneType = null;
+        
+        // Priority: siswa -> ortu -> wali
+        if (!empty($pendaftar->no_telepon)) {
+            $phoneToSend = $pendaftar->no_telepon;
+            $phoneType = 'Siswa';
+        } elseif (!empty($pendaftar->no_hp_ortu)) {
+            $phoneToSend = $pendaftar->no_hp_ortu;
+            $phoneType = 'Orang Tua';
+        } elseif (!empty($pendaftar->no_hp_wali)) {
+            $phoneToSend = $pendaftar->no_hp_wali;
+            $phoneType = 'Wali';
+        }
+        
+        if ($phoneToSend) {
+            try {
+                $jurusanData = $pendaftar->masterJurusan;
+                
+                // Prepare data for template
+                $templateData = [
+                    'nama' => $pendaftar->nama_lengkap,
+                    'no_pendaftaran' => $pendaftar->no_registrasi,
+                    'jurusan' => $jurusanData ? "{$jurusanData->kode} - {$jurusanData->nama}" : $pendaftar->jurusan,
+                    'ukuran_kaos' => $request->ukuran_kaos,
+                    'portal_url' => url('/'),
+                    'sekolah' => config('app.name', 'SMK PGRI Blora'),
+                ];
+
+                // Format phone number (add 62 if starts with 0)
+                $phone = $phoneToSend;
+                if (substr($phone, 0, 1) === '0') {
+                    $phone = '62' . substr($phone, 1);
+                }
+
+                // Send WhatsApp using template
+                $result = $this->whatsappService->sendWithTemplate(
+                    $phone,
+                    'daftar_ulang_verified',
+                    $templateData,
+                    [
+                        'pendaftar_id' => $pendaftar->id_pendaftar,
+                        'type' => 'daftar_ulang_verified',
+                        'sent_by' => auth()->id(),
+                    ]
+                );
+
+                // Add success/fail message to session
+                if ($result['success']) {
+                    session()->flash('wa_sent', true);
+                    session()->flash('wa_phone', $phoneToSend);
+                    session()->flash('wa_phone_type', $phoneType);
+                } else {
+                    session()->flash('wa_failed', true);
+                    session()->flash('wa_error', $result['message'] ?? 'Gagal mengirim WhatsApp');
+                }
+            } catch (\Exception $e) {
+                \Log::error('Failed to send daftar ulang verification WhatsApp', [
+                    'pendaftar_id' => $pendaftar->id_pendaftar,
+                    'phone_type' => $phoneType,
+                    'error' => $e->getMessage(),
+                ]);
+                session()->flash('wa_failed', true);
+                session()->flash('wa_error', $e->getMessage());
+            }
+        }
 
         return redirect()->route('pendaftar.daftar-ulang', $pendaftar->id_pendaftar)
             ->with('success', 'Daftar ulang berhasil diverifikasi untuk ' . $pendaftar->nama_lengkap . '.');
