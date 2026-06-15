@@ -210,6 +210,24 @@
     @if (Session::has('success'))
         <x-alert type="success" dismissible="true">
             {{ Session::get('success') }}
+            
+            @if (Session::has('wa_sent'))
+                <div class="mt-2 pt-2 border-top border-success-subtle">
+                    <i class="fas fa-check-circle text-success me-1"></i>
+                    <strong>WhatsApp berhasil dikirim</strong> ke 
+                    @if (Session::has('wa_phone_type'))
+                        <span class="badge bg-info">{{ Session::get('wa_phone_type') }}</span>
+                    @endif
+                    <code>{{ Session::get('wa_phone') }}</code>
+                </div>
+            @endif
+            
+            @if (Session::has('wa_failed'))
+                <div class="mt-2 pt-2 border-top border-warning-subtle">
+                    <i class="fas fa-exclamation-triangle text-warning me-1"></i>
+                    <strong>WhatsApp gagal dikirim:</strong> {{ Session::get('wa_error') }}
+                </div>
+            @endif
         </x-alert>
     @endif
 
