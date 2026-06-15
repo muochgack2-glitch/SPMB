@@ -16,10 +16,12 @@ use Maatwebsite\Excel\Facades\Excel;
 class PendaftarController extends Controller
 {
     protected $tahunAjaranService;
+    protected $whatsappService;
     
-    public function __construct(TahunAjaranService $tahunAjaranService)
+    public function __construct(TahunAjaranService $tahunAjaranService, \App\Services\WhatsAppService $whatsappService)
     {
         $this->tahunAjaranService = $tahunAjaranService;
+        $this->whatsappService = $whatsappService;
     }
     /**
      * Send WhatsApp message via Twilio.
@@ -95,6 +97,7 @@ class PendaftarController extends Controller
         $request->validate([
             'nisn' => 'required|string|unique:pendaftar',
             'nama_lengkap' => 'required|string',
+            'no_telepon' => 'required|string|max:20',
             'asal_sekolah' => 'required|string',
             'alamat' => 'required|string',
             'jurusan_id' => 'required|exists:jurusan,id',
@@ -116,6 +119,7 @@ class PendaftarController extends Controller
             'no_registrasi' => $noRegistrasi,
             'nisn' => $request->nisn,
             'nama_lengkap' => $request->nama_lengkap,
+            'no_telepon' => $request->no_telepon,
             'asal_sekolah' => $request->asal_sekolah,
             'alamat' => $request->alamat,
             'jurusan_id' => (int) $request->jurusan_id,
@@ -137,6 +141,56 @@ class PendaftarController extends Controller
 
         // Notify admin via WhatsApp
         $this->sendWhatsApp(env('ADMIN_WHATSAPP'), "🆕 Registrasi baru: {$pendaftar->nama_lengkap} (No: {$noRegistrasi})");
+
+        // Auto-send welcome message to student via WhatsApp
+        if (!empty($pendaftar->no_telepon)) {
+            try {
+                $jurusanData = Jurusan::find($request->jurusan_id);
+                
+                // Prepare data for template
+                $templateData = [
+                    'nama' => $pendaftar->nama_lengkap,
+                    'no_pendaftaran' => $noRegistrasi,
+                    'jurusan' => $jurusanData ? "{$jurusanData->kode} - {$jurusanData->nama}" : $pendaftar->jurusan,
+                    'portal_url' => url('/'),
+                    'sekolah' => config('app.name', 'SMK PGRI Blora'),
+                ];
+
+                // Format phone number (add 62 if starts with 0)
+                $phone = $pendaftar->no_telepon;
+                if (substr($phone, 0, 1) === '0') {
+                    $phone = '62' . substr($phone, 1);
+                }
+
+                // Send WhatsApp using template
+                $result = $this->whatsappService->sendWithTemplate(
+                    $phone,
+                    'welcome_registration',
+                    $templateData,
+                    [
+                        'pendaftar_id' => $pendaftar->id_pendaftar,
+                        'type' => 'auto_registration',
+                        'sent_by' => auth()->id(),
+                    ]
+                );
+
+                // Add success/fail message to session
+                if ($result['success']) {
+                    session()->flash('wa_sent', true);
+                    session()->flash('wa_phone', $pendaftar->no_telepon);
+                } else {
+                    session()->flash('wa_failed', true);
+                    session()->flash('wa_error', $result['message'] ?? 'Gagal mengirim WhatsApp');
+                }
+            } catch (\Exception $e) {
+                \Log::error('Failed to send welcome WhatsApp', [
+                    'pendaftar_id' => $pendaftar->id_pendaftar,
+                    'error' => $e->getMessage(),
+                ]);
+                session()->flash('wa_failed', true);
+                session()->flash('wa_error', $e->getMessage());
+            }
+        }
 
         return redirect()->route('pendaftar.index')
             ->with('success', 'Pendaftar ' . $pendaftar->nama_lengkap . ' berhasil dibuat dengan nomor registrasi ' . $noRegistrasi . '.')

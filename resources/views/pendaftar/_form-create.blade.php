@@ -56,6 +56,17 @@
                         </div>
                     </div>
 
+                    <x-form-group label="Nomor HP Siswa" name="no_telepon" required="true">
+                        <x-input 
+                            name="no_telepon" 
+                            value="{{ old('no_telepon') }}"
+                            placeholder="Contoh: 08123456789"
+                            icon="fas fa-phone"
+                            required
+                        />
+                        <small class="text-muted">Nomor HP untuk notifikasi WhatsApp</small>
+                    </x-form-group>
+
                     <x-form-group label="Asal Sekolah" name="asal_sekolah" required="true">
                         <x-input 
                             name="asal_sekolah" 
@@ -113,10 +124,21 @@
             <x-info-card type="info" title="Petunjuk Pengisian">
                 <ul class="mb-0 ps-3">
                     <li class="mb-2">Isi data awal pendaftar terlebih dahulu</li>
+                    <li class="mb-2">Nomor HP diperlukan untuk notifikasi WhatsApp</li>
                     <li class="mb-2">Setelah disimpan, Anda dapat melengkapi biodata</li>
                     <li class="mb-2">Data lengkap diperlukan untuk verifikasi daftar ulang</li>
                     <li>Semua field dengan tanda <span class="text-danger">*</span> wajib diisi</li>
                 </ul>
+            </x-info-card>
+
+            <x-info-card type="success" title="Notifikasi Otomatis" class="mt-3">
+                <p class="mb-2 small">
+                    <i class="fas fa-whatsapp me-1"></i>
+                    <strong>WhatsApp akan otomatis terkirim</strong> ke nomor HP siswa setelah data disimpan.
+                </p>
+                <p class="mb-0 small text-muted">
+                    Notifikasi berisi nomor registrasi dan link portal SPMB.
+                </p>
             </x-info-card>
 
             <x-info-card type="warning" title="Catatan" class="mt-3">
