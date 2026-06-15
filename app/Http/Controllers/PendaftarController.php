@@ -165,7 +165,7 @@ class PendaftarController extends Controller
                 // Send WhatsApp using template
                 $result = $this->whatsappService->sendWithTemplate(
                     $phone,
-                    'welcome_registration',
+                    'admin_registration',
                     $templateData,
                     [
                         'pendaftar_id' => $pendaftar->id_pendaftar,
@@ -406,6 +406,7 @@ class PendaftarController extends Controller
                     'nama' => $pendaftar->nama_lengkap,
                     'no_pendaftaran' => $pendaftar->no_registrasi,
                     'jurusan' => $jurusanData ? "{$jurusanData->kode} - {$jurusanData->nama}" : $pendaftar->jurusan,
+                    'nomor_hp' => $phoneToSend,
                     'portal_url' => url('/'),
                     'sekolah' => config('app.name', 'SMK PGRI Blora'),
                 ];
@@ -419,7 +420,7 @@ class PendaftarController extends Controller
                 // Send WhatsApp using template
                 $result = $this->whatsappService->sendWithTemplate(
                     $phone,
-                    'welcome_registration',
+                    'phone_number_added',
                     $templateData,
                     [
                         'pendaftar_id' => $pendaftar->id_pendaftar,
