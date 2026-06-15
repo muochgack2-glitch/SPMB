@@ -319,6 +319,9 @@ class PendaftarController extends Controller
      */
     public function update(Request $request, Pendaftar $pendaftar)
     {
+        // Store old phone number BEFORE validation
+        $oldPhone = $pendaftar->no_telepon;
+        
         $validated = $request->validate([
             'nisn' => 'required|string|unique:pendaftar,nisn,' . $pendaftar->id_pendaftar . ',id_pendaftar',
             'nik' => 'nullable|string|max:20',
@@ -367,6 +370,59 @@ class PendaftarController extends Controller
         }
 
         $pendaftar->update($validated);
+
+        // Auto-send welcome WhatsApp if phone number was just added
+        $newPhone = $validated['no_telepon'] ?? null;
+        $phoneWasAdded = empty($oldPhone) && !empty($newPhone);
+        
+        if ($phoneWasAdded) {
+            try {
+                $jurusanData = Jurusan::find($validated['jurusan_id']);
+                
+                // Prepare data for template
+                $templateData = [
+                    'nama' => $pendaftar->nama_lengkap,
+                    'no_pendaftaran' => $pendaftar->no_registrasi,
+                    'jurusan' => $jurusanData ? "{$jurusanData->kode} - {$jurusanData->nama}" : $pendaftar->jurusan,
+                    'portal_url' => url('/'),
+                    'sekolah' => config('app.name', 'SMK PGRI Blora'),
+                ];
+
+                // Format phone number (add 62 if starts with 0)
+                $phone = $newPhone;
+                if (substr($phone, 0, 1) === '0') {
+                    $phone = '62' . substr($phone, 1);
+                }
+
+                // Send WhatsApp using template
+                $result = $this->whatsappService->sendWithTemplate(
+                    $phone,
+                    'welcome_registration',
+                    $templateData,
+                    [
+                        'pendaftar_id' => $pendaftar->id_pendaftar,
+                        'type' => 'phone_added',
+                        'sent_by' => auth()->id(),
+                    ]
+                );
+
+                // Add success/fail message to session
+                if ($result['success']) {
+                    session()->flash('wa_sent', true);
+                    session()->flash('wa_phone', $newPhone);
+                } else {
+                    session()->flash('wa_failed', true);
+                    session()->flash('wa_error', $result['message'] ?? 'Gagal mengirim WhatsApp');
+                }
+            } catch (\Exception $e) {
+                \Log::error('Failed to send welcome WhatsApp on update', [
+                    'pendaftar_id' => $pendaftar->id_pendaftar,
+                    'error' => $e->getMessage(),
+                ]);
+                session()->flash('wa_failed', true);
+                session()->flash('wa_error', $e->getMessage());
+            }
+        }
 
         return redirect()->route('pendaftar.index')
             ->with('success', 'Data pendaftar berhasil diperbarui');
