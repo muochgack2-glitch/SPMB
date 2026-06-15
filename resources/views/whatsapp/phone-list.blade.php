@@ -23,64 +23,66 @@
     <!-- Message Status Tabs -->
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body p-0">
-            <ul class="nav nav-tabs nav-fill border-0 phone-list-tabs" role="tablist">
-                <li class="nav-item">
-                    <a class="nav-link {{ $activeTab == 'all' ? 'active' : '' }}" 
-                       href="{{ route('whatsapp.phone-list', array_merge(request()->except('tab'), ['tab' => 'all'])) }}">
-                        <i class="fas fa-list me-1"></i>
-                        <span class="tab-text">Semua</span>
-                        <span class="badge badge-tab bg-primary ms-2">{{ $tabCounts['all'] }}</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ $activeTab == 'sent' ? 'active' : '' }}" 
-                       href="{{ route('whatsapp.phone-list', array_merge(request()->except('tab'), ['tab' => 'sent'])) }}">
-                        <i class="fas fa-check-circle me-1"></i>
-                        <span class="tab-text">Terkirim</span>
-                        <span class="badge badge-tab bg-success ms-2">{{ $tabCounts['sent'] }}</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ $activeTab == 'not-sent' ? 'active' : '' }}" 
-                       href="{{ route('whatsapp.phone-list', array_merge(request()->except('tab'), ['tab' => 'not-sent'])) }}">
-                        <i class="fas fa-clock me-1"></i>
-                        <span class="tab-text">Belum Dikirim</span>
-                        <span class="badge badge-tab bg-secondary ms-2">{{ $tabCounts['not-sent'] }}</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ $activeTab == 'failed' ? 'active' : '' }}" 
-                       href="{{ route('whatsapp.phone-list', array_merge(request()->except('tab'), ['tab' => 'failed'])) }}">
-                        <i class="fas fa-times-circle me-1"></i>
-                        <span class="tab-text">Gagal</span>
-                        <span class="badge badge-tab bg-danger ms-2">{{ $tabCounts['failed'] }}</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ $activeTab == 'accepted' ? 'active' : '' }}" 
-                       href="{{ route('whatsapp.phone-list', array_merge(request()->except('tab'), ['tab' => 'accepted'])) }}">
-                        <i class="fas fa-user-check me-1"></i>
-                        <span class="tab-text">Diterima</span>
-                        <span class="badge badge-tab bg-success ms-2">{{ $tabCounts['accepted'] }}</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ $activeTab == 'no-phone' ? 'active' : '' }}" 
-                       href="{{ route('whatsapp.phone-list', array_merge(request()->except('tab'), ['tab' => 'no-phone'])) }}">
-                        <i class="fas fa-phone-slash me-1"></i>
-                        <span class="tab-text">Tidak Ada Nomor</span>
-                        <span class="badge badge-tab bg-dark ms-2">{{ $tabCounts['no-phone'] }}</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ $activeTab == 'external' ? 'active' : '' }}" 
-                       href="{{ route('whatsapp.phone-list', array_merge(request()->except('tab'), ['tab' => 'external'])) }}">
-                        <i class="fas fa-external-link-alt me-1"></i>
-                        <span class="tab-text">Eksternal</span>
-                        <span class="badge badge-tab bg-info ms-2">{{ $tabCounts['external'] ?? 0 }}</span>
-                    </a>
-                </li>
-            </ul>
+            <div class="phone-list-tabs-wrapper">
+                <ul class="nav nav-tabs nav-fill border-0 phone-list-tabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link {{ $activeTab == 'all' ? 'active' : '' }}" 
+                           href="{{ route('whatsapp.phone-list', array_merge(request()->except('tab'), ['tab' => 'all'])) }}">
+                            <i class="fas fa-list"></i>
+                            <span class="tab-text">Semua</span>
+                            <span class="badge badge-tab bg-primary">{{ $tabCounts['all'] }}</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ $activeTab == 'sent' ? 'active' : '' }}" 
+                           href="{{ route('whatsapp.phone-list', array_merge(request()->except('tab'), ['tab' => 'sent'])) }}">
+                            <i class="fas fa-check-circle"></i>
+                            <span class="tab-text">Terkirim</span>
+                            <span class="badge badge-tab bg-success">{{ $tabCounts['sent'] }}</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ $activeTab == 'not-sent' ? 'active' : '' }}" 
+                           href="{{ route('whatsapp.phone-list', array_merge(request()->except('tab'), ['tab' => 'not-sent'])) }}">
+                            <i class="fas fa-clock"></i>
+                            <span class="tab-text">Belum Dikirim</span>
+                            <span class="badge badge-tab bg-secondary">{{ $tabCounts['not-sent'] }}</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ $activeTab == 'failed' ? 'active' : '' }}" 
+                           href="{{ route('whatsapp.phone-list', array_merge(request()->except('tab'), ['tab' => 'failed'])) }}">
+                            <i class="fas fa-times-circle"></i>
+                            <span class="tab-text">Gagal</span>
+                            <span class="badge badge-tab bg-danger">{{ $tabCounts['failed'] }}</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ $activeTab == 'accepted' ? 'active' : '' }}" 
+                           href="{{ route('whatsapp.phone-list', array_merge(request()->except('tab'), ['tab' => 'accepted'])) }}">
+                            <i class="fas fa-user-check"></i>
+                            <span class="tab-text">Diterima</span>
+                            <span class="badge badge-tab bg-success">{{ $tabCounts['accepted'] }}</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ $activeTab == 'no-phone' ? 'active' : '' }}" 
+                           href="{{ route('whatsapp.phone-list', array_merge(request()->except('tab'), ['tab' => 'no-phone'])) }}">
+                            <i class="fas fa-phone-slash"></i>
+                            <span class="tab-text">Tidak Ada Nomor</span>
+                            <span class="badge badge-tab bg-dark">{{ $tabCounts['no-phone'] }}</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ $activeTab == 'external' ? 'active' : '' }}" 
+                           href="{{ route('whatsapp.phone-list', array_merge(request()->except('tab'), ['tab' => 'external'])) }}">
+                            <i class="fas fa-external-link-alt"></i>
+                            <span class="tab-text">Eksternal</span>
+                            <span class="badge badge-tab bg-info">{{ $tabCounts['external'] ?? 0 }}</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 
@@ -512,15 +514,39 @@
 
 @push('scripts')
 <style>
+/* Phone List Tabs Wrapper - Enable Horizontal Scroll on Mobile */
+.phone-list-tabs-wrapper {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+}
+
+.phone-list-tabs-wrapper::-webkit-scrollbar {
+    height: 4px;
+}
+
+.phone-list-tabs-wrapper::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+.phone-list-tabs-wrapper::-webkit-scrollbar-thumb {
+    background: var(--bs-primary);
+    border-radius: 2px;
+}
+
 /* Phone List Tabs Styling */
 .phone-list-tabs {
     background: var(--bg-secondary);
     border-radius: 8px 8px 0 0;
     padding: 0.5rem 0;
+    flex-wrap: nowrap;
 }
 
 .phone-list-tabs .nav-item {
     margin: 0;
+    flex: 0 0 auto;
+    white-space: nowrap;
 }
 
 .phone-list-tabs .nav-link {
@@ -561,17 +587,14 @@
     border-radius: 12px;
 }
 
-/* Responsive: Stack text on small screens */
+/* Responsive: Tablet (1200px and below) */
 @media (max-width: 1200px) {
     .phone-list-tabs .nav-link {
         font-size: 0.85rem;
-        padding: 0.5rem 0.75rem;
+        padding: 0.6rem 0.8rem;
     }
     
     .phone-list-tabs .tab-text {
-        display: block;
-        width: 100%;
-        text-align: center;
         font-size: 0.8rem;
     }
     
@@ -580,23 +603,57 @@
     }
 }
 
+/* Responsive: Mobile (768px and below) */
 @media (max-width: 768px) {
     .phone-list-tabs {
         padding: 0.25rem 0;
     }
     
+    .phone-list-tabs .nav-item {
+        min-width: 80px;
+    }
+    
     .phone-list-tabs .nav-link {
-        padding: 0.5rem 0.25rem;
-        min-height: 50px;
+        padding: 0.5rem 0.6rem;
+        min-height: 65px;
+        flex-direction: column;
+        gap: 0.15rem;
+    }
+    
+    .phone-list-tabs .nav-link i {
+        font-size: 1.2rem;
+        margin: 0;
     }
     
     .phone-list-tabs .tab-text {
         font-size: 0.7rem;
+        line-height: 1.2;
+        text-align: center;
     }
     
     .phone-list-tabs .badge-tab {
         font-size: 0.65rem;
-        padding: 0.2rem 0.4rem;
+        padding: 0.15rem 0.35rem;
+        margin: 0;
+    }
+}
+
+/* Responsive: Small Mobile (576px and below) */
+@media (max-width: 576px) {
+    .phone-list-tabs .nav-item {
+        min-width: 70px;
+    }
+    
+    .phone-list-tabs .nav-link {
+        padding: 0.4rem 0.5rem;
+    }
+    
+    .phone-list-tabs .nav-link i {
+        font-size: 1.1rem;
+    }
+    
+    .phone-list-tabs .tab-text {
+        font-size: 0.65rem;
     }
 }
 
