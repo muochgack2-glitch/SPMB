@@ -55,14 +55,21 @@ class BackupService
 
             // 5. Execute mysqldump
             $mysqldumpPath = $this->getMysqldumpPath();
+            
+            // IMPORTANT: Redirect stderr to null (2>nul on Windows, 2>/dev/null on Linux)
+            // to prevent warnings from being included in the SQL file
+            $isWindows = PHP_OS_FAMILY === 'Windows';
+            $nullDevice = $isWindows ? 'nul' : '/dev/null';
+            
             $command = sprintf(
-                '"%s" --host=%s --user=%s --password=%s --single-transaction --quick --lock-tables=false %s > "%s" 2>&1',
+                '"%s" --host=%s --user=%s --password=%s --single-transaction --quick --lock-tables=false %s > "%s" 2>%s',
                 $mysqldumpPath,
                 escapeshellarg($host),
                 escapeshellarg($username),
                 escapeshellarg($password),
                 escapeshellarg($dbName),
-                $tempPath
+                $tempPath,
+                $nullDevice
             );
 
             exec($command, $output, $returnCode);
