@@ -176,6 +176,14 @@ class PendaftarController extends Controller
 
                 // Add success/fail message to session
                 if ($result['success']) {
+                    // Mark WA as sent
+                    $pendaftar->update([
+                        'wa_welcome_sent' => true,
+                        'wa_welcome_sent_at' => now(),
+                        'wa_welcome_sent_to' => $pendaftar->no_telepon,
+                        'wa_welcome_recipient_type' => 'siswa',
+                    ]);
+                    
                     session()->flash('wa_sent', true);
                     session()->flash('wa_phone', $pendaftar->no_telepon);
                 } else {
@@ -371,33 +379,51 @@ class PendaftarController extends Controller
 
         $pendaftar->update($validated);
 
-        // Auto-send welcome WhatsApp with cascade priority: siswa -> ortu -> wali
-        // Store old values
-        $oldNoTelepon = $oldPhone; // Already stored at the beginning
+        // ============================================
+        // AUTO-SEND WHATSAPP LOGIC (IMPROVED)
+        // ============================================
+        // KASUS 1: Nomor baru ditambahkan (kosong → isi)
+        // KASUS 2: WA belum pernah terkirim sama sekali
+        // KASUS 3: Nomor diubah dari nomor salah ke nomor benar
+        // ============================================
+        
+        // Get old and new phone numbers
+        $oldNoTelepon = $oldPhone;
         $oldNoOrtu = $pendaftar->getOriginal('no_hp_ortu');
         $oldNoWali = $pendaftar->getOriginal('no_hp_wali');
         
-        // Get new values
         $newNoTelepon = $validated['no_telepon'] ?? null;
         $newNoOrtu = $validated['no_hp_ortu'] ?? null;
         $newNoWali = $validated['no_hp_wali'] ?? null;
         
-        // Check which phone number was added (priority: siswa -> ortu -> wali)
+        // Determine which phone to send (cascade priority: siswa -> ortu -> wali)
         $phoneToSend = null;
         $phoneType = null;
+        $shouldSendWA = false;
         
-        if (empty($oldNoTelepon) && !empty($newNoTelepon)) {
+        // LOGIC 1: Nomor siswa baru ditambahkan ATAU nomor berubah DAN WA belum pernah terkirim
+        if (!empty($newNoTelepon) && 
+            (!$pendaftar->wa_welcome_sent || $oldNoTelepon !== $newNoTelepon)) {
             $phoneToSend = $newNoTelepon;
-            $phoneType = 'Siswa';
-        } elseif (empty($oldNoOrtu) && !empty($newNoOrtu)) {
+            $phoneType = 'siswa';
+            $shouldSendWA = true;
+        }
+        // LOGIC 2: Nomor ortu baru ditambahkan ATAU nomor berubah DAN WA belum pernah terkirim
+        elseif (!empty($newNoOrtu) && 
+                 (!$pendaftar->wa_welcome_sent || $oldNoOrtu !== $newNoOrtu)) {
             $phoneToSend = $newNoOrtu;
-            $phoneType = 'Orang Tua';
-        } elseif (empty($oldNoWali) && !empty($newNoWali)) {
+            $phoneType = 'ortu';
+            $shouldSendWA = true;
+        }
+        // LOGIC 3: Nomor wali baru ditambahkan ATAU nomor berubah DAN WA belum pernah terkirim
+        elseif (!empty($newNoWali) && 
+                 (!$pendaftar->wa_welcome_sent || $oldNoWali !== $newNoWali)) {
             $phoneToSend = $newNoWali;
-            $phoneType = 'Wali';
+            $phoneType = 'wali';
+            $shouldSendWA = true;
         }
         
-        if ($phoneToSend) {
+        if ($shouldSendWA && $phoneToSend) {
             try {
                 $jurusanData = Jurusan::find($validated['jurusan_id']);
                 
@@ -431,9 +457,18 @@ class PendaftarController extends Controller
 
                 // Add success/fail message to session
                 if ($result['success']) {
+                    // Mark WA as sent with tracking info
+                    $pendaftar->update([
+                        'wa_welcome_sent' => true,
+                        'wa_welcome_sent_at' => now(),
+                        'wa_welcome_sent_to' => $phoneToSend,
+                        'wa_welcome_recipient_type' => $phoneType,
+                    ]);
+                    
                     session()->flash('wa_sent', true);
                     session()->flash('wa_phone', $phoneToSend);
-                    session()->flash('wa_phone_type', $phoneType);
+                    session()->flash('wa_phone_type', ucfirst($phoneType));
+                    session()->flash('wa_resent', $oldNoTelepon !== null && $oldNoTelepon !== $newNoTelepon);
                 } else {
                     session()->flash('wa_failed', true);
                     session()->flash('wa_error', $result['message'] ?? 'Gagal mengirim WhatsApp');

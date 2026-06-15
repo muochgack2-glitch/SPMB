@@ -56,6 +56,10 @@ class Pendaftar extends Model
         'status_siswa',
         'status_data',
         'tahun_ajaran',
+        'wa_welcome_sent',
+        'wa_welcome_sent_at',
+        'wa_welcome_sent_to',
+        'wa_welcome_recipient_type',
         'deleted_by',
         'deleted_reason',
     ];
