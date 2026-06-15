@@ -578,6 +578,10 @@ class WhatsAppController extends Controller
                       ->whereRaw('whatsapp_logs.id = (SELECT MAX(id) FROM whatsapp_logs AS wl WHERE wl.pendaftar_id = whatsapp_logs.pendaftar_id)');
                 });
                 break;
+            case 'accepted':
+                // Students with status_siswa = 'Diterima'
+                $query->where('status_siswa', 'Diterima');
+                break;
             case 'no-phone':
                 // No phone number
                 $query->where(function($q) {
@@ -1498,6 +1502,9 @@ class WhatsAppController extends Controller
               ->whereRaw('whatsapp_logs.id = (SELECT MAX(id) FROM whatsapp_logs AS wl WHERE wl.pendaftar_id = whatsapp_logs.pendaftar_id)');
         })->count();
         
+        // Accepted: siswa dengan status_siswa = 'Diterima'
+        $accepted = Pendaftar::where('status_siswa', 'Diterima')->count();
+        
         // External: total recipient eksternal
         $external = \App\Models\ExternalBroadcastRecipient::count();
         
@@ -1506,6 +1513,7 @@ class WhatsAppController extends Controller
             'sent' => $sent,
             'not-sent' => $notSent,
             'failed' => $failed,
+            'accepted' => $accepted,
             'no-phone' => $noPhone,
             'external' => $external
         ];

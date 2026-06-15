@@ -57,6 +57,14 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link {{ $activeTab == 'accepted' ? 'active' : '' }}" 
+                       href="{{ route('whatsapp.phone-list', array_merge(request()->except('tab'), ['tab' => 'accepted'])) }}">
+                        <i class="fas fa-user-check me-1"></i>
+                        <span class="tab-text">Diterima</span>
+                        <span class="badge badge-tab bg-success ms-2">{{ $tabCounts['accepted'] }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link {{ $activeTab == 'no-phone' ? 'active' : '' }}" 
                        href="{{ route('whatsapp.phone-list', array_merge(request()->except('tab'), ['tab' => 'no-phone'])) }}">
                         <i class="fas fa-phone-slash me-1"></i>
@@ -93,8 +101,6 @@
                 <div class="col-md-4">
                     <select name="sort" class="form-select" onchange="document.getElementById('searchForm').submit()">
                         <option value="">Urutkan: Default</option>
-                        <option value="has_phone" {{ request('sort') == 'has_phone' ? 'selected' : '' }}>📞 Punya WA Dulu</option>
-                        <option value="no_phone" {{ request('sort') == 'no_phone' ? 'selected' : '' }}>📵 Tidak Punya WA Dulu</option>
                         <option value="name_asc" {{ request('sort') == 'name_asc' ? 'selected' : '' }}>📝 Nama (A → Z)</option>
                         <option value="name_desc" {{ request('sort') == 'name_desc' ? 'selected' : '' }}>📝 Nama (Z → A)</option>
                         <option value="reg_newest" {{ request('sort') == 'reg_newest' ? 'selected' : '' }}>🆕 Terbaru Daftar</option>
