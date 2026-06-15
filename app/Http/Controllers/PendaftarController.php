@@ -371,11 +371,33 @@ class PendaftarController extends Controller
 
         $pendaftar->update($validated);
 
-        // Auto-send welcome WhatsApp if phone number was just added
-        $newPhone = $validated['no_telepon'] ?? null;
-        $phoneWasAdded = empty($oldPhone) && !empty($newPhone);
+        // Auto-send welcome WhatsApp with cascade priority: siswa -> ortu -> wali
+        // Store old values
+        $oldNoTelepon = $oldPhone; // Already stored at the beginning
+        $oldNoOrtu = $pendaftar->getOriginal('no_hp_ortu');
+        $oldNoWali = $pendaftar->getOriginal('no_hp_wali');
         
-        if ($phoneWasAdded) {
+        // Get new values
+        $newNoTelepon = $validated['no_telepon'] ?? null;
+        $newNoOrtu = $validated['no_hp_ortu'] ?? null;
+        $newNoWali = $validated['no_hp_wali'] ?? null;
+        
+        // Check which phone number was added (priority: siswa -> ortu -> wali)
+        $phoneToSend = null;
+        $phoneType = null;
+        
+        if (empty($oldNoTelepon) && !empty($newNoTelepon)) {
+            $phoneToSend = $newNoTelepon;
+            $phoneType = 'Siswa';
+        } elseif (empty($oldNoOrtu) && !empty($newNoOrtu)) {
+            $phoneToSend = $newNoOrtu;
+            $phoneType = 'Orang Tua';
+        } elseif (empty($oldNoWali) && !empty($newNoWali)) {
+            $phoneToSend = $newNoWali;
+            $phoneType = 'Wali';
+        }
+        
+        if ($phoneToSend) {
             try {
                 $jurusanData = Jurusan::find($validated['jurusan_id']);
                 
@@ -389,7 +411,7 @@ class PendaftarController extends Controller
                 ];
 
                 // Format phone number (add 62 if starts with 0)
-                $phone = $newPhone;
+                $phone = $phoneToSend;
                 if (substr($phone, 0, 1) === '0') {
                     $phone = '62' . substr($phone, 1);
                 }
@@ -409,7 +431,8 @@ class PendaftarController extends Controller
                 // Add success/fail message to session
                 if ($result['success']) {
                     session()->flash('wa_sent', true);
-                    session()->flash('wa_phone', $newPhone);
+                    session()->flash('wa_phone', $phoneToSend);
+                    session()->flash('wa_phone_type', $phoneType);
                 } else {
                     session()->flash('wa_failed', true);
                     session()->flash('wa_error', $result['message'] ?? 'Gagal mengirim WhatsApp');
@@ -417,6 +440,7 @@ class PendaftarController extends Controller
             } catch (\Exception $e) {
                 \Log::error('Failed to send welcome WhatsApp on update', [
                     'pendaftar_id' => $pendaftar->id_pendaftar,
+                    'phone_type' => $phoneType,
                     'error' => $e->getMessage(),
                 ]);
                 session()->flash('wa_failed', true);
@@ -426,9 +450,7 @@ class PendaftarController extends Controller
 
         return redirect()->route('pendaftar.index')
             ->with('success', 'Data pendaftar berhasil diperbarui');
-    }
-
-    /**
+    }    /**
      * Show daftar ulang verification form
      */
     public function showDaftarUlangVerification($id)
