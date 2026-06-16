@@ -782,6 +782,10 @@ class WhatsAppController extends Controller
 
     /**
      * Send bulk broadcast from phone list
+     * 
+     * HYBRID AUTO-DETECT:
+     * - If ≤30 phones: Loop + Detail Feedback (synchronous)
+     * - If >30 phones: Bulk/Batch method (asynchronous)
      */
     public function sendBulkBroadcast(Request $request)
     {
@@ -806,7 +810,27 @@ class WhatsAppController extends Controller
         $phones = $request->phones;
         $message = $request->message;
         $templateId = $request->template_id;
+        $totalPhones = count($phones);
 
+        // ============================================
+        // HYBRID AUTO-DETECT (Threshold: 30 phones)
+        // ============================================
+        
+        if ($totalPhones <= 30) {
+            // Method A: DETAIL FEEDBACK (≤30 phones)
+            return $this->sendWithDetailFeedback($phones, $message, $templateId);
+        } else {
+            // Method B: BULK/BATCH (>30 phones)
+            return $this->sendWithBulkMethod($phones, $message, $templateId);
+        }
+    }
+
+    /**
+     * Method A: Send with detail feedback (for ≤30 phones)
+     * Loop one by one, return detailed results per phone
+     */
+    private function sendWithDetailFeedback($phones, $message, $templateId)
+    {
         $results = [];
         $successCount = 0;
         $failedCount = 0;
@@ -837,11 +861,13 @@ class WhatsAppController extends Controller
                 $results[] = [
                     'phone' => $phoneData['phone'],
                     'name' => $phoneData['name'],
+                    'no_reg' => $phoneData['no_reg'],
+                    'jurusan' => $phoneData['jurusan'],
                     'success' => $result['success'],
                     'message' => $result['message'] ?? null,
                 ];
 
-                // Delay between messages
+                // Delay between messages (prevent spam/rate limit)
                 if (count($phones) > 1) {
                     sleep(1);
                 }
@@ -851,6 +877,8 @@ class WhatsAppController extends Controller
                 $results[] = [
                     'phone' => $phoneData['phone'],
                     'name' => $phoneData['name'],
+                    'no_reg' => $phoneData['no_reg'],
+                    'jurusan' => $phoneData['jurusan'],
                     'success' => false,
                     'message' => $e->getMessage(),
                 ];
@@ -859,11 +887,50 @@ class WhatsAppController extends Controller
 
         return response()->json([
             'success' => true,
+            'method' => 'detail_feedback',
             'message' => "Broadcast selesai. Terkirim: {$successCount}, Gagal: {$failedCount}",
             'total' => count($phones),
             'success_count' => $successCount,
             'failed_count' => $failedCount,
-            'results' => $results,
+            'results' => $results, // Detail per phone
+            'note' => 'Hasil detail per nomor tersedia',
+        ]);
+    }
+
+    /**
+     * Method B: Send with bulk method (for >30 phones)
+     * Use sendBulk for better performance, return summary only
+     */
+    private function sendWithBulkMethod($phones, $message, $templateId)
+    {
+        $messages = [];
+
+        foreach ($phones as $phoneData) {
+            // Prepare message with personalization
+            $personalizedMessage = $this->replaceMessageVariables($message, $phoneData);
+
+            $messages[] = [
+                'phone' => $phoneData['phone'],
+                'message' => $personalizedMessage,
+                'pendaftar_id' => $phoneData['id'] ?? null,
+            ];
+        }
+
+        // Send via bulk method (non-blocking)
+        $result = $this->whatsappService->sendBulk($messages, [
+            'type' => 'broadcast',
+            'sent_by' => auth()->id(),
+            'template_id' => $templateId,
+        ]);
+
+        return response()->json([
+            'success' => $result['success'],
+            'method' => 'bulk',
+            'message' => $result['message'] ?? "Broadcast diproses untuk " . count($phones) . " nomor",
+            'total' => count($phones),
+            'success_count' => $result['success_count'] ?? null,
+            'failed_count' => $result['failed_count'] ?? null,
+            'note' => 'Proses berjalan di background. Detail hasil dapat dilihat di Log WhatsApp.',
         ]);
     }
 

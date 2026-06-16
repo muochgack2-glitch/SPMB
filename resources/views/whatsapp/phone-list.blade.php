@@ -1145,6 +1145,155 @@ function updateBroadcastProgress(current, total, success, failed) {
 
 // Show broadcast result
 function showBroadcastResult(data) {
+    // ============================================
+    // HYBRID RESULT DISPLAY
+    // ============================================
+    
+    if (data.method === 'detail_feedback') {
+        // Method A: Show detailed results (≤30 phones)
+        showDetailedBroadcastResult(data);
+    } else if (data.method === 'bulk') {
+        // Method B: Show bulk summary (>30 phones)
+        showBulkBroadcastSummary(data);
+    } else {
+        // Fallback: Original display
+        showOriginalBroadcastResult(data);
+    }
+}
+
+// Method A: Detailed results for ≤30 phones
+function showDetailedBroadcastResult(data) {
+    document.getElementById('resultTotal').textContent = data.total;
+    document.getElementById('resultSuccess').textContent = data.success_count;
+    document.getElementById('resultFailed').textContent = data.failed_count;
+    
+    // Build detailed list
+    let detailsHtml = '';
+    if (data.results && data.results.length > 0) {
+        detailsHtml = '<div class="alert alert-info mb-3">';
+        detailsHtml += '<i class="fas fa-info-circle me-2"></i>';
+        detailsHtml += '<strong>Detail Feedback:</strong> ' + data.note;
+        detailsHtml += '</div>';
+        
+        detailsHtml += '<div class="list-group">';
+        data.results.forEach(result => {
+            const iconClass = result.success ? 'fa-check-circle text-success' : 'fa-times-circle text-danger';
+            const statusText = result.success ? 'Terkirim' : 'Gagal';
+            const errorMsg = result.message && !result.success ? `<br><small class="text-muted">${result.message}</small>` : '';
+            
+            detailsHtml += `
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <i class="fas ${iconClass} me-2"></i>
+                            <strong>${result.name}</strong>
+                            <span class="text-muted ms-2">(${result.no_reg})</span>
+                            <br>
+                            <small class="text-muted">
+                                <i class="fas fa-phone me-1"></i>${result.phone}
+                                <span class="ms-2"><i class="fas fa-graduation-cap me-1"></i>${result.jurusan}</span>
+                            </small>
+                            ${errorMsg}
+                        </div>
+                        <span class="badge ${result.success ? 'bg-success' : 'bg-danger'}">${statusText}</span>
+                    </div>
+                </div>
+            `;
+        });
+        detailsHtml += '</div>';
+    }
+    
+    document.getElementById('resultDetails').innerHTML = detailsHtml;
+    
+    // Show result modal
+    const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
+    resultModal.show();
+}
+
+// Method B: Bulk summary for >30 phones
+function showBulkBroadcastSummary(data) {
+    // Use different modal or modify existing
+    const modalHtml = `
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-paper-plane me-2"></i>Broadcast Dalam Proses
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <h5 class="alert-heading">
+                        <i class="fas fa-clock me-2"></i>Proses Background
+                    </h5>
+                    <p class="mb-0">Broadcast untuk <strong>${data.total} nomor</strong> sedang diproses di background.</p>
+                </div>
+                
+                <div class="row text-center mb-4">
+                    <div class="col-md-4">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <h3 class="text-primary mb-0">${data.total}</h3>
+                                <small class="text-muted">Total Nomor</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <h3 class="text-success mb-0">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                </h3>
+                                <small class="text-muted">Sedang Kirim</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <h3 class="text-info mb-0">
+                                    <i class="fas fa-clock"></i>
+                                </h3>
+                                <small class="text-muted">Estimasi ~${Math.ceil(data.total / 10)} menit</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-warning">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Catatan:</strong> ${data.note}
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <a href="{{ route('whatsapp.logs') }}" class="btn btn-primary">
+                        <i class="fas fa-list me-2"></i>Lihat Log WhatsApp
+                    </a>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Create temporary modal or use existing
+    const resultModalEl = document.getElementById('resultModal');
+    const originalContent = resultModalEl.querySelector('.modal-content').innerHTML;
+    
+    resultModalEl.querySelector('.modal-content').innerHTML = modalHtml;
+    
+    const resultModal = new bootstrap.Modal(resultModalEl);
+    resultModal.show();
+    
+    // Restore original content when modal closes
+    resultModalEl.addEventListener('hidden.bs.modal', function() {
+        resultModalEl.querySelector('.modal-content').innerHTML = originalContent;
+    }, { once: true });
+}
+
+// Fallback: Original display
+function showOriginalBroadcastResult(data) {
     document.getElementById('resultTotal').textContent = data.total;
     document.getElementById('resultSuccess').textContent = data.success_count;
     document.getElementById('resultFailed').textContent = data.failed_count;
