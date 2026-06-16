@@ -662,44 +662,57 @@ class WhatsAppController extends Controller
 
         // Sorting
         $sort = $request->get('sort', '');
-        switch ($sort) {
-            case 'has_phone':
-                // Punya WA dulu (prioritas: wali > ortu > siswa)
-                $query->orderByRaw("
-                    CASE 
-                        WHEN no_hp_wali IS NOT NULL AND no_hp_wali != '' THEN 1
-                        WHEN no_hp_ortu IS NOT NULL AND no_hp_ortu != '' THEN 2
-                        WHEN no_telepon IS NOT NULL AND no_telepon != '' THEN 3
-                        ELSE 4
-                    END
-                ");
-                break;
-            case 'no_phone':
-                // Tidak punya WA dulu
-                $query->orderByRaw("
-                    CASE 
-                        WHEN (no_hp_wali IS NULL OR no_hp_wali = '') 
-                         AND (no_hp_ortu IS NULL OR no_hp_ortu = '') 
-                         AND (no_telepon IS NULL OR no_telepon = '') THEN 1
-                        ELSE 2
-                    END
-                ");
-                break;
-            case 'name_asc':
-                $query->orderBy('nama_lengkap', 'asc');
-                break;
-            case 'name_desc':
-                $query->orderBy('nama_lengkap', 'desc');
-                break;
-            case 'reg_newest':
-                $query->orderBy('tgl_daftar', 'desc');
-                break;
-            case 'reg_oldest':
-                $query->orderBy('tgl_daftar', 'asc');
-                break;
-            default:
-                // Default: terbaru daftar
-                $query->orderBy('tgl_daftar', 'desc');
+        
+        // Auto-sort for 'today' and 'sent' tabs: newest WhatsApp message first
+        if (($activeTab === 'today' || $activeTab === 'sent') && empty($sort)) {
+            // Sort by latest WhatsApp log created_at (newest first)
+            $query->leftJoin('whatsapp_logs', function($join) {
+                $join->on('pendaftar.id_pendaftar', '=', 'whatsapp_logs.pendaftar_id')
+                     ->where('whatsapp_logs.status', '=', 'sent')
+                     ->whereRaw('whatsapp_logs.id = (SELECT MAX(wl.id) FROM whatsapp_logs AS wl WHERE wl.pendaftar_id = pendaftar.id_pendaftar AND wl.status = "sent")');
+            })
+            ->orderBy('whatsapp_logs.created_at', 'desc')
+            ->select('pendaftar.*');
+        } else {
+            switch ($sort) {
+                case 'has_phone':
+                    // Punya WA dulu (prioritas: wali > ortu > siswa)
+                    $query->orderByRaw("
+                        CASE 
+                            WHEN no_hp_wali IS NOT NULL AND no_hp_wali != '' THEN 1
+                            WHEN no_hp_ortu IS NOT NULL AND no_hp_ortu != '' THEN 2
+                            WHEN no_telepon IS NOT NULL AND no_telepon != '' THEN 3
+                            ELSE 4
+                        END
+                    ");
+                    break;
+                case 'no_phone':
+                    // Tidak punya WA dulu
+                    $query->orderByRaw("
+                        CASE 
+                            WHEN (no_hp_wali IS NULL OR no_hp_wali = '') 
+                             AND (no_hp_ortu IS NULL OR no_hp_ortu = '') 
+                             AND (no_telepon IS NULL OR no_telepon = '') THEN 1
+                            ELSE 2
+                        END
+                    ");
+                    break;
+                case 'name_asc':
+                    $query->orderBy('nama_lengkap', 'asc');
+                    break;
+                case 'name_desc':
+                    $query->orderBy('nama_lengkap', 'desc');
+                    break;
+                case 'reg_newest':
+                    $query->orderBy('tgl_daftar', 'desc');
+                    break;
+                case 'reg_oldest':
+                    $query->orderBy('tgl_daftar', 'asc');
+                    break;
+                default:
+                    // Default: terbaru daftar
+                    $query->orderBy('tgl_daftar', 'desc');
+            }
         }
 
         $perPage = $request->get('per_page', 20);
