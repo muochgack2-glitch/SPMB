@@ -551,8 +551,30 @@ class WhatsAppController extends Controller
         switch ($activeTab) {
             case 'sent':
                 // Has at least one successful message
-                $query->whereHas('whatsappLogs', function($q) {
+                $query->whereHas('whatsappLogs', function($q) use ($request) {
                     $q->where('status', 'sent');
+                    
+                    // Apply date filter if provided (for quick filter chips)
+                    $dateFilter = $request->get('date_filter', 'all');
+                    switch ($dateFilter) {
+                        case 'today':
+                            $q->whereDate('created_at', today());
+                            break;
+                        case '7days':
+                            $q->where('created_at', '>=', now()->subDays(7));
+                            break;
+                        case '30days':
+                            $q->where('created_at', '>=', now()->subDays(30));
+                            break;
+                        // 'all' - no additional date filter
+                    }
+                });
+                break;
+            case 'today':
+                // Messages sent today
+                $query->whereHas('whatsappLogs', function($q) {
+                    $q->where('status', 'sent')
+                      ->whereDate('created_at', today());
                 });
                 break;
             case 'not-sent':
@@ -1575,6 +1597,12 @@ class WhatsAppController extends Controller
         // External: total recipient eksternal
         $external = \App\Models\ExternalBroadcastRecipient::count();
         
+        // Today: messages sent today
+        $today = Pendaftar::whereHas('whatsappLogs', function($q) {
+            $q->where('status', 'sent')
+              ->whereDate('created_at', today());
+        })->count();
+        
         return [
             'all' => $total,
             'sent' => $sent,
@@ -1582,7 +1610,8 @@ class WhatsAppController extends Controller
             'failed' => $failed,
             'accepted' => $accepted,
             'no-phone' => $noPhone,
-            'external' => $external
+            'external' => $external,
+            'today' => $today
         ];
     }
 

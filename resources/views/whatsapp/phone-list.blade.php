@@ -42,6 +42,18 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link {{ $activeTab == 'today' ? 'active' : '' }}" 
+                           href="{{ route('whatsapp.phone-list', array_merge(request()->except('tab'), ['tab' => 'today'])) }}">
+                            <i class="fas fa-calendar-day"></i>
+                            <span class="tab-text">Hari Ini</span>
+                            @if(isset($tabCounts['today']) && $tabCounts['today'] > 0)
+                                <span class="badge badge-tab bg-info">{{ $tabCounts['today'] }}</span>
+                            @else
+                                <span class="badge badge-tab bg-secondary">0</span>
+                            @endif
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link {{ $activeTab == 'not-sent' ? 'active' : '' }}" 
                            href="{{ route('whatsapp.phone-list', array_merge(request()->except('tab'), ['tab' => 'not-sent'])) }}">
                             <i class="fas fa-clock"></i>
@@ -89,8 +101,41 @@
     <!-- Search Box -->
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
+            <!-- Quick Filter Chips (only visible on 'sent' tab) -->
+            @if($activeTab === 'sent')
+            <div class="mb-3">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <small class="text-muted me-2">
+                        <i class="fas fa-filter"></i> Filter Cepat:
+                    </small>
+                    @php
+                        $currentDateFilter = request()->get('date_filter', 'all');
+                    @endphp
+                    <a href="{{ route('whatsapp.phone-list', array_merge(request()->except(['date_filter', 'page']), ['tab' => 'sent', 'date_filter' => 'today'])) }}" 
+                       class="btn btn-sm {{ $currentDateFilter === 'today' ? 'btn-primary' : 'btn-outline-primary' }}">
+                        <i class="fas fa-calendar-day"></i> Hari Ini
+                    </a>
+                    <a href="{{ route('whatsapp.phone-list', array_merge(request()->except(['date_filter', 'page']), ['tab' => 'sent', 'date_filter' => '7days'])) }}" 
+                       class="btn btn-sm {{ $currentDateFilter === '7days' ? 'btn-primary' : 'btn-outline-primary' }}">
+                        <i class="fas fa-calendar-week"></i> 7 Hari
+                    </a>
+                    <a href="{{ route('whatsapp.phone-list', array_merge(request()->except(['date_filter', 'page']), ['tab' => 'sent', 'date_filter' => '30days'])) }}" 
+                       class="btn btn-sm {{ $currentDateFilter === '30days' ? 'btn-primary' : 'btn-outline-primary' }}">
+                        <i class="fas fa-calendar-alt"></i> 30 Hari
+                    </a>
+                    <a href="{{ route('whatsapp.phone-list', array_merge(request()->except(['date_filter', 'page']), ['tab' => 'sent', 'date_filter' => 'all'])) }}" 
+                       class="btn btn-sm {{ $currentDateFilter === 'all' ? 'btn-primary' : 'btn-outline-primary' }}">
+                        <i class="fas fa-infinity"></i> Semua
+                    </a>
+                </div>
+            </div>
+            @endif
+            
             <form method="GET" action="{{ route('whatsapp.phone-list') }}" id="searchForm" class="row g-3">
                 <input type="hidden" name="tab" value="{{ $activeTab }}">
+                @if($activeTab === 'sent' && request()->has('date_filter'))
+                    <input type="hidden" name="date_filter" value="{{ request()->get('date_filter') }}">
+                @endif
                 <div class="col-md-10">
                     <input type="text" name="search" id="searchInput" class="form-control" 
                            placeholder="Cari berdasarkan nama, NISN, atau nomor registrasi..." 
@@ -603,6 +648,23 @@
     }
 }
 
+/* Quick Filter Chips Styling */
+.gap-2 {
+    gap: 0.5rem !important;
+}
+
+.btn-sm {
+    transition: all 0.2s ease;
+}
+
+.btn-sm:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-outline-primary:hover {
+    transform: translateY(-1px);
+}
 /* Responsive: Mobile (768px and below) */
 @media (max-width: 768px) {
     .phone-list-tabs {
