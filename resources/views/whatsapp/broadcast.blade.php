@@ -646,21 +646,43 @@ function executeBroadcast() {
             message: message
         })
     })
-    .then(response => response.json())
+    .then(response => {
+        // Check if response is OK
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Check content type
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Server mengembalikan response bukan JSON. Kemungkinan error dari server.');
+        }
+        
+        return response.json();
+    })
     .then(data => {
+        console.log('Broadcast response:', data); // Debug log
+        
+        // Handle response based on method (detail_feedback or bulk)
+        const successCount = data.success_count || 0;
+        const failedCount = data.failed_count || 0;
+        
         // Update progress to 100%
-        updateBroadcastProgress(recipients.length, recipients.length, data.success_count, data.failed_count);
+        updateBroadcastProgress(recipients.length, recipients.length, successCount, failedCount);
         
         // Hide progress modal after short delay
         setTimeout(() => {
             progressModal.hide();
+            
             // Show result modal
             showBroadcastResult(data);
         }, 1000);
     })
     .catch(error => {
+        console.error('Broadcast error:', error); // Debug log
         progressModal.hide();
-        alert('Error: ' + error.message);
+        
+        alert('Error mengirim broadcast: ' + error.message + '\n\nSilakan cek browser console untuk detail.');
     });
 }
 
@@ -703,6 +725,7 @@ function showBroadcastResult(data) {
                 <small>Gagal</small>
             </div>
         </div>
+        ${data.method === 'bulk' ? '<p class="mb-0 mt-2 text-muted"><i class="fas fa-info-circle me-2"></i>' + (data.note || 'Proses berjalan di background. Detail hasil dapat dilihat di Log WhatsApp.') + '</p>' : ''}
     `;
     
     // Update badge counts
@@ -721,40 +744,79 @@ function showBroadcastResult(data) {
     
     // Populate success list
     const successList = document.getElementById('successList');
-    const successResults = data.results.filter(r => r.success);
-    if (successResults.length > 0) {
-        successList.innerHTML = successResults.map(result => {
-            const normalizedResultPhone = String(result.phone).replace(/[\s\-\+]/g, '');
-            const name = result.name || phoneToNameMap[normalizedResultPhone] || phoneToNameMap[result.phone] || 'Unknown';
-            return `
+    
+    // Check if results array is available (detail feedback mode) or bulk mode
+    if (data.results && Array.isArray(data.results)) {
+        // DETAIL FEEDBACK MODE (≤30 recipients)
+        const successResults = data.results.filter(r => r.success);
+        if (successResults.length > 0) {
+            successList.innerHTML = successResults.map(result => {
+                const normalizedResultPhone = String(result.phone).replace(/[\s\-\+]/g, '');
+                const name = result.name || phoneToNameMap[normalizedResultPhone] || phoneToNameMap[result.phone] || 'Unknown';
+                return `
+                    <tr>
+                        <td>${name}</td>
+                        <td>${result.phone}</td>
+                        <td><span class="badge bg-success">Terkirim</span></td>
+                    </tr>
+                `;
+            }).join('');
+        } else {
+            successList.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Tidak ada pesan yang berhasil terkirim</td></tr>';
+        }
+    } else {
+        // BULK MODE (>30 recipients)
+        if (data.success_count > 0) {
+            successList.innerHTML = `
                 <tr>
-                    <td>${name}</td>
-                    <td>${result.phone}</td>
-                    <td><span class="badge bg-success">Terkirim</span></td>
+                    <td colspan="3" class="text-center text-muted">
+                        <i class="fas fa-info-circle me-2"></i>
+                        ${data.success_count} pesan berhasil terkirim. 
+                        <br><small>Detail dapat dilihat di <a href="{{ route('whatsapp.logs') }}">Log WhatsApp</a></small>
+                    </td>
                 </tr>
             `;
-        }).join('');
-    } else {
-        successList.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Tidak ada pesan yang berhasil terkirim</td></tr>';
+        } else {
+            successList.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Tidak ada pesan yang berhasil terkirim</td></tr>';
+        }
     }
     
     // Populate failed list
     const failedList = document.getElementById('failedList');
-    const failedResults = data.results.filter(r => !r.success);
-    if (failedResults.length > 0) {
-        failedList.innerHTML = failedResults.map(result => {
-            const normalizedResultPhone = String(result.phone).replace(/[\s\-\+]/g, '');
-            const name = result.name || phoneToNameMap[normalizedResultPhone] || phoneToNameMap[result.phone] || 'Unknown';
-            return `
+    
+    if (data.results && Array.isArray(data.results)) {
+        // DETAIL FEEDBACK MODE (≤30 recipients)
+        const failedResults = data.results.filter(r => !r.success);
+        if (failedResults.length > 0) {
+            failedList.innerHTML = failedResults.map(result => {
+                const normalizedResultPhone = String(result.phone).replace(/[\s\-\+]/g, '');
+                const name = result.name || phoneToNameMap[normalizedResultPhone] || phoneToNameMap[result.phone] || 'Unknown';
+                return `
+                    <tr>
+                        <td>${name}</td>
+                        <td>${result.phone}</td>
+                        <td><small class="text-danger">${result.error || result.message || 'Unknown error'}</small></td>
+                    </tr>
+                `;
+            }).join('');
+        } else {
+            failedList.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Semua pesan berhasil terkirim</td></tr>';
+        }
+    } else {
+        // BULK MODE (>30 recipients)
+        if (data.failed_count > 0) {
+            failedList.innerHTML = `
                 <tr>
-                    <td>${name}</td>
-                    <td>${result.phone}</td>
-                    <td><small class="text-danger">${result.error || result.message || 'Unknown error'}</small></td>
+                    <td colspan="3" class="text-center text-muted">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        ${data.failed_count} pesan gagal terkirim. 
+                        <br><small>Detail dapat dilihat di <a href="{{ route('whatsapp.logs') }}">Log WhatsApp</a></small>
+                    </td>
                 </tr>
             `;
-        }).join('');
-    } else {
-        failedList.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Semua pesan berhasil terkirim</td></tr>';
+        } else {
+            failedList.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Semua pesan berhasil terkirim</td></tr>';
+        }
     }
     
     // Show modal
