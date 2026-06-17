@@ -1742,6 +1742,10 @@ class WhatsAppController extends Controller
      */
     public function sendExternalBroadcast(Request $request)
     {
+        // Increase timeout for large broadcasts
+        set_time_limit(300); // 5 minutes
+        ini_set('max_execution_time', 300);
+        
         $validator = Validator::make($request->all(), [
             'batch_id' => 'required|exists:external_broadcast_batches,id',
             'message' => 'required|string',
