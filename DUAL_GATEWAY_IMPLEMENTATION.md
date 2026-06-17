@@ -1,210 +1,201 @@
-# ✅ Dual Gateway Implementation Summary
+# 🔄 Dual Function Backup Gateway Implementation
 
-**Status:** COMPLETED ✅  
-**Date:** June 11, 2026
+## 📋 Overview
 
-## 🎯 What Was Implemented
+Backup Gateway sekarang memiliki **2 fungsi sekaligus**:
 
-### 1. **Dual Gateway Setup**
-- ✅ Folder `whatsapp-server-absensi/` (port 3001)
-- ✅ Independent session folder: `spmb-wa-session-absensi`
-- ✅ Configured for external access (HOST=0.0.0.0)
+1. **DEDICATED untuk Broadcast Eksternal** - Selalu menggunakan backup gateway
+2. **FAILOVER untuk Broadcast SPMB** - Otomatis pakai backup kalau primary down
 
-### 2. **Database Migration**
-- ✅ Added 3 settings to `whatsapp_settings`:
-  - `wa_server_url_backup` = http://localhost:3001
-  - `wa_failover_enabled` = true
-  - `wa_failover_timeout` = 5 seconds
+---
 
-### 3. **Failover Logic in WhatsAppService**
-- ✅ Method `getActiveServerUrl()` - Auto-detect primary/backup
-- ✅ Method `checkServerHealth()` - Health check gateway
-- ✅ Auto-switch to backup if primary offline
-- ✅ Auto-switch back to primary when online
+## 🎯 Routing Logic
 
-### 4. **Gateway Management UI**
-- ✅ Controller: `WhatsAppGatewayController.php`
-- ✅ View: `resources/views/admin/gateway/index.blade.php`
-- ✅ Routes: `/admin/gateway/*`
-- ✅ Features:
-  - Real-time status monitoring
-  - View QR code untuk scan
-  - Restart gateway dengan 1 klik
-  - Logout & generate QR baru
-  - View logs real-time
-  - Failover settings display
-
-### 5. **Documentation**
-- ✅ `DUAL_GATEWAY_SETUP.md` - Setup guide
-- ✅ `ABSENSI_SYSTEM_PLAN.md` - Future planning
-- ✅ `whatsapp-server-absensi/README.md` - Gateway docs
-
-## 📦 Files Created/Modified
-
-### Created:
+### Broadcast SPMB (Reguler)
 ```
-whatsapp-server-absensi/                (entire folder)
-database/migrations/2026_06_11_234501_add_backup_gateway_to_whatsapp_settings.php
-app/Http/Controllers/WhatsAppGatewayController.php
-resources/views/admin/gateway/index.blade.php
-DUAL_GATEWAY_SETUP.md
-ABSENSI_SYSTEM_PLAN.md
-DUAL_GATEWAY_IMPLEMENTATION.md
-whatsapp-server-absensi/README.md
+┌─────────────────────────────────────┐
+│ Primary Gateway Healthy?            │
+├─────────────────────────────────────┤
+│ ✅ YES → Use Primary Gateway        │
+│ ❌ NO  → FAILOVER to Backup Gateway │
+└─────────────────────────────────────┘
 ```
 
-### Modified:
+### Broadcast Eksternal
 ```
-app/Services/WhatsAppService.php          (added failover logic)
-routes/web.php                            (added gateway routes)
-whatsapp-server-absensi/.env.example      (configured for port 3001)
+┌─────────────────────────────────────┐
+│ ALWAYS → Use Backup Gateway         │
+│ (Dedicated untuk traffic eksternal) │
+└─────────────────────────────────────┘
 ```
 
-## 🚀 Next Steps (For Deployment)
+---
 
-### 1. Di Server (via SSH):
+## 💻 Implementation Details
+
+### Modified File: `app/Services/WhatsAppService.php`
+
+#### 1. Method `getActiveServerUrl(?string $context = null)`
+
+**FUNCTION 1: Dedicated External Broadcast**
+```php
+if ($context === 'external_broadcast' && !empty($backup)) {
+    Log::info('Using backup gateway for external broadcast (dedicated)');
+    return $backup;  // ALWAYS use backup for external
+}
+```
+
+**FUNCTION 2: SPMB Failover**
+```php
+// Check primary health
+if ($this->checkServerHealth($primary)) {
+    return $primary;  // Primary healthy → use primary
+}
+
+// Primary down → failover to backup
+Log::warning('Primary gateway unhealthy, failover to backup (SPMB)');
+return $backup;
+```
+
+#### 2. Method `send()`
+
+Sekarang menerima context dari `$options['type']`:
+```php
+public function send(string $phone, string $message, array $options = []): array
+{
+    // Determine context from options
+    $context = $options['type'] ?? null;
+    
+    // Get appropriate gateway based on context
+    $serverUrl = $this->getActiveServerUrl($context);
+    
+    // ... send to selected gateway
+}
+```
+
+---
+
+## 🔧 Configuration
+
+Di **WhatsApp Settings** (`whatsapp_settings` table):
+
+| Key | Value | Description |
+|-----|-------|-------------|
+| `wa_server_url` | `http://localhost:3000` | Primary Gateway (untuk SPMB) |
+| `wa_server_url_backup` | `http://backup-server:3000` | Backup Gateway (untuk Eksternal + Failover) |
+| `wa_failover_enabled` | `true` | Aktifkan failover mechanism |
+| `wa_failover_timeout` | `5` | Health check timeout (detik) |
+
+---
+
+## 📊 Gateway Usage Matrix
+
+| Broadcast Type | Primary Health | Gateway Used | Reason |
+|---------------|----------------|--------------|--------|
+| **SPMB** | ✅ Healthy | Primary | Normal operation |
+| **SPMB** | ❌ Down | Backup | Failover for high availability |
+| **External** | ✅ Healthy | **Backup** | Dedicated routing (separasi traffic) |
+| **External** | ❌ Down | **Backup** | Always use backup regardless |
+
+---
+
+## ✅ Benefits
+
+### 1. **Traffic Separation**
+- SPMB students (sensitive data) → Primary Gateway
+- External contacts (alumni, marketing) → Backup Gateway
+- Tidak saling ganggu/compete untuk resources
+
+### 2. **Load Balancing**
+- Backup gateway tidak idle, actively used untuk eksternal
+- Primary fokus untuk SPMB core business
+
+### 3. **High Availability**
+- Failover tetap aktif untuk SPMB
+- External broadcast tidak terpengaruh primary status
+
+### 4. **Easy Monitoring**
+- Log backup gateway = eksternal + SPMB failover
+- Mudah tracking usage per type
+
+---
+
+## 🔍 Logging
+
+### External Broadcast
+```
+[INFO] Using backup gateway for external broadcast (dedicated)
+Gateway: http://backup-server:3000
+Context: external_broadcast
+```
+
+### SPMB Failover
+```
+[WARNING] Primary gateway unhealthy, failover to backup (SPMB)
+Primary: http://localhost:3000
+Backup: http://backup-server:3000
+Context: broadcast
+```
+
+### Normal SPMB (Primary Healthy)
+```
+[INFO] Attempting to send WhatsApp message
+Server URL: http://localhost:3000
+Context: broadcast
+```
+
+---
+
+## 🧪 Testing Scenarios
+
+### Scenario 1: External Broadcast (Primary Up)
 ```bash
-cd /www/wwwroot/your-domain.com
-
-# Pull changes
-git pull origin main
-
-# Setup gateway Absensi
-cd whatsapp-server-absensi
-cp .env.example .env
-npm install
-pm2 start server.js --name wa-gateway-absensi
-pm2 save
-
-# Run migration
-cd ..
-php artisan migrate
-
-# Clear cache
-php artisan cache:clear
-php artisan config:clear
+Expected: Uses backup gateway
+Log: "Using backup gateway for external broadcast (dedicated)"
 ```
 
-### 2. Scan QR Code:
-- Buka: `https://your-domain.com/admin/gateway`
-- Gateway SPMB: Klik "QR Code" → scan dengan nomor 08123...
-- Gateway Absensi: Klik "QR Code" → scan dengan nomor 08987...
-
-### 3. Verify:
+### Scenario 2: External Broadcast (Primary Down)
 ```bash
-pm2 list
-# Should show:
-# - wa-gateway-spmb (online)
-# - wa-gateway-absensi (online)
-
-# Test endpoints
-curl http://localhost:3000/status
-curl http://localhost:3001/status
+Expected: Uses backup gateway (same result)
+Log: "Using backup gateway for external broadcast (dedicated)"
 ```
 
-## ✨ Features Available Now
-
-### Admin Dashboard → Gateway Management:
-1. **Monitor Status**
-   - Real-time connection status
-   - Uptime & resource usage (RAM, CPU)
-   - QR availability indicator
-
-2. **Manage Gateways**
-   - View QR code untuk scan
-   - Restart gateway (1 klik)
-   - Logout & generate QR baru
-   - View logs untuk troubleshooting
-
-3. **Failover Settings**
-   - Enable/disable auto failover
-   - Timeout configuration
-   - Current active server indicator
-
-4. **Smart Failover**
-   - Auto-detect primary offline
-   - Auto-switch to backup (port 3001)
-   - Auto-switch back when primary online
-   - Logged di `storage/logs/laravel.log`
-
-## 🔧 Usage Examples
-
-### Scenario 1: Primary Gateway Down
-```
-User send WA → Laravel detect primary (3000) offline
-              → Auto switch to backup (3001)
-              → Message sent successfully ✅
-              → Log: "Primary gateway unhealthy, switching to backup"
+### Scenario 3: SPMB Broadcast (Primary Up)
+```bash
+Expected: Uses primary gateway
+Log: "Attempting to send WhatsApp message" (server_url = primary)
 ```
 
-### Scenario 2: Need to Rescan QR
-```
-Admin → Open /admin/gateway
-      → Click "Logout" button on gateway card
-      → Confirm
-      → Wait 5-10 seconds
-      → Click "QR Code" button
-      → New QR appears
-      → Scan dengan HP
-      → Done! ✅
+### Scenario 4: SPMB Broadcast (Primary Down)
+```bash
+Expected: Failover to backup gateway
+Log: "Primary gateway unhealthy, failover to backup (SPMB)"
 ```
 
-### Scenario 3: Gateway Troubleshooting
-```
-Admin → Open /admin/gateway
-      → Click "Logs" button
-      → View PM2 logs real-time
-      → Identify problem
-      → Click "Restart" if needed
-      → Done! ✅
-```
+---
 
-## 📊 Resource Impact
+## 🚀 Deployment Checklist
 
-### Before:
-- Gateway SPMB: ~200 MB RAM
-- Total: ~1.7 GB RAM used
+- [ ] Setup backup gateway di server berbeda (recommended)
+- [ ] Update `wa_server_url_backup` di WhatsApp Settings
+- [ ] Set `wa_failover_enabled` = `true`
+- [ ] Test external broadcast → verify using backup
+- [ ] Test SPMB broadcast → verify using primary
+- [ ] Stop primary → test SPMB failover → verify using backup
+- [ ] Monitor logs di `storage/logs/laravel.log`
 
-### After (with Dual Gateway):
-- Gateway SPMB: ~200 MB RAM
-- Gateway Absensi: ~200 MB RAM
-- Total: ~1.9 GB RAM used
+---
 
-**Server has 6 GB RAM → Still 4+ GB free! ✅**
+## 📝 Notes
 
-## 🔄 Future Migration (When Absensi Ready)
+- Context detection: automatic dari `$options['type']`
+- Type `'external_broadcast'` → trigger dedicated routing
+- Type lain (`'broadcast'`, `'manual'`, etc.) → use failover logic
+- Failover timeout configurable via `wa_failover_timeout` setting
+- No code changes needed in controllers - transparent routing
 
-Gateway Absensi (port 3001) saat ini untuk **backup SPMB**.
+---
 
-Nanti saat aplikasi Absensi siap:
-1. Gateway 3001 dipakai untuk Absensi
-2. SPMB kembali single gateway (3000)
-3. **Tidak perlu scan QR ulang!**
-4. Session tetap valid
-
-## ✅ Testing Checklist
-
-Before deployment, test:
-- [ ] Gateway SPMB status via UI
-- [ ] Gateway Absensi status via UI
-- [ ] View QR code both gateways
-- [ ] Restart gateway functionality
-- [ ] Logout gateway functionality
-- [ ] View logs functionality
-- [ ] Send test message via SPMB
-- [ ] Failover: Stop primary → send message (should use backup)
-- [ ] Failover: Start primary → send message (should use primary)
-
-## 📞 Support
-
-Jika ada issue:
-1. Check `/admin/gateway` untuk status
-2. Check logs: `storage/logs/laravel.log`
-3. Check PM2: `pm2 logs wa-gateway-xxx`
-4. Restart if needed via UI atau `pm2 restart`
-
-## 🎉 Done!
-
-Dual Gateway dengan UI Management sudah **COMPLETE**! 
-
-Ready untuk deployment ke production! 🚀
+**Commit**: Implement dual function backup gateway for external broadcast + SPMB failover
+**Date**: June 17, 2026
+**Author**: Kiro AI Assistant

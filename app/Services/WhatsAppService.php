@@ -37,16 +37,31 @@ class WhatsAppService
     }
 
     /**
-     * Get active server URL with failover support
+     * Get active server URL with context-aware selection and failover support
      * 
+     * DUAL FUNCTION BACKUP GATEWAY:
+     * 1. Dedicated for External Broadcast (always use backup)
+     * 2. Failover for SPMB Broadcast (use backup when primary down)
+     * 
+     * @param string|null $context Context type: 'external_broadcast', 'broadcast', etc.
      * @return string
      */
-    protected function getActiveServerUrl(): string
+    protected function getActiveServerUrl(?string $context = null): string
     {
         $primary = WhatsAppSetting::get('wa_server_url', 'http://localhost:3000');
         $backup = WhatsAppSetting::get('wa_server_url_backup');
         $failoverEnabled = WhatsAppSetting::get('wa_failover_enabled', false);
 
+        // FUNCTION 1: External Broadcast ALWAYS uses backup gateway (if configured)
+        if ($context === 'external_broadcast' && !empty($backup)) {
+            Log::info('Using backup gateway for external broadcast (dedicated)', [
+                'backup' => $backup,
+                'context' => $context,
+            ]);
+            return $backup;
+        }
+
+        // FUNCTION 2: SPMB Broadcast uses primary with failover to backup
         // If failover not enabled or no backup configured, always use primary
         if (!$failoverEnabled || !$backup) {
             return $primary;
@@ -57,10 +72,11 @@ class WhatsAppService
             return $primary;
         }
 
-        // Primary unhealthy, use backup
-        Log::warning('Primary WhatsApp gateway unhealthy, switching to backup', [
+        // Primary unhealthy, failover to backup
+        Log::warning('Primary WhatsApp gateway unhealthy, failover to backup (SPMB)', [
             'primary' => $primary,
             'backup' => $backup,
+            'context' => $context ?? 'default',
         ]);
 
         return $backup;
@@ -218,11 +234,17 @@ class WhatsAppService
      * 
      * @param string $phone Phone number
      * @param string $message Message content
-     * @param array $options Additional options (pendaftar_id, template_id, sent_by, type)
+     * @param array $options Additional options (pendaftar_id, template_id, sent_by, type, external_batch_id)
      * @return array
      */
     public function send(string $phone, string $message, array $options = []): array
     {
+        // Determine context from options
+        $context = $options['type'] ?? null;
+        
+        // Get appropriate gateway URL based on context
+        $serverUrl = $this->getActiveServerUrl($context);
+        
         // Create log entry
         $log = WhatsAppLog::create([
             'phone' => $phone,
@@ -240,12 +262,13 @@ class WhatsAppService
                 'phone' => $phone,
                 'message_length' => strlen($message),
                 'log_id' => $log->id,
-                'server_url' => $this->serverUrl,
+                'server_url' => $serverUrl,
+                'context' => $context,
             ]);
 
             $response = Http::timeout($this->timeout)
                 ->retry($this->retryAttempts, 1000)
-                ->post("{$this->serverUrl}/send", [
+                ->post("{$serverUrl}/send", [
                     'phone' => $phone,
                     'message' => $message,
                 ]);
