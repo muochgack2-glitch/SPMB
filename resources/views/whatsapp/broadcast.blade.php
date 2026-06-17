@@ -1044,16 +1044,17 @@ function executeExternalBroadcast() {
     
     const { batchId, message, templateId, selectedCount } = window.externalBroadcastData;
     
-    // Show progress modal
+    // Show progress modal with loading state
     const progressModal = new bootstrap.Modal(document.getElementById('progressModal'));
     progressModal.show();
     
-    // Initialize progress
-    document.getElementById('progressBar').style.width = '0%';
-    document.getElementById('progressBar').textContent = '0%';
-    document.getElementById('progressText').textContent = '0 / ' + selectedCount;
-    document.getElementById('successCount').textContent = '0';
-    document.getElementById('failedCount').textContent = '0';
+    // Show indeterminate progress (processing...)
+    document.getElementById('progressBar').style.width = '100%';
+    document.getElementById('progressBar').classList.add('progress-bar-animated', 'progress-bar-striped');
+    document.getElementById('progressBar').textContent = 'Memproses...';
+    document.getElementById('progressText').textContent = 'Mengirim ' + selectedCount + ' pesan...';
+    document.getElementById('successCount').textContent = '-';
+    document.getElementById('failedCount').textContent = '-';
     document.getElementById('remainingCount').textContent = selectedCount;
     
     const payload = {
@@ -1075,13 +1076,22 @@ function executeExternalBroadcast() {
     })
     .then(response => response.json())
     .then(data => {
+        // Remove animated class
+        document.getElementById('progressBar').classList.remove('progress-bar-animated', 'progress-bar-striped');
+        
         if (data.success) {
-            // Update progress to 100%
+            // Update with final results
             const total = data.data?.total || selectedCount;
             const successCount = data.data?.success_count || 0;
             const failedCount = data.data?.failed_count || 0;
             
-            updateBroadcastProgress(total, total, successCount, failedCount);
+            // Set to 100% complete
+            document.getElementById('progressBar').style.width = '100%';
+            document.getElementById('progressBar').textContent = '100%';
+            document.getElementById('progressText').textContent = total + ' / ' + total;
+            document.getElementById('successCount').textContent = successCount;
+            document.getElementById('failedCount').textContent = failedCount;
+            document.getElementById('remainingCount').textContent = '0';
             
             // Hide progress modal after short delay
             setTimeout(() => {
@@ -1095,6 +1105,7 @@ function executeExternalBroadcast() {
         }
     })
     .catch(error => {
+        document.getElementById('progressBar').classList.remove('progress-bar-animated', 'progress-bar-striped');
         progressModal.hide();
         alert('Error: ' + error.message);
     });
