@@ -282,10 +282,22 @@ class WhatsAppService
             if ($response->successful()) {
                 $responseData = $response->json();
                 
+                // Enhanced logging untuk debug
+                Log::info('WhatsApp gateway response detail', [
+                    'phone' => $phone,
+                    'log_id' => $log->id,
+                    'response_data' => $responseData,
+                    'has_success_key' => isset($responseData['success']),
+                    'success_value' => $responseData['success'] ?? null,
+                    'has_message_id' => isset($responseData['messageId']) || isset($responseData['message_id']),
+                    'message_id' => $responseData['messageId'] ?? $responseData['message_id'] ?? null,
+                    'server_url' => $serverUrl,
+                ]);
+                
                 // Check if server actually sent the message
                 if (isset($responseData['success']) && $responseData['success'] === false) {
                     // Server returned success HTTP code but message failed
-                    $errorMessage = $responseData['message'] ?? 'Message failed on WhatsApp server';
+                    $errorMessage = $responseData['message'] ?? $responseData['error'] ?? 'Message failed on WhatsApp server';
                     $log->markAsFailed($errorMessage, $responseData);
 
                     Log::warning('WhatsApp server returned success=false', [
@@ -298,7 +310,21 @@ class WhatsAppService
                         'success' => false,
                         'message' => $errorMessage,
                         'log_id' => $log->id,
+                        'debug' => $responseData,
                     ];
+                }
+                
+                // Additional validation: Check if messageId exists (proof of sending)
+                $hasMessageId = isset($responseData['messageId']) || isset($responseData['message_id']) || isset($responseData['data']['messageId']);
+                
+                if (!$hasMessageId && isset($responseData['success']) && $responseData['success'] === true) {
+                    // Gateway says success but no messageId - suspicious!
+                    Log::warning('WhatsApp gateway returned success without messageId', [
+                        'phone' => $phone,
+                        'response' => $responseData,
+                        'log_id' => $log->id,
+                        'warning' => 'Message may not be actually sent - no messageId proof',
+                    ]);
                 }
                 
                 // Mark as sent
@@ -308,6 +334,7 @@ class WhatsAppService
                     'phone' => $phone,
                     'log_id' => $log->id,
                     'response' => $responseData,
+                    'has_message_id' => $hasMessageId,
                 ]);
 
                 return [
@@ -315,6 +342,7 @@ class WhatsAppService
                     'message' => 'Message sent successfully',
                     'data' => $responseData,
                     'log_id' => $log->id,
+                    'has_message_id' => $hasMessageId,
                 ];
             }
 
