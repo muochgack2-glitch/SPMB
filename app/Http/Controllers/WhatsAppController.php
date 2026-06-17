@@ -1906,9 +1906,23 @@ class WhatsAppController extends Controller
                     $batch->incrementFailed();
                 }
 
-                // Rate limiting: 1 second delay between messages
+                // Anti-spam rate limiting for external broadcast
+                // WhatsApp recommends 2-5 seconds between messages to avoid spam detection
                 if ($batch->recipients->count() > 1) {
-                    sleep(1);
+                    $currentIndex = $successCount + $failedCount;
+                    $totalRecipients = $batch->recipients->count() - $skippedCount;
+                    
+                    // Don't sleep after last message
+                    if ($currentIndex < $totalRecipients) {
+                        // Random delay between 2-4 seconds to appear more natural
+                        $delay = rand(2, 4);
+                        sleep($delay);
+                        
+                        // Extra delay every 10 messages (mini break to avoid patterns)
+                        if ($currentIndex % 10 === 0 && $currentIndex > 0) {
+                            sleep(2); // Additional 2 second break
+                        }
+                    }
                 }
             }
 
