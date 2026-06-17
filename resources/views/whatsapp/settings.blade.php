@@ -39,6 +39,8 @@
                     <i class="fas fa-bell me-2"></i>Notifikasi
                     @elseif($group == 'advanced')
                     <i class="fas fa-sliders-h me-2"></i>Lanjutan
+                    @elseif($group == 'rate_limiting')
+                    <i class="fas fa-clock me-2"></i>Rate Limiting
                     @else
                     <i class="fas fa-folder me-2"></i>{{ ucfirst($group) }}
                     @endif

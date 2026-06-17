@@ -1907,20 +1907,25 @@ class WhatsAppController extends Controller
                 }
 
                 // Anti-spam rate limiting for external broadcast
-                // WhatsApp recommends 2-5 seconds between messages to avoid spam detection
+                // Uses configurable delays from database settings
                 if ($batch->recipients->count() > 1) {
                     $currentIndex = $successCount + $failedCount;
                     $totalRecipients = $batch->recipients->count() - $skippedCount;
                     
                     // Don't sleep after last message
                     if ($currentIndex < $totalRecipients) {
-                        // Random delay between 2-4 seconds to appear more natural
-                        $delay = rand(2, 4);
+                        // Random delay between min-max seconds to appear more natural
+                        $minDelay = WhatsAppSetting::getExternalBroadcastMinDelay();
+                        $maxDelay = WhatsAppSetting::getExternalBroadcastMaxDelay();
+                        $delay = rand($minDelay, $maxDelay);
                         sleep($delay);
                         
-                        // Extra delay every 10 messages (mini break to avoid patterns)
-                        if ($currentIndex % 10 === 0 && $currentIndex > 0) {
-                            sleep(2); // Additional 2 second break
+                        // Extra delay every N messages (mini break to avoid patterns)
+                        $breakInterval = WhatsAppSetting::getExternalBroadcastBreakInterval();
+                        $breakDuration = WhatsAppSetting::getExternalBroadcastBreakDuration();
+                        
+                        if ($breakInterval > 0 && $currentIndex % $breakInterval === 0 && $currentIndex > 0) {
+                            sleep($breakDuration); // Additional break
                         }
                     }
                 }

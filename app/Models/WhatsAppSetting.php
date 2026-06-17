@@ -241,7 +241,40 @@ class WhatsAppSetting extends Model
             'connection' => 'Koneksi',
             'notification' => 'Notifikasi',
             'advanced' => 'Lanjutan',
+            'rate_limiting' => 'Rate Limiting',
             default => ucfirst($this->group),
         };
+    }
+
+    /**
+     * Get external broadcast min delay (in seconds)
+     */
+    public static function getExternalBroadcastMinDelay(): int
+    {
+        return self::get('wa_external_broadcast_min_delay', 2);
+    }
+
+    /**
+     * Get external broadcast max delay (in seconds)
+     */
+    public static function getExternalBroadcastMaxDelay(): int
+    {
+        return self::get('wa_external_broadcast_max_delay', 4);
+    }
+
+    /**
+     * Get external broadcast break interval
+     */
+    public static function getExternalBroadcastBreakInterval(): int
+    {
+        return self::get('wa_external_broadcast_break_interval', 10);
+    }
+
+    /**
+     * Get external broadcast break duration (in seconds)
+     */
+    public static function getExternalBroadcastBreakDuration(): int
+    {
+        return self::get('wa_external_broadcast_break_duration', 2);
     }
 }
