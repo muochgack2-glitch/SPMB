@@ -379,6 +379,10 @@ class WhatsAppController extends Controller
      */
     public function sendBroadcast(Request $request)
     {
+        // Increase timeout for large broadcasts
+        set_time_limit(300); // 5 minutes
+        ini_set('max_execution_time', 300);
+        
         $validator = Validator::make($request->all(), [
             'recipients' => 'required|array',
             'recipients.*.phone' => 'required|string',
@@ -824,6 +828,10 @@ class WhatsAppController extends Controller
      */
     public function sendBulkBroadcast(Request $request)
     {
+        // Increase timeout for large broadcasts
+        set_time_limit(300); // 5 minutes
+        ini_set('max_execution_time', 300);
+        
         $validator = Validator::make($request->all(), [
             'phones' => 'required|array|min:1',
             'phones.*.phone' => 'required|string',
