@@ -13,11 +13,14 @@ class ExternalBroadcastRecipient extends Model
         'phone_normalized',
         'notes',
         'is_duplicate_spmb',
-        'matched_pendaftar_id'
+        'matched_pendaftar_id',
+        'matched_status',
+        'will_be_skipped'
     ];
 
     protected $casts = [
         'is_duplicate_spmb' => 'boolean',
+        'will_be_skipped' => 'boolean',
     ];
 
     /**

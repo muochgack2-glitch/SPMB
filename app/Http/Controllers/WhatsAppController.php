@@ -1798,6 +1798,8 @@ class WhatsAppController extends Controller
 
             $successCount = 0;
             $failedCount = 0;
+            $skippedCount = 0;
+            $skippedRecipients = [];
 
             // Prepare common variables (date, time, school info)
             $now = now();
@@ -1817,6 +1819,19 @@ class WhatsAppController extends Controller
             ];
 
             foreach ($batch->recipients as $recipient) {
+                // SKIP if recipient should not receive external broadcast
+                // (Student already enrolled: "Diterima" or "Sudah Daftar Ulang")
+                if ($recipient->will_be_skipped) {
+                    $skippedCount++;
+                    $skippedRecipients[] = [
+                        'name' => $recipient->name,
+                        'phone' => $recipient->phone,
+                        'status' => $recipient->matched_status,
+                        'reason' => 'Siswa sudah terdaftar di SPMB',
+                    ];
+                    continue; // Skip to next recipient
+                }
+                
                 // Prepare variables for replacement
                 $variables = array_merge($commonVariables, [
                     '{nama}' => $recipient->name,
@@ -1892,18 +1907,26 @@ class WhatsAppController extends Controller
             UserActivityLog::create([
                 'user_id' => auth()->id(),
                 'action' => 'external_broadcast_sent',
-                'description' => "Sent external broadcast '{$batch->batch_name}' to {$batch->total_recipients} recipients",
+                'description' => "Sent external broadcast '{$batch->batch_name}': Terkirim {$successCount}, Gagal {$failedCount}, Di-skip {$skippedCount}",
                 'ip_address' => request()->ip(),
                 'user_agent' => request()->userAgent(),
             ]);
 
+            // Build response message
+            $message = "Broadcast selesai. Terkirim: {$successCount}, Gagal: {$failedCount}";
+            if ($skippedCount > 0) {
+                $message .= ", Di-skip: {$skippedCount} (siswa sudah terdaftar di SPMB)";
+            }
+
             return response()->json([
                 'success' => true,
-                'message' => "Broadcast selesai. Terkirim: {$successCount}, Gagal: {$failedCount}",
+                'message' => $message,
                 'data' => [
                     'total' => $batch->total_recipients,
                     'success_count' => $successCount,
                     'failed_count' => $failedCount,
+                    'skipped_count' => $skippedCount,
+                    'skipped_recipients' => $skippedRecipients,
                     'batch_id' => $batch->id,
                 ],
             ]);

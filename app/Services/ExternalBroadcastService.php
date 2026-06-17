@@ -212,48 +212,66 @@ class ExternalBroadcastService
         // Extract normalized phones
         $normalizedPhones = array_column($recipients, 'phone_normalized');
         
-        // Get ALL pendaftars with phone numbers (we'll normalize and compare in PHP)
+        // Get ALL pendaftars with phone numbers (include status_siswa)
         $duplicates = DB::table('pendaftar')
             ->where(function($query) {
                 $query->whereNotNull('no_hp_wali')
                       ->orWhereNotNull('no_hp_ortu')
                       ->orWhereNotNull('no_telepon');
             })
-            ->select('id_pendaftar', 'no_hp_wali', 'no_hp_ortu', 'no_telepon', 'nama_lengkap')
+            ->select('id_pendaftar', 'no_hp_wali', 'no_hp_ortu', 'no_telepon', 'nama_lengkap', 'status_siswa')
             ->get();
         
-        // Create lookup map with normalized phones
+        // Create lookup map with normalized phones and status
         $duplicateMap = [];
         foreach ($duplicates as $dup) {
             if (!empty($dup->no_hp_wali) && trim($dup->no_hp_wali) !== '' && $dup->no_hp_wali !== '-') {
                 $normalized = $this->normalizePhone($dup->no_hp_wali);
                 if ($normalized) {
-                    $duplicateMap[$normalized] = $dup->id_pendaftar;
+                    $duplicateMap[$normalized] = [
+                        'id_pendaftar' => $dup->id_pendaftar,
+                        'status_siswa' => $dup->status_siswa,
+                    ];
                 }
             }
             if (!empty($dup->no_hp_ortu) && trim($dup->no_hp_ortu) !== '' && $dup->no_hp_ortu !== '-') {
                 $normalized = $this->normalizePhone($dup->no_hp_ortu);
                 if ($normalized) {
-                    $duplicateMap[$normalized] = $dup->id_pendaftar;
+                    $duplicateMap[$normalized] = [
+                        'id_pendaftar' => $dup->id_pendaftar,
+                        'status_siswa' => $dup->status_siswa,
+                    ];
                 }
             }
             if (!empty($dup->no_telepon) && trim($dup->no_telepon) !== '' && $dup->no_telepon !== '-') {
                 $normalized = $this->normalizePhone($dup->no_telepon);
                 if ($normalized) {
-                    $duplicateMap[$normalized] = $dup->id_pendaftar;
+                    $duplicateMap[$normalized] = [
+                        'id_pendaftar' => $dup->id_pendaftar,
+                        'status_siswa' => $dup->status_siswa,
+                    ];
                 }
             }
         }
+        
+        // Statuses that should be skipped from external broadcast
+        $skipStatuses = ['Diterima', 'Sudah Daftar Ulang'];
         
         // Flag duplicates in recipients array
         foreach ($recipients as &$recipient) {
             $normalized = $recipient['phone_normalized'];
             if (isset($duplicateMap[$normalized])) {
                 $recipient['is_duplicate_spmb'] = true;
-                $recipient['matched_pendaftar_id'] = $duplicateMap[$normalized];
+                $recipient['matched_pendaftar_id'] = $duplicateMap[$normalized]['id_pendaftar'];
+                $recipient['matched_status'] = $duplicateMap[$normalized]['status_siswa'];
+                
+                // NEW: Flag if should be skipped (student already enrolled)
+                $recipient['will_be_skipped'] = in_array($duplicateMap[$normalized]['status_siswa'], $skipStatuses);
             } else {
                 $recipient['is_duplicate_spmb'] = false;
                 $recipient['matched_pendaftar_id'] = null;
+                $recipient['matched_status'] = null;
+                $recipient['will_be_skipped'] = false;
             }
         }
         
@@ -315,8 +333,10 @@ class ExternalBroadcastService
                         'phone' => $recipient['phone'],
                         'phone_normalized' => $recipient['phone_normalized'],
                         'notes' => $recipient['notes'] ?? null,
-                        'is_duplicate_spmb' => $recipient['is_duplicate'] ?? false,
+                        'is_duplicate_spmb' => $recipient['is_duplicate_spmb'] ?? false,
                         'matched_pendaftar_id' => $recipient['matched_pendaftar_id'] ?? null,
+                        'matched_status' => $recipient['matched_status'] ?? null,
+                        'will_be_skipped' => $recipient['will_be_skipped'] ?? false,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ];
