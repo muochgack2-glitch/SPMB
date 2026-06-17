@@ -1808,6 +1808,41 @@ class WhatsAppController extends Controller
             // Mark batch as in progress
             $batch->markAsInProgress();
 
+            // ===== EARLY RESPONSE (Prevent 502 timeout) =====
+            // Close connection and send response immediately
+            // Then continue processing in background
+            ignore_user_abort(true);
+            
+            // Start output buffering
+            ob_start();
+            
+            // Send headers and initial response
+            header('Content-Type: application/json');
+            header('Connection: close');
+            header('Content-Length: ' . ob_get_length());
+            
+            // Prepare early response
+            $earlyResponse = [
+                'success' => true,
+                'message' => 'Broadcast sedang diproses di background',
+                'batch_id' => $batch->id,
+                'total_recipients' => $batch->recipients->count(),
+                'note' => 'Pesan sedang dikirim. Hasil detail dapat dilihat di Log WhatsApp.',
+            ];
+            
+            echo json_encode($earlyResponse);
+            
+            // Flush and close connection
+            ob_end_flush();
+            flush();
+            
+            // Close session if exists
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                session_write_close();
+            }
+            
+            // ===== Now process broadcast in background =====
+            
             $successCount = 0;
             $failedCount = 0;
             $skippedCount = 0;
