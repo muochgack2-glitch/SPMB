@@ -938,7 +938,11 @@ function displayPreview(data) {
     const tbody = document.getElementById('previewTableBody');
     tbody.innerHTML = '';
     
-    data.preview.forEach((recipient, index) => {
+    // Show all recipients (not just preview 10)
+    const recipientsToShow = data.preview;
+    const isLimitedPreview = data.total_count > recipientsToShow.length;
+    
+    recipientsToShow.forEach((recipient, index) => {
         const row = document.createElement('tr');
         
         const duplicateBadge = recipient.is_duplicate_spmb 
@@ -962,6 +966,20 @@ function displayPreview(data) {
         
         tbody.appendChild(row);
     });
+    
+    // Add info row if preview is limited
+    if (isLimitedPreview) {
+        const infoRow = document.createElement('tr');
+        infoRow.className = 'table-info';
+        infoRow.innerHTML = `
+            <td colspan="5" class="text-center py-3">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Preview terbatas:</strong> Menampilkan ${recipientsToShow.length} dari ${data.total_count} recipients.
+                <br><small class="text-muted">Saat kirim broadcast, SEMUA ${data.total_count} recipients akan diproses (bukan hanya yang terlihat di preview).</small>
+            </td>
+        `;
+        tbody.appendChild(infoRow);
+    }
     
     // Store full data for later use
     window.previewData = data;
