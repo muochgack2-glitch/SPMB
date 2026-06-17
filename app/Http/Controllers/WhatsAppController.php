@@ -376,6 +376,10 @@ class WhatsAppController extends Controller
 
     /**
      * Send broadcast
+     * 
+     * HYBRID AUTO-DETECT (same as sendBulkBroadcast):
+     * - If ≤30 recipients: Loop + Detail Feedback (synchronous)
+     * - If >30 recipients: Bulk/Batch method (asynchronous)
      */
     public function sendBroadcast(Request $request)
     {
@@ -400,11 +404,9 @@ class WhatsAppController extends Controller
             ], 422);
         }
 
-        $messages = [];
-        $successCount = 0;
-        $failedCount = 0;
-        $results = [];
-
+        // Prepare phone data array (normalize format for hybrid method)
+        $phones = [];
+        
         foreach ($request->recipients as $recipient) {
             $phone = $recipient['phone'];
             $pendaftarId = $recipient['id_pendaftar'] ?? null;
@@ -422,32 +424,30 @@ class WhatsAppController extends Controller
                 })->first();
             }
 
-            // Replace variables in message
-            $personalizedMessage = $request->message;
-            
-            if ($pendaftar) {
-                $personalizedMessage = $this->replaceMessageVariables($request->message, [
-                    'name' => $pendaftar->nama_lengkap,
-                    'no_reg' => $pendaftar->no_registrasi,
-                    'jurusan' => $pendaftar->jurusan,
-                    'nisn' => $pendaftar->nisn,
-                    'asal_sekolah' => $pendaftar->asal_sekolah,
-                ]);
-            }
-
-            $messages[] = [
+            $phones[] = [
                 'phone' => $phone,
-                'message' => $personalizedMessage,
-                'pendaftar_id' => $pendaftar ? $pendaftar->id_pendaftar : null,
+                'name' => $recipient['nama'] ?? ($pendaftar ? $pendaftar->nama_lengkap : ''),
+                'no_reg' => $pendaftar ? $pendaftar->no_registrasi : '',
+                'jurusan' => $recipient['jurusan'] ?? ($pendaftar ? $pendaftar->jurusan : ''),
+                'nisn' => $pendaftar ? $pendaftar->nisn : '',
+                'asal_sekolah' => $pendaftar ? $pendaftar->asal_sekolah : '',
+                'id' => $pendaftarId,
             ];
         }
 
-        $result = $this->whatsappService->sendBulk($messages, [
-            'type' => 'broadcast',
-            'sent_by' => auth()->id(),
-        ]);
+        $totalRecipients = count($phones);
 
-        return response()->json($result);
+        // ============================================
+        // HYBRID AUTO-DETECT (Threshold: 30 phones)
+        // ============================================
+        
+        if ($totalRecipients <= 30) {
+            // Method A: DETAIL FEEDBACK (≤30 recipients)
+            return $this->sendWithDetailFeedback($phones, $request->message, null);
+        } else {
+            // Method B: BULK/BATCH (>30 recipients)
+            return $this->sendWithBulkMethod($phones, $request->message, null);
+        }
     }
 
     /**
