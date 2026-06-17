@@ -1813,14 +1813,6 @@ class WhatsAppController extends Controller
             // Then continue processing in background
             ignore_user_abort(true);
             
-            // Start output buffering
-            ob_start();
-            
-            // Send headers and initial response
-            header('Content-Type: application/json');
-            header('Connection: close');
-            header('Content-Length: ' . ob_get_length());
-            
             // Prepare early response
             $earlyResponse = [
                 'success' => true,
@@ -1830,7 +1822,19 @@ class WhatsAppController extends Controller
                 'note' => 'Pesan sedang dikirim. Hasil detail dapat dilihat di Log WhatsApp.',
             ];
             
-            echo json_encode($earlyResponse);
+            $responseJson = json_encode($earlyResponse);
+            $contentLength = strlen($responseJson);
+            
+            // Start output buffering
+            ob_start();
+            
+            // Send headers
+            header('Content-Type: application/json');
+            header('Connection: close');
+            header('Content-Length: ' . $contentLength);
+            
+            // Send response
+            echo $responseJson;
             
             // Flush and close connection
             ob_end_flush();
