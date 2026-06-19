@@ -1897,15 +1897,39 @@ class WhatsAppController extends Controller
                     ]
                 );
 
-                // Validate result is an array with 'success' key
+                // Task 3.1: Enhanced response processing with messageId verification
+                // Check for messageId as proof of actual delivery
+                $messageIdPresent = false;
+                
                 if (is_array($result) && isset($result['success']) && $result['success']) {
-                    $successCount++;
-                    $batch->incrementSent();
+                    // Verify messageId presence (proof that gateway will send the message)
+                    $messageIdPresent = isset($result['data']['messageId']) 
+                                     || isset($result['data']['message_id'])
+                                     || (isset($result['has_message_id']) && $result['has_message_id']);
+                    
+                    if ($messageIdPresent) {
+                        // Confirmed success - has messageId proof
+                        $successCount++;
+                        $batch->incrementSent();
+                    } else {
+                        // Gateway says success but no messageId - treat as failed (suspicious)
+                        $failedCount++;
+                        $batch->incrementFailed();
+                        
+                        \Log::warning('External broadcast: Success response without messageId', [
+                            'recipient' => $recipient->name,
+                            'phone' => $recipient->phone,
+                            'batch_id' => $batch->id,
+                            'response' => $result,
+                        ]);
+                    }
                 } else {
+                    // Explicit failure
                     $failedCount++;
                     $batch->incrementFailed();
                 }
 
+                // Task 3.2: Conditional delay application
                 // Anti-spam rate limiting for external broadcast
                 // Uses configurable delays from database settings
                 if ($batch->recipients->count() > 1) {
@@ -1914,19 +1938,24 @@ class WhatsAppController extends Controller
                     
                     // Don't sleep after last message
                     if ($currentIndex < $totalRecipients) {
-                        // Random delay between min-max seconds to appear more natural
-                        $minDelay = WhatsAppSetting::getExternalBroadcastMinDelay();
-                        $maxDelay = WhatsAppSetting::getExternalBroadcastMaxDelay();
-                        $delay = rand($minDelay, $maxDelay);
-                        sleep($delay);
-                        
-                        // Extra delay every N messages (mini break to avoid patterns)
-                        $breakInterval = WhatsAppSetting::getExternalBroadcastBreakInterval();
-                        $breakDuration = WhatsAppSetting::getExternalBroadcastBreakDuration();
-                        
-                        if ($breakInterval > 0 && $currentIndex % $breakInterval === 0 && $currentIndex > 0) {
-                            sleep($breakDuration); // Additional break
+                        // ONLY apply delay if message was confirmed successful (messageId present)
+                        // Skip delay for failed messages to save time
+                        if ($messageIdPresent) {
+                            // Random delay between min-max seconds to appear more natural
+                            $minDelay = WhatsAppSetting::getExternalBroadcastMinDelay();
+                            $maxDelay = WhatsAppSetting::getExternalBroadcastMaxDelay();
+                            $delay = rand($minDelay, $maxDelay);
+                            sleep($delay);
+                            
+                            // Extra delay every N messages (mini break to avoid patterns)
+                            $breakInterval = WhatsAppSetting::getExternalBroadcastBreakInterval();
+                            $breakDuration = WhatsAppSetting::getExternalBroadcastBreakDuration();
+                            
+                            if ($breakInterval > 0 && $successCount % $breakInterval === 0 && $successCount > 0) {
+                                sleep($breakDuration); // Additional break
+                            }
                         }
+                        // If messageId not present (failed), skip delay entirely
                     }
                 }
             }
