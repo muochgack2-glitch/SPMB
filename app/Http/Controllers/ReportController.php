@@ -288,27 +288,15 @@ class ReportController extends Controller
             ->sortByDesc('total')
             ->values();
 
-        // Rekap Pendaftar Diterima (status_siswa = 'Diterima')
+        // Get pendaftar diterima for detailed table
         $pendaftarDiterima = $pendaftars->where('status_siswa', 'Diterima');
-        $totalDiterima = $pendaftarDiterima->count();
-        
-        $diterimaPerJurusan = [];
-        foreach ($jurusanAktif as $j) {
-            $group = $pendaftarDiterima->where('jurusan', $j->kode);
-            $diterimaPerJurusan[$j->kode] = [
-                'total' => $group->count(),
-                'lunas' => $group->filter(fn($p) => optional($p->logistik)->status_bayar === 'Lunas')->count(),
-            ];
-        }
-        
-        $diterimaPerGelombang = $pendaftarDiterima->groupBy('gelombang')->map->count()->sortKeys();
 
         $jurusan = $jurusanId !== 'all' ? (Jurusan::find($jurusanId)?->kode ?? 'all') : 'all';
 
         return view('reports.pdf', compact(
             'pendaftars', 'perJurusan', 'perGelombang', 'totalLunas',
             'perJaringan', 'gelombang', 'jurusan', 'jurusanAktif', 'activeTahun',
-            'pendaftarDiterima', 'totalDiterima', 'diterimaPerJurusan', 'diterimaPerGelombang'
+            'pendaftarDiterima'
         ));
     }
 }

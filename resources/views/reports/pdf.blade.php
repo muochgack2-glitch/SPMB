@@ -103,7 +103,7 @@
         <div class="report-title">Laporan Rekap Pendaftaran — SPMB (Sistem Penerimaan Murid Baru) {{ now()->year }}</div>
 
         <!-- Summary -->
-        <div class="summary-grid">
+        <div class="summary-grid" style="grid-template-columns: repeat(3, 1fr);">
             <div class="sum-box" style="border-color:#6366f1;">
                 <div class="sum-value" style="color:#6366f1;">{{ $pendaftars->count() }}</div>
                 <div class="sum-label">Total Pendaftar</div>
@@ -115,11 +115,6 @@
             <div class="sum-box" style="border-color:#ef4444;">
                 <div class="sum-value" style="color:#ef4444;">{{ $pendaftars->count() - $totalLunas }}</div>
                 <div class="sum-label">Belum Daftar Ulang</div>
-            </div>
-            <div class="sum-box" style="border-color:#a855f7;">
-                @php $selesai = $pendaftars->filter(fn($p) => optional($p->logistik)->status_kaos === 'Sudah')->count(); @endphp
-                <div class="sum-value" style="color:#a855f7;">{{ $selesai }}</div>
-                <div class="sum-label">Pendaftaran Selesai</div>
             </div>
         </div>
 
@@ -203,74 +198,6 @@
             </table>
         </div>
 
-        <!-- Rekap Pendaftar Diterima -->
-        <div class="section">
-            <div class="section-head" style="border-color:#10b981;background:#f0fdf4;">📋 Rekap Pendaftar Diterima</div>
-            
-            <div class="summary-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 16px;">
-                <div class="sum-box" style="border-color:#10b981;">
-                    <div class="sum-value" style="color:#10b981;">{{ $totalDiterima }}</div>
-                    <div class="sum-label">Total Diterima</div>
-                </div>
-                <div class="sum-box" style="border-color:#6366f1;">
-                    @php $diterimaLunas = $pendaftarDiterima->filter(fn($p) => optional($p->logistik)->status_bayar === 'Lunas')->count(); @endphp
-                    <div class="sum-value" style="color:#6366f1;">{{ $diterimaLunas }}</div>
-                    <div class="sum-label">Sudah Daftar Ulang</div>
-                </div>
-                <div class="sum-box" style="border-color:#ef4444;">
-                    <div class="sum-value" style="color:#ef4444;">{{ $totalDiterima - $diterimaLunas }}</div>
-                    <div class="sum-label">Belum Daftar Ulang</div>
-                </div>
-            </div>
-
-            <!-- Diterima Per Jurusan -->
-            <table class="data-table">
-                <thead><tr><th>Jurusan</th><th class="text-center">Total Diterima</th><th class="text-center">Sudah Daftar Ulang</th><th class="text-center">Belum Daftar Ulang</th><th class="text-center">% Daftar Ulang</th></tr></thead>
-                <tbody>
-                    @foreach (collect($jurusanAktif ?? [])->pluck('kode') as $j)
-                        @php
-                            $d = $diterimaPerJurusan[$j] ?? ['total'=>0,'lunas'=>0];
-                            $pct = $d['total'] > 0 ? round($d['lunas']/$d['total']*100) : 0;
-                        @endphp
-                        @if ($d['total'] > 0)
-                            <tr>
-                                <td><strong>{{ $j }}</strong></td>
-                                <td style="text-align:center;color:#059669;font-weight:700;">{{ $d['total'] }}</td>
-                                <td style="text-align:center;color:#0891b2;">{{ $d['lunas'] }}</td>
-                                <td style="text-align:center;color:#dc2626;">{{ $d['total'] - $d['lunas'] }}</td>
-                                <td style="text-align:center;">{{ $pct }}%</td>
-                            </tr>
-                        @endif
-                    @endforeach
-                </tbody>
-                <tfoot><tr>
-                    <td>TOTAL</td>
-                    <td style="text-align:center;color:#059669;">{{ $totalDiterima }}</td>
-                    <td style="text-align:center;color:#0891b2;">{{ $diterimaLunas }}</td>
-                    <td style="text-align:center;color:#dc2626;">{{ $totalDiterima - $diterimaLunas }}</td>
-                    <td style="text-align:center;">{{ $totalDiterima > 0 ? round($diterimaLunas/$totalDiterima*100) : 0 }}%</td>
-                </tr></tfoot>
-            </table>
-
-            @if($diterimaPerGelombang->count() > 0)
-                <div style="margin-top:16px;">
-                    <strong style="font-size:10px;color:#475569;display:block;margin-bottom:8px;">Diterima per Gelombang:</strong>
-                    <table class="data-table">
-                        <thead><tr><th>Gelombang</th><th class="text-center">Total Diterima</th><th class="text-center">% dari Total Diterima</th></tr></thead>
-                        <tbody>
-                            @foreach ($diterimaPerGelombang as $gel => $count)
-                                <tr>
-                                    <td>Gelombang {{ $gel }}</td>
-                                    <td style="text-align:center;font-weight:700;color:#059669;">{{ $count }}</td>
-                                    <td style="text-align:center;">{{ $totalDiterima > 0 ? round($count/$totalDiterima*100) : 0 }}%</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @endif
-        </div>
-
         <div class="doc-footer">
             {{ $schoolName }} | Laporan SPMB (Sistem Penerimaan Murid Baru) {{ now()->year }} | Dicetak: {{ now()->format('d-m-Y H:i') }} WIB<br>
             {{ $printFooter }}
@@ -315,9 +242,9 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse ($pendaftarDiterima as $i => $p)
+                @forelse ($pendaftarDiterima as $p)
                     <tr>
-                        <td>{{ $i + 1 }}</td>
+                        <td>{{ $loop->iteration }}</td>
                         <td style="font-family:'Courier New',monospace;font-size:10px;">{{ $p->no_registrasi }}</td>
                         <td><strong>{{ $p->nama_lengkap }}</strong></td>
                         <td>{{ $p->nisn }}</td>
@@ -345,6 +272,78 @@
 
         <div class="doc-footer">
             Total: {{ $pendaftarDiterima->count() }} pendaftar diterima | {{ $schoolName }} | SPMB (Sistem Penerimaan Murid Baru) {{ now()->year }}<br>
+            {{ $printFooter }}
+        </div>
+    </div>
+
+    <!-- Page 3: All Pendaftar Data Table -->
+    <div class="page page-break">
+        <div class="doc-header">
+            <div>
+                @if($logoUrl)
+                    <img src="{{ $logoUrl }}" alt="Logo {{ $schoolName }}" style="width:48px;height:48px;object-fit:contain;">
+                @else
+                    🎓
+                @endif
+            </div>
+            <div>
+                @if($docHeaderText)
+                    <div style="font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;">{{ $docHeaderText }}</div>
+                @endif
+                <div class="school-name">{{ $schoolName }}</div>
+                <div class="school-sub">{{ $schoolAddress }}, {{ $schoolCity }}</div>
+            </div>
+            <div class="doc-meta">Halaman 3 — Data Seluruh Pendaftar<br>{{ now()->format('d-m-Y H:i') }}</div>
+        </div>
+
+        <div class="report-title">Data Lengkap Seluruh Pendaftar</div>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width:20px;">No</th>
+                    <th>No. Registrasi</th>
+                    <th>Nama Lengkap</th>
+                    <th>NISN</th>
+                    <th>Jurusan</th>
+                    <th>Asal Sekolah</th>
+                    <th>Gel.</th>
+                    <th>Daftar Ulang</th>
+                    <th>Kaos</th>
+                    <th>Jaringan</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse ($pendaftars as $p)
+                    <tr>
+                        <td>{{ $loop->iteration }}</td>
+                        <td style="font-family:'Courier New',monospace;font-size:10px;">{{ $p->no_registrasi }}</td>
+                        <td><strong>{{ $p->nama_lengkap }}</strong></td>
+                        <td>{{ $p->nisn }}</td>
+                        <td><span class="badge" style="background:#eef2ff;color:#3730a3;">{{ $p->jurusan }}</span></td>
+                        <td style="font-size:10px;">{{ $p->asal_sekolah }}</td>
+                        <td style="text-align:center;">{{ $p->gelombang }}</td>
+                        <td>
+                            <span class="badge {{ optional($p->logistik)->status_bayar === 'Lunas' ? 'b-green' : 'b-red' }}">
+                                {{ optional($p->logistik)->status_bayar === 'Lunas' ? 'Sudah Daftar Ulang' : 'Belum Daftar Ulang' }}
+                            </span>
+                        </td>
+                        <td>
+                            @php $sk = optional($p->logistik)->status_kaos; @endphp
+                            <span class="badge {{ $sk === 'Sudah' ? 'b-green' : ($sk === 'Proses' ? 'b-yellow' : 'b-red') }}">
+                                {{ $sk ?? '-' }}
+                            </span>
+                        </td>
+                        <td style="font-size:10px;">{{ $p->nama_jaringan ?? '-' }}</td>
+                    </tr>
+                @empty
+                    <tr><td colspan="10" style="text-align:center;padding:20px;color:#94a3b8;">Belum ada data</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+
+        <div class="doc-footer">
+            Total: {{ $pendaftars->count() }} pendaftar | {{ $schoolName }} | SPMB (Sistem Penerimaan Murid Baru) {{ now()->year }}<br>
             {{ $printFooter }}
         </div>
     </div>
