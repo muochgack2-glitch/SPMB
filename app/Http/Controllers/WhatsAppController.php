@@ -2000,6 +2000,53 @@ class WhatsAppController extends Controller
     }
 
     /**
+     * Get external broadcast status for progress tracking (Task 4.2)
+     * 
+     * Returns current progress of an external broadcast batch
+     * Used for AJAX polling to show real-time progress
+     * 
+     * @param int $batchId External broadcast batch ID
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function externalBroadcastStatus($batchId)
+    {
+        try {
+            $batch = ExternalBroadcastBatch::find($batchId);
+            
+            if (!$batch) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Batch not found'
+                ], 404);
+            }
+            
+            // Calculate progress
+            $currentIndex = $batch->sent_count + $batch->failed_count;
+            $progressPercent = $batch->total_recipients > 0 
+                ? round(($currentIndex / $batch->total_recipients) * 100) 
+                : 0;
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'status' => $batch->status,
+                    'total' => $batch->total_recipients,
+                    'sent' => $batch->sent_count,
+                    'failed' => $batch->failed_count,
+                    'current_index' => $currentIndex,
+                    'progress_percent' => $progressPercent,
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error retrieving batch status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Get external recipient messages (Task 5.4)
      */
     public function getExternalMessages($id)

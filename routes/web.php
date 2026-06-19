@@ -241,6 +241,9 @@ Route::middleware('admin')->group(function () {
         Route::post('/broadcast/external/send', [\App\Http\Controllers\WhatsAppController::class, 'sendExternalBroadcast'])->name('broadcast.external.send');
         Route::get('/external/{id}/messages', [\App\Http\Controllers\WhatsAppController::class, 'getExternalMessages'])->name('external.messages');
         
+        // External Broadcast Progress Tracking (Task 4.1 & 4.2)
+        Route::get('/broadcast/external/status/{batch_id}', [\App\Http\Controllers\WhatsAppController::class, 'externalBroadcastStatus'])->name('broadcast.external.status');
+        
         // Phone List & Bulk Broadcast
         Route::get('/phone-list', [\App\Http\Controllers\WhatsAppController::class, 'phoneList'])->name('phone-list');
         Route::post('/broadcast/send-bulk', [\App\Http\Controllers\WhatsAppController::class, 'sendBulkBroadcast'])->name('broadcast.send-bulk');

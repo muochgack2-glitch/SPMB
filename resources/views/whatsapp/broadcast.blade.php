@@ -1067,12 +1067,12 @@ function executeExternalBroadcast() {
     progressModal.show();
     
     // Show indeterminate progress (processing...)
-    document.getElementById('progressBar').style.width = '100%';
+    document.getElementById('progressBar').style.width = '0%';
     document.getElementById('progressBar').classList.add('progress-bar-animated', 'progress-bar-striped');
-    document.getElementById('progressBar').textContent = 'Memproses...';
-    document.getElementById('progressText').textContent = 'Mengirim ' + selectedCount + ' pesan...';
-    document.getElementById('successCount').textContent = '-';
-    document.getElementById('failedCount').textContent = '-';
+    document.getElementById('progressBar').textContent = '0%';
+    document.getElementById('progressText').textContent = 'Memulai broadcast...';
+    document.getElementById('successCount').textContent = '0';
+    document.getElementById('failedCount').textContent = '0';
     document.getElementById('remainingCount').textContent = selectedCount;
     
     const payload = {
@@ -1084,6 +1084,72 @@ function executeExternalBroadcast() {
         payload.template_id = templateId;
     }
     
+    // Task 5.1: Start polling for progress BEFORE sending broadcast
+    let pollInterval = null;
+    let broadcastStarted = false;
+    
+    // Function to update progress UI from status data
+    function updateProgress(statusData) {
+        if (!statusData || !statusData.data) return;
+        
+        const progress = statusData.data;
+        const progressPercent = progress.progress_percent || 0;
+        const currentIndex = progress.current_index || 0;
+        const total = progress.total || selectedCount;
+        
+        // Update progress bar
+        document.getElementById('progressBar').style.width = progressPercent + '%';
+        document.getElementById('progressBar').textContent = progressPercent + '%';
+        
+        // Update counts
+        document.getElementById('successCount').textContent = progress.sent || 0;
+        document.getElementById('failedCount').textContent = progress.failed || 0;
+        document.getElementById('remainingCount').textContent = Math.max(0, total - currentIndex);
+        
+        // Update text
+        document.getElementById('progressText').textContent = 
+            `Mengirim pesan ${currentIndex} dari ${total}`;
+        
+        // Check if completed
+        if (progress.status === 'completed' || progress.status === 'failed') {
+            if (pollInterval) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+            }
+            
+            // Remove animated class
+            document.getElementById('progressBar').classList.remove('progress-bar-animated', 'progress-bar-striped');
+            
+            // Hide progress modal after short delay
+            setTimeout(() => {
+                progressModal.hide();
+                // Show result modal with final data
+                showExternalBroadcastResult({
+                    success: true,
+                    data: {
+                        total: progress.total,
+                        success_count: progress.sent,
+                        failed_count: progress.failed
+                    }
+                });
+            }, 1000);
+        }
+    }
+    
+    // Task 5.1: Start polling every 500ms
+    pollInterval = setInterval(() => {
+        if (!broadcastStarted) return; // Don't poll until broadcast starts
+        
+        fetch(`{{ url('/whatsapp/broadcast/external/status') }}/${batchId}`)
+            .then(response => response.json())
+            .then(updateProgress)
+            .catch(error => {
+                console.error('Polling error:', error);
+                // Don't stop polling on individual errors - might be temporary
+            });
+    }, 500);
+    
+    // Send broadcast request
     fetch('{{ route("whatsapp.broadcast.external.send") }}', {
         method: 'POST',
         headers: {
@@ -1092,8 +1158,17 @@ function executeExternalBroadcast() {
         },
         body: JSON.stringify(payload)
     })
-    .then(response => response.json())
+    .then(response => {
+        broadcastStarted = true; // Mark as started so polling begins
+        return response.json();
+    })
     .then(data => {
+        // Stop polling
+        if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+        }
+        
         // Remove animated class
         document.getElementById('progressBar').classList.remove('progress-bar-animated', 'progress-bar-striped');
         
@@ -1123,6 +1198,12 @@ function executeExternalBroadcast() {
         }
     })
     .catch(error => {
+        // Stop polling on error
+        if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+        }
+        
         document.getElementById('progressBar').classList.remove('progress-bar-animated', 'progress-bar-striped');
         progressModal.hide();
         alert('Error: ' + error.message);
