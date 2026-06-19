@@ -203,6 +203,74 @@
             </table>
         </div>
 
+        <!-- Rekap Pendaftar Diterima -->
+        <div class="section">
+            <div class="section-head" style="border-color:#10b981;background:#f0fdf4;">📋 Rekap Pendaftar Diterima</div>
+            
+            <div class="summary-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 16px;">
+                <div class="sum-box" style="border-color:#10b981;">
+                    <div class="sum-value" style="color:#10b981;">{{ $totalDiterima }}</div>
+                    <div class="sum-label">Total Diterima</div>
+                </div>
+                <div class="sum-box" style="border-color:#6366f1;">
+                    @php $diterimaLunas = $pendaftarDiterima->filter(fn($p) => optional($p->logistik)->status_bayar === 'Lunas')->count(); @endphp
+                    <div class="sum-value" style="color:#6366f1;">{{ $diterimaLunas }}</div>
+                    <div class="sum-label">Sudah Daftar Ulang</div>
+                </div>
+                <div class="sum-box" style="border-color:#ef4444;">
+                    <div class="sum-value" style="color:#ef4444;">{{ $totalDiterima - $diterimaLunas }}</div>
+                    <div class="sum-label">Belum Daftar Ulang</div>
+                </div>
+            </div>
+
+            <!-- Diterima Per Jurusan -->
+            <table class="data-table">
+                <thead><tr><th>Jurusan</th><th class="text-center">Total Diterima</th><th class="text-center">Sudah Daftar Ulang</th><th class="text-center">Belum Daftar Ulang</th><th class="text-center">% Daftar Ulang</th></tr></thead>
+                <tbody>
+                    @foreach (collect($jurusanAktif ?? [])->pluck('kode') as $j)
+                        @php
+                            $d = $diterimaPerJurusan[$j] ?? ['total'=>0,'lunas'=>0];
+                            $pct = $d['total'] > 0 ? round($d['lunas']/$d['total']*100) : 0;
+                        @endphp
+                        @if ($d['total'] > 0)
+                            <tr>
+                                <td><strong>{{ $j }}</strong></td>
+                                <td style="text-align:center;color:#059669;font-weight:700;">{{ $d['total'] }}</td>
+                                <td style="text-align:center;color:#0891b2;">{{ $d['lunas'] }}</td>
+                                <td style="text-align:center;color:#dc2626;">{{ $d['total'] - $d['lunas'] }}</td>
+                                <td style="text-align:center;">{{ $pct }}%</td>
+                            </tr>
+                        @endif
+                    @endforeach
+                </tbody>
+                <tfoot><tr>
+                    <td>TOTAL</td>
+                    <td style="text-align:center;color:#059669;">{{ $totalDiterima }}</td>
+                    <td style="text-align:center;color:#0891b2;">{{ $diterimaLunas }}</td>
+                    <td style="text-align:center;color:#dc2626;">{{ $totalDiterima - $diterimaLunas }}</td>
+                    <td style="text-align:center;">{{ $totalDiterima > 0 ? round($diterimaLunas/$totalDiterima*100) : 0 }}%</td>
+                </tr></tfoot>
+            </table>
+
+            @if($diterimaPerGelombang->count() > 0)
+                <div style="margin-top:16px;">
+                    <strong style="font-size:10px;color:#475569;display:block;margin-bottom:8px;">Diterima per Gelombang:</strong>
+                    <table class="data-table">
+                        <thead><tr><th>Gelombang</th><th class="text-center">Total Diterima</th><th class="text-center">% dari Total Diterima</th></tr></thead>
+                        <tbody>
+                            @foreach ($diterimaPerGelombang as $gel => $count)
+                                <tr>
+                                    <td>Gelombang {{ $gel }}</td>
+                                    <td style="text-align:center;font-weight:700;color:#059669;">{{ $count }}</td>
+                                    <td style="text-align:center;">{{ $totalDiterima > 0 ? round($count/$totalDiterima*100) : 0 }}%</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
+
         <div class="doc-footer">
             {{ $schoolName }} | Laporan SPMB (Sistem Penerimaan Murid Baru) {{ now()->year }} | Dicetak: {{ now()->format('d-m-Y H:i') }} WIB<br>
             {{ $printFooter }}
