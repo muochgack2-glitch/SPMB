@@ -380,10 +380,15 @@ class WhatsAppController extends Controller
      * HYBRID AUTO-DETECT (same as sendBulkBroadcast):
      * - If ≤30 recipients: Loop + Detail Feedback (synchronous)
      * - If >30 recipients: Bulk/Batch method (asynchronous)
+     * 
+     * Enhanced with:
+     * - MessageId verification for accurate success/failed counts
+     * - Conditional delay (only after confirmed success)
+     * - Configurable rate limiting from database
      */
     public function sendBroadcast(Request $request)
     {
-        // Increase timeout for large broadcasts
+        // Increase timeout for large broadcasts (same as external broadcast)
         set_time_limit(300); // 5 minutes
         ini_set('max_execution_time', 300);
         
@@ -825,10 +830,15 @@ class WhatsAppController extends Controller
      * HYBRID AUTO-DETECT:
      * - If ≤30 phones: Loop + Detail Feedback (synchronous)
      * - If >30 phones: Bulk/Batch method (asynchronous)
+     * 
+     * Enhanced with:
+     * - MessageId verification for accurate success/failed counts
+     * - Conditional delay (only after confirmed success)
+     * - Configurable rate limiting from database
      */
     public function sendBulkBroadcast(Request $request)
     {
-        // Increase timeout for large broadcasts
+        // Increase timeout for large broadcasts (same as external broadcast)
         set_time_limit(300); // 5 minutes
         ini_set('max_execution_time', 300);
         
@@ -871,6 +881,11 @@ class WhatsAppController extends Controller
     /**
      * Method A: Send with detail feedback (for ≤30 phones)
      * Loop one by one, return detailed results per phone
+     * 
+     * Enhanced with:
+     * - MessageId verification (proof of delivery)
+     * - Conditional delay (only after confirmed success)
+     * - Configurable rate limiting from database
      */
     private function sendWithDetailFeedback($phones, $message, $templateId)
     {
@@ -895,9 +910,31 @@ class WhatsAppController extends Controller
                     ]
                 );
 
-                if ($result['success']) {
-                    $successCount++;
+                // Enhanced response processing with messageId verification
+                // (Same logic as external broadcast - unified)
+                $messageIdPresent = false;
+                
+                if (is_array($result) && isset($result['success']) && $result['success']) {
+                    // Verify messageId presence (proof that gateway will send the message)
+                    $messageIdPresent = isset($result['data']['messageId']) 
+                                     || isset($result['data']['message_id'])
+                                     || (isset($result['has_message_id']) && $result['has_message_id']);
+                    
+                    if ($messageIdPresent) {
+                        // Confirmed success - has messageId proof
+                        $successCount++;
+                    } else {
+                        // Gateway says success but no messageId - treat as failed (suspicious)
+                        $failedCount++;
+                        
+                        \Log::warning('Broadcast: Success response without messageId', [
+                            'recipient' => $phoneData['name'],
+                            'phone' => $phoneData['phone'],
+                            'response' => $result,
+                        ]);
+                    }
                 } else {
+                    // Explicit failure
                     $failedCount++;
                 }
 
@@ -906,13 +943,35 @@ class WhatsAppController extends Controller
                     'name' => $phoneData['name'],
                     'no_reg' => $phoneData['no_reg'],
                     'jurusan' => $phoneData['jurusan'],
-                    'success' => $result['success'],
+                    'success' => $messageIdPresent, // Only true if messageId present
                     'message' => $result['message'] ?? null,
                 ];
 
-                // Delay between messages (prevent spam/rate limit)
+                // Conditional delay application (only after confirmed success)
+                // Skip delay for failed messages to save time
                 if (count($phones) > 1) {
-                    sleep(1);
+                    $currentIndex = $successCount + $failedCount;
+                    
+                    // Don't sleep after last message
+                    if ($currentIndex < count($phones)) {
+                        // ONLY apply delay if message was confirmed successful (messageId present)
+                        if ($messageIdPresent) {
+                            // Use configurable delay from database (same as external broadcast)
+                            $minDelay = WhatsAppSetting::getExternalBroadcastMinDelay();
+                            $maxDelay = WhatsAppSetting::getExternalBroadcastMaxDelay();
+                            $delay = rand($minDelay, $maxDelay);
+                            sleep($delay);
+                            
+                            // Extra delay every N messages (mini break to avoid patterns)
+                            $breakInterval = WhatsAppSetting::getExternalBroadcastBreakInterval();
+                            $breakDuration = WhatsAppSetting::getExternalBroadcastBreakDuration();
+                            
+                            if ($breakInterval > 0 && $successCount % $breakInterval === 0 && $successCount > 0) {
+                                sleep($breakDuration);
+                            }
+                        }
+                        // If messageId not present (failed), skip delay entirely
+                    }
                 }
 
             } catch (\Exception $e) {
