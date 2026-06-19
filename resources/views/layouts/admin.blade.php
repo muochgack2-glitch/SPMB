@@ -883,9 +883,6 @@
     <!-- Form Validation -->
     <script src="{{ asset('js/form-validation.js?v=' . time()) }}"></script>
     
-    <!-- Auto-save Draft -->
-    <script src="{{ asset('js/auto-save-draft.js?v=' . time()) }}"></script>
-    
     @stack('scripts')
 </body>
 </html>
