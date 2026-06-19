@@ -297,7 +297,7 @@
             <div class="doc-meta">Halaman 2 — Data Lengkap<br>{{ now()->format('d-m-Y H:i') }}</div>
         </div>
 
-        <div class="report-title">Data Lengkap Seluruh Pendaftar</div>
+        <div class="report-title">Data Lengkap Seluruh Pendaftar Diterima</div>
 
         <table class="data-table">
             <thead>
@@ -315,7 +315,7 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse ($pendaftars as $i => $p)
+                @forelse ($pendaftarDiterima as $i => $p)
                     <tr>
                         <td>{{ $i + 1 }}</td>
                         <td style="font-family:'Courier New',monospace;font-size:10px;">{{ $p->no_registrasi }}</td>
@@ -344,7 +344,7 @@
         </table>
 
         <div class="doc-footer">
-            Total: {{ $pendaftars->count() }} pendaftar | {{ $schoolName }} | SPMB (Sistem Penerimaan Murid Baru) {{ now()->year }}<br>
+            Total: {{ $pendaftarDiterima->count() }} pendaftar diterima | {{ $schoolName }} | SPMB (Sistem Penerimaan Murid Baru) {{ now()->year }}<br>
             {{ $printFooter }}
         </div>
     </div>
