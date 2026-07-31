@@ -1,4 +1,6 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* Alpine.js x-cloak - Hide elements until Alpine loads */
 [x-cloak] {
