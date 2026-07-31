@@ -1,11 +1,7 @@
-@php
-    $pageTitle = 'Manajemen Kelas';
-    $breadcrumbs = [
-        ['label' => 'Data Kelas']
-    ];
-@endphp
-
 <x-app-layout>
+    <x-slot name="title">Data Kelas</x-slot>
+    <x-slot name="pageTitle">Manajemen Kelas</x-slot>
+
     <div class="space-y-6">
         {{-- Page Header --}}
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">

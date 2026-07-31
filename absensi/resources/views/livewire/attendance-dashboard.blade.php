@@ -241,7 +241,8 @@
                 },
                 zoom: {
                     enabled: false
-                }
+                },
+                background: 'transparent'
             },
             colors: ['#10b981', '#f59e0b', '#ef4444'],
             dataLabels: {
@@ -283,8 +284,8 @@
                     colors: document.documentElement.classList.contains('dark') ? '#d1d5db' : '#374151'
                 }
             },
-            theme: {
-                mode: document.documentElement.classList.contains('dark') ? 'dark' : 'light'
+            tooltip: {
+                theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light'
             }
         };
 

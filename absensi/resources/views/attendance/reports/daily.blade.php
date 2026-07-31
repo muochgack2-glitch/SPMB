@@ -1,12 +1,7 @@
-@php
-    $pageTitle = 'Laporan Harian';
-    $breadcrumbs = [
-        ['label' => 'Laporan', 'url' => route('attendance.reports.index')],
-        ['label' => 'Laporan Harian']
-    ];
-@endphp
-
 <x-app-layout>
+    <x-slot name="title">Laporan Harian</x-slot>
+    <x-slot name="pageTitle">Laporan Harian</x-slot>
+
     <div class="space-y-6">
         {{-- Page Header with Filters --}}
         <x-card>

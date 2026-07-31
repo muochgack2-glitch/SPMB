@@ -16,8 +16,25 @@
 
                 <!-- Page Title -->
                 <div>
+                    @php
+                        // Get pageTitle - handle both slot and string
+                        $rawTitle = $pageTitle ?? 'Dashboard';
+                        $displayTitle = is_string($rawTitle) ? $rawTitle : (string) $rawTitle;
+                        
+                        // Map page titles to match sidebar menu names
+                        $titleMap = [
+                            'Dashboard Absensi' => 'Dashboard',
+                            'Manajemen Siswa' => 'Data Siswa',
+                            'Manajemen Kelas' => 'Data Kelas',
+                            'Laporan Absensi' => 'Laporan',
+                            'Pengaturan Sistem' => 'Settings',
+                        ];
+                        
+                        $displayTitle = $titleMap[$displayTitle] ?? $displayTitle;
+                    @endphp
+                    
                     <h2 class="text-xl font-bold text-gray-800 dark:text-white">
-                        {{ $pageTitle ?? 'Dashboard' }}
+                        {{ $displayTitle }}
                     </h2>
                     
                     <!-- Breadcrumb -->

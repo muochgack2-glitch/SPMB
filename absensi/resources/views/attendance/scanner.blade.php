@@ -1,11 +1,7 @@
-@php
-    $pageTitle = 'QR Scanner';
-    $breadcrumbs = [
-        ['label' => 'QR Scanner']
-    ];
-@endphp
-
 <x-app-layout>
+    <x-slot name="title">QR Scanner</x-slot>
+    <x-slot name="pageTitle">QR Scanner</x-slot>
+
     {{-- Livewire Scanner Component --}}
     @livewire(App\Livewire\QRScannerInterface::class)
 </x-app-layout>

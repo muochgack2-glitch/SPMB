@@ -1,11 +1,7 @@
-@php
-    $pageTitle = 'Pengaturan Sistem';
-    $breadcrumbs = [
-        ['label' => 'Pengaturan']
-    ];
-@endphp
-
 <x-app-layout>
+    <x-slot name="title">Settings</x-slot>
+    <x-slot name="pageTitle">Pengaturan Sistem</x-slot>
+
     <div class="max-w-5xl mx-auto space-y-6">
         {{-- Page Header --}}
         <div class="flex justify-between items-center">

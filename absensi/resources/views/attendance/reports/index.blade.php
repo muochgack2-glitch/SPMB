@@ -1,11 +1,7 @@
-@php
-    $pageTitle = 'Laporan Absensi';
-    $breadcrumbs = [
-        ['label' => 'Laporan']
-    ];
-@endphp
-
 <x-app-layout>
+    <x-slot name="title">Laporan</x-slot>
+    <x-slot name="pageTitle">Laporan Absensi</x-slot>
+
     <div class="space-y-6">
         {{-- Page Header --}}
         <div>
