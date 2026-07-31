@@ -4,12 +4,14 @@
         <h2 class="text-center text-2xl font-bold mb-4 text-gray-900 dark:text-white">Sistem Absensi Siswa</h2>
         <div class="flex justify-center gap-4 mb-6">
             <button 
+                type="button"
                 wire:click="setAction('check_in')"
                 class="px-6 py-3 rounded-lg font-semibold transition-all {{ $action === 'check_in' ? 'bg-green-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600' }}"
             >
                 📥 Check In (Masuk)
             </button>
             <button 
+                type="button"
                 wire:click="setAction('check_out')"
                 class="px-6 py-3 rounded-lg font-semibold transition-all {{ $action === 'check_out' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600' }}"
             >
@@ -65,6 +67,7 @@
                 </div>
             </div>
             <button 
+                type="button"
                 wire:click="hideResult"
                 class="w-full px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition"
             >
