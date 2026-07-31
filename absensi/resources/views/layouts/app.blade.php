@@ -50,6 +50,46 @@
         if (localStorage.getItem('darkMode') === 'true') {
             document.documentElement.classList.add('dark');
         }
+        
+        // Dark mode toggle function (Pure JavaScript - no Alpine needed)
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const isDark = html.classList.contains('dark');
+            
+            if (isDark) {
+                html.classList.remove('dark');
+                localStorage.setItem('darkMode', 'false');
+                updateDarkModeIcon(false);
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('darkMode', 'true');
+                updateDarkModeIcon(true);
+            }
+            
+            console.log('Dark mode toggled:', !isDark ? 'Dark' : 'Light');
+        }
+        
+        // Update icon display
+        function updateDarkModeIcon(isDark) {
+            const moonIcon = document.getElementById('dark-icon-moon');
+            const sunIcon = document.getElementById('dark-icon-sun');
+            
+            if (moonIcon && sunIcon) {
+                if (isDark) {
+                    moonIcon.classList.add('hidden');
+                    sunIcon.classList.remove('hidden');
+                } else {
+                    moonIcon.classList.remove('hidden');
+                    sunIcon.classList.add('hidden');
+                }
+            }
+        }
+        
+        // Initialize icon on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const isDark = localStorage.getItem('darkMode') === 'true';
+            updateDarkModeIcon(isDark);
+        });
     </script>
 </head>
 <body class="font-sans antialiased bg-gray-50 dark:bg-gray-900 transition-colors duration-300">

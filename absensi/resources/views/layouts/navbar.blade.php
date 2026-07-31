@@ -71,12 +71,13 @@
                 
                 <!-- Dark Mode Toggle -->
                 <button 
-                    @click="$store.darkMode.toggle()"
+                    onclick="toggleDarkMode()"
+                    id="dark-mode-toggle"
                     class="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     title="Toggle Dark Mode"
                 >
-                    <i class="fas fa-moon text-lg" x-show="!$store.darkMode.isDark"></i>
-                    <i class="fas fa-sun text-lg" x-show="$store.darkMode.isDark" x-cloak></i>
+                    <i class="fas fa-moon text-lg" id="dark-icon-moon"></i>
+                    <i class="fas fa-sun text-lg hidden" id="dark-icon-sun"></i>
                 </button>
 
                 <!-- Notifications -->
