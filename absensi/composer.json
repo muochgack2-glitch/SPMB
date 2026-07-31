@@ -89,7 +89,8 @@
             "php-http/discovery": true
         },
         "audit": {
-            "abandoned": "ignore"
+            "abandoned": "ignore",
+            "ignore": ["PKSA-y2cr-5h3j-g3ys"]
         },
         "platform": {
             "php": "8.3.31"
