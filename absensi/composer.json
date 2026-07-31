@@ -12,7 +12,11 @@
         "laravel/tinker": "^3.0",
         "livewire/livewire": "^4.3",
         "maatwebsite/excel": "^3.1",
-        "simplesoftwareio/simple-qrcode": "^4.2"
+        "simplesoftwareio/simple-qrcode": "^4.2",
+        "symfony/http-foundation": "^7.0",
+        "symfony/http-kernel": "^7.0",
+        "symfony/console": "^7.0",
+        "symfony/routing": "^7.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -87,10 +91,8 @@
         "audit": {
             "abandoned": "ignore"
         },
-        "policy": {
-            "advisories": {
-                "ignore": ["PKSA-y2cr-5h3j-g3ys"]
-            }
+        "platform": {
+            "php": "8.3.31"
         }
     },
     "minimum-stability": "stable",
