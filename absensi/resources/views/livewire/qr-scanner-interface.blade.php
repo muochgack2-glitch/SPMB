@@ -117,8 +117,12 @@
     @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <script>
+        let cameraInitialized = false; // Flag to prevent re-init
+        
         document.addEventListener('DOMContentLoaded', function() {
-            initQRScanner();
+            if (!cameraInitialized) {
+                initQRScanner();
+            }
         });
 
         let video, canvas, ctx, scanning = false;
@@ -127,6 +131,11 @@
         const SCAN_COOLDOWN = 3000; // 3 seconds cooldown between scans
 
         function initQRScanner() {
+            if (cameraInitialized) {
+                console.log('Camera already initialized');
+                return;
+            }
+            
             video = document.getElementById('qr-video');
             canvas = document.getElementById('qr-canvas');
             ctx = canvas.getContext('2d', { willReadFrequently: true }); // Optimize for frequent reads
@@ -140,6 +149,7 @@
                 video.setAttribute('playsinline', true);
                 video.play();
                 
+                cameraInitialized = true; // Mark as initialized
                 updateStatus('Camera ready. Scanning...', 'text-green-400');
                 requestAnimationFrame(scanQRCode);
             })
