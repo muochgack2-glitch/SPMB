@@ -68,6 +68,17 @@
                     </div>
                 </div>
 
+                
+                <!-- Dark Mode Toggle -->
+                <button 
+                    @click="$store.darkMode.toggle()"
+                    class="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    title="Toggle Dark Mode"
+                >
+                    <i class="fas fa-moon text-lg" x-show="!$store.darkMode.isDark"></i>
+                    <i class="fas fa-sun text-lg" x-show="$store.darkMode.isDark" x-cloak></i>
+                </button>
+
                 <!-- Notifications -->
                 <div class="relative" x-data="{ notifOpen: false }">
                     <button 
