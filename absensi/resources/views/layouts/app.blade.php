@@ -1,36 +1,118 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="csrf-token" content="{{ csrf_token() }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="description" content="Sistem Absensi QR Code - Modern & Real-time">
+    <meta name="theme-color" content="#1e3a8a">
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>{{ config('app.name', 'Absensi QR') }} - {{ $title ?? 'Dashboard' }}</title>
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
-        <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    </head>
-    <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
-            @include('layouts.navigation')
-
-            <!-- Page Heading -->
-            @isset($header)
-                <header class="bg-white dark:bg-gray-800 shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                        {{ $header }}
-                    </div>
-                </header>
-            @endisset
-
+    <!-- CSS Only -->
+    @vite(['resources/css/app.css'])
+    
+    <!-- Livewire Styles -->
+    @livewireStyles
+    
+    <!-- Additional Styles -->
+    @stack('styles')
+    
+    <!-- Initialize Dark Mode & Sidebar State Early -->
+    <script>
+        // Apply dark mode class before page renders to prevent flash
+        (function() {
+            const darkMode = localStorage.getItem('darkMode') === 'true';
+            if (darkMode) {
+                document.documentElement.classList.add('dark');
+            }
+            
+            // Apply sidebar state before render to prevent flash
+            const sidebarOpen = localStorage.getItem('sidebarOpen') !== 'false';
+            const sidebarWidth = sidebarOpen ? '16rem' : '5rem';
+            
+            // Create style element to immediately apply sidebar width
+            const style = document.createElement('style');
+            style.textContent = `
+                aside[data-sidebar] {
+                    width: ${sidebarWidth} !important;
+                }
+            `;
+            document.head.appendChild(style);
+        })();
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+</head>
+<body class="font-sans antialiased bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+    <div class="min-h-screen" x-data>
+        
+        <!-- Sidebar -->
+        @include('layouts.sidebar')
+        
+        <!-- Main Content Area -->
+        <div class="transition-all duration-300" 
+             x-data="{ sidebarOpen: localStorage.getItem('sidebarOpen') !== 'false' }" 
+             @sidebar-toggled.window="sidebarOpen = $event.detail"
+             :class="sidebarOpen ? 'ml-64' : 'ml-20'">
+            
+            <!-- Top Navbar -->
+            @include('layouts.navbar')
+            
             <!-- Page Content -->
-            <main>
+            <main class="p-6 animate-fade-in">
+                <!-- Alerts/Flash Messages -->
+                @if (session('success'))
+                    <div x-data="{ show: true }" x-show="show" x-transition class="mb-6">
+                        <x-alert type="success" :message="session('success')" dismissible />
+                    </div>
+                @endif
+                
+                @if (session('error'))
+                    <div x-data="{ show: true }" x-show="show" x-transition class="mb-6">
+                        <x-alert type="danger" :message="session('error')" dismissible />
+                    </div>
+                @endif
+                
+                @if (session('warning'))
+                    <div x-data="{ show: true }" x-show="show" x-transition class="mb-6">
+                        <x-alert type="warning" :message="session('warning')" dismissible />
+                    </div>
+                @endif
+                
+                @if (session('info'))
+                    <div x-data="{ show: true }" x-show="show" x-transition class="mb-6">
+                        <x-alert type="info" :message="session('info')" dismissible />
+                    </div>
+                @endif
+
+                <!-- Page Content Slot -->
                 {{ $slot }}
             </main>
+            
+            <!-- Footer -->
+            @include('layouts.footer')
         </div>
-    </body>
+    </div>
+
+    <!-- Toast Container (Fixed bottom-right) -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+
+    <!-- Livewire Scripts (includes Alpine.js) -->
+    @livewireScripts
+    
+    <!-- Custom JS after Livewire -->
+    @vite(['resources/js/app.js'])
+    
+    <!-- Additional Scripts -->
+    @stack('scripts')
+</body>
 </html>

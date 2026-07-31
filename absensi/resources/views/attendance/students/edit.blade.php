@@ -1,230 +1,209 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Siswa - Sistem Absensi</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50">
-    <div class="min-h-screen">
-        <!-- Header -->
-        <nav class="bg-blue-600 text-white shadow-lg">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center h-16">
-                    <div class="flex items-center">
-                        <h1 class="text-xl font-bold">📚 Sistem Absensi QR Code</h1>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        <a href="{{ route('attendance.dashboard') }}" class="hover:bg-blue-700 px-3 py-2 rounded">Dashboard</a>
-                        <a href="{{ route('attendance.scanner') }}" class="hover:bg-blue-700 px-3 py-2 rounded">Scanner</a>
-                        <a href="{{ route('attendance.students.index') }}" class="bg-blue-800 px-3 py-2 rounded">Siswa</a>
-                        <a href="{{ route('attendance.classes.index') }}" class="hover:bg-blue-700 px-3 py-2 rounded">Kelas</a>
-                        <a href="{{ route('attendance.reports.daily') }}" class="hover:bg-blue-700 px-3 py-2 rounded">Laporan</a>
-                        <a href="{{ route('attendance.settings.index') }}" class="hover:bg-blue-700 px-3 py-2 rounded">Pengaturan</a>
-                    </div>
+@php
+    $pageTitle = 'Edit Data Siswa';
+    $breadcrumbs = [
+        ['label' => 'Data Siswa', 'url' => route('attendance.students.index')],
+        ['label' => 'Edit Siswa']
+    ];
+@endphp
+
+<x-app-layout>
+    <div class="max-w-4xl mx-auto space-y-6">
+        {{-- Page Header --}}
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Edit Data Siswa</h1>
+                <p class="text-gray-600 dark:text-gray-400 mt-1">{{ $student->nama }} ({{ $student->nis }})</p>
+            </div>
+            
+            {{-- QR Code Quick Actions --}}
+            @if($student->qr_code_path)
+                <div class="flex gap-2">
+                    <a
+                        href="{{ route('attendance.qr.show', $student->nis) }}"
+                        target="_blank"
+                        class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 shadow-md hover:shadow-lg"
+                    >
+                        <i class="fas fa-qrcode mr-2"></i>
+                        Lihat QR
+                    </a>
                 </div>
-            </div>
-        </nav>
+            @endif
+        </div>
 
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <!-- Back Button -->
-            <div class="mb-6">
-                <a href="{{ route('attendance.students.index') }}" 
-                   class="text-blue-600 hover:text-blue-800 inline-flex items-center">
-                    ← Kembali ke Daftar Siswa
-                </a>
-            </div>
+        {{-- Form Card --}}
+        <x-card>
+            <form method="POST" action="{{ route('attendance.students.update', $student->id) }}" enctype="multipart/form-data">
+                @csrf
+                @method('PUT')
 
-            <!-- Page Header -->
-            <div class="mb-6">
-                <h2 class="text-3xl font-bold text-gray-900">Edit Data Siswa</h2>
-                <p class="text-gray-600 mt-1">{{ $student->nama }} ({{ $student->nis }})</p>
-            </div>
-
-            <!-- Form Card -->
-            <div class="bg-white rounded-lg shadow-md p-8">
-                <form method="POST" action="{{ route('attendance.students.update', $student->id) }}" enctype="multipart/form-data">
-                    @csrf
-                    @method('PUT')
-
-                    <!-- NIS -->
-                    <div class="mb-6">
-                        <label for="nis" class="block text-sm font-medium text-gray-700 mb-2">
-                            NIS <span class="text-red-500">*</span>
-                        </label>
-                        <input type="text" 
-                               id="nis" 
-                               name="nis" 
-                               value="{{ old('nis', $student->nis) }}"
-                               required
-                               class="w-full px-4 py-2 border @error('nis') border-red-500 @else border-gray-300 @enderror rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                               placeholder="Contoh: 24001">
-                        @error('nis')
-                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Nama -->
-                    <div class="mb-6">
-                        <label for="nama" class="block text-sm font-medium text-gray-700 mb-2">
-                            Nama Lengkap <span class="text-red-500">*</span>
-                        </label>
-                        <input type="text" 
-                               id="nama" 
-                               name="nama" 
-                               value="{{ old('nama', $student->nama) }}"
-                               required
-                               class="w-full px-4 py-2 border @error('nama') border-red-500 @else border-gray-300 @enderror rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                               placeholder="Contoh: Budi Santoso">
-                        @error('nama')
-                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Kelas -->
-                    <div class="mb-6">
-                        <label for="kelas_id" class="block text-sm font-medium text-gray-700 mb-2">
-                            Kelas <span class="text-red-500">*</span>
-                        </label>
-                        <select id="kelas_id" 
-                                name="kelas_id" 
-                                required
-                                class="w-full px-4 py-2 border @error('kelas_id') border-red-500 @else border-gray-300 @enderror rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option value="">Pilih Kelas</option>
-                            @foreach($classes as $class)
-                            <option value="{{ $class->id }}" {{ old('kelas_id', $student->kelas_id) == $class->id ? 'selected' : '' }}>
-                                {{ $class->tingkat }} {{ $class->nama_kelas }} {{ $class->jurusan ? '- ' . $class->jurusan : '' }}
-                            </option>
-                            @endforeach
-                        </select>
-                        @error('kelas_id')
-                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- No HP Orang Tua -->
-                    <div class="mb-6">
-                        <label for="no_hp_ortu" class="block text-sm font-medium text-gray-700 mb-2">
-                            No HP Orang Tua
-                        </label>
-                        <input type="text" 
-                               id="no_hp_ortu" 
-                               name="no_hp_ortu" 
-                               value="{{ old('no_hp_ortu', $student->no_hp_ortu) }}"
-                               class="w-full px-4 py-2 border @error('no_hp_ortu') border-red-500 @else border-gray-300 @enderror rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                               placeholder="Contoh: 628123456789">
-                        <p class="mt-1 text-xs text-gray-500">Format: 628XXXXXXXXX (untuk notifikasi WhatsApp)</p>
-                        @error('no_hp_ortu')
-                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Foto Profil -->
-                    <div class="mb-6">
-                        <label for="foto_profil" class="block text-sm font-medium text-gray-700 mb-2">
-                            Foto Profil
-                        </label>
-                        
-                        <!-- Current Photo -->
-                        @if($student->foto_profil)
-                        <div class="mb-3">
-                            <p class="text-sm text-gray-600 mb-2">Foto saat ini:</p>
-                            <img src="{{ Storage::url($student->foto_profil) }}" 
-                                 alt="{{ $student->nama }}" 
-                                 class="w-32 h-32 rounded-lg object-cover border-2 border-gray-300">
-                        </div>
-                        @endif
-                        
-                        <input type="file" 
-                               id="foto_profil" 
-                               name="foto_profil" 
-                               accept="image/*"
-                               onchange="previewImage(event)"
-                               class="w-full px-4 py-2 border @error('foto_profil') border-red-500 @else border-gray-300 @enderror rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <p class="mt-1 text-xs text-gray-500">Max 2MB, format: JPG, PNG, GIF. Kosongkan jika tidak ingin mengubah foto.</p>
-                        @error('foto_profil')
-                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                        
-                        <!-- Image Preview -->
-                        <div id="imagePreview" class="mt-4 hidden">
-                            <p class="text-sm text-gray-600 mb-2">Preview foto baru:</p>
-                            <img id="preview" src="" alt="Preview" class="w-32 h-32 rounded-lg object-cover border-2 border-blue-300">
-                        </div>
-                    </div>
-
-                    <!-- Status Aktif -->
-                    <div class="mb-6">
-                        <label class="flex items-center">
-                            <input type="checkbox" 
-                                   name="is_active" 
-                                   value="1" 
-                                   {{ old('is_active', $student->is_active) ? 'checked' : '' }}
-                                   class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                            <span class="ml-2 text-sm text-gray-700">Siswa Aktif</span>
-                        </label>
-                        <p class="mt-1 text-xs text-gray-500">Hanya siswa aktif yang bisa melakukan absensi</p>
-                    </div>
-
-                    <!-- QR Code Info -->
-                    @if($student->qr_code_path)
-                    <div class="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded">
-                        <div class="flex justify-between items-center">
-                            <div class="flex">
-                                <div class="flex-shrink-0">
-                                    ✅
-                                </div>
-                                <div class="ml-3">
-                                    <p class="text-sm text-green-700">
-                                        <strong>QR Code:</strong> Sudah tersedia
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="flex space-x-2">
-                                <a href="{{ route('attendance.qr.show', $student->nis) }}" 
-                                   class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm"
-                                   target="_blank">
-                                    Lihat QR
-                                </a>
-                                <a href="{{ route('attendance.qr.download', $student->nis) }}" 
-                                   class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm">
-                                    Download
-                                </a>
+                <div class="space-y-6">
+                    {{-- Current Photo Display --}}
+                    @if($student->foto_profil)
+                        <div class="flex items-center space-x-4 p-4 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl">
+                            <img
+                                src="{{ asset('storage/' . $student->foto_profil) }}"
+                                alt="{{ $student->nama }}"
+                                class="w-20 h-20 rounded-xl object-cover ring-4 ring-white dark:ring-gray-700 shadow-lg"
+                            />
+                            <div>
+                                <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Foto Profil Saat Ini</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Upload foto baru untuk mengganti</p>
                             </div>
                         </div>
-                    </div>
-                    @else
-                    <div class="mb-6 bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                ⚠️
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm text-yellow-700">
-                                    <strong>QR Code:</strong> Belum dibuat. Silakan gunakan command untuk generate QR Code.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
                     @endif
 
-                    <!-- Action Buttons -->
-                    <div class="flex justify-end space-x-3">
-                        <a href="{{ route('attendance.students.index') }}" 
-                           class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {{-- NIS --}}
+                        <x-input
+                            type="text"
+                            name="nis"
+                            label="NIS"
+                            :value="old('nis', $student->nis)"
+                            placeholder="Contoh: 24001"
+                            required
+                            :error="$errors->first('nis')"
+                        />
+
+                        {{-- Nama --}}
+                        <x-input
+                            type="text"
+                            name="nama"
+                            label="Nama Lengkap"
+                            :value="old('nama', $student->nama)"
+                            placeholder="Contoh: Budi Santoso"
+                            required
+                            :error="$errors->first('nama')"
+                        />
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {{-- Kelas --}}
+                        <x-select
+                            name="kelas_id"
+                            label="Kelas"
+                            required
+                            :error="$errors->first('kelas_id')"
+                        >
+                            <option value="">Pilih Kelas</option>
+                            @foreach($classes as $class)
+                                <option value="{{ $class->id }}" {{ old('kelas_id', $student->kelas_id) == $class->id ? 'selected' : '' }}>
+                                    {{ $class->nama_kelas }}{{ $class->jurusan ? ' - ' . $class->jurusan : '' }}
+                                </option>
+                            @endforeach
+                        </x-select>
+
+                        {{-- No HP Orang Tua --}}
+                        <x-input
+                            type="text"
+                            name="no_hp_ortu"
+                            label="No HP Orang Tua"
+                            :value="old('no_hp_ortu', $student->no_hp_ortu)"
+                            placeholder="Contoh: 628123456789"
+                            helper="Format: 628XXXXXXXXX"
+                            :error="$errors->first('no_hp_ortu')"
+                        />
+                    </div>
+
+                    {{-- Foto Profil --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Foto Profil Baru
+                        </label>
+                        <input
+                            type="file"
+                            name="foto_profil"
+                            accept="image/*"
+                            onchange="previewImage(event)"
+                            class="block w-full text-sm text-gray-900 dark:text-gray-100 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl cursor-pointer bg-gray-50 dark:bg-gray-800 hover:border-primary-400 focus:outline-none transition-colors p-4"
+                        />
+                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                            Max 2MB, format: JPG, PNG, GIF. Kosongkan jika tidak ingin mengubah foto.
+                        </p>
+                        @error('foto_profil')
+                            <p class="mt-2 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                        
+                        {{-- Image Preview --}}
+                        <div id="imagePreview" class="mt-4 hidden">
+                            <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Preview Foto Baru:</p>
+                            <img id="preview" src="" alt="Preview" class="w-32 h-32 rounded-xl object-cover ring-4 ring-primary-200 dark:ring-primary-800 shadow-lg">
+                        </div>
+                    </div>
+
+                    {{-- Status Aktif --}}
+                    <div class="flex items-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 rounded-xl">
+                        <input
+                            type="checkbox"
+                            name="is_active"
+                            id="is_active"
+                            value="1"
+                            {{ old('is_active', $student->is_active) ? 'checked' : '' }}
+                            class="w-5 h-5 text-primary-600 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500"
+                        />
+                        <label for="is_active" class="ml-3">
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Siswa Aktif</span>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Hanya siswa aktif yang bisa melakukan absensi</p>
+                        </label>
+                    </div>
+
+                    {{-- QR Code Status --}}
+                    @if($student->qr_code_path)
+                        <div class="flex items-center justify-between p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/10 dark:to-emerald-900/10 border-l-4 border-green-500 rounded-xl">
+                            <div class="flex items-center space-x-3">
+                                <div class="flex-shrink-0">
+                                    <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-check text-white"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-green-800 dark:text-green-300">QR Code Tersedia</p>
+                                    <p class="text-xs text-green-600 dark:text-green-400">Siswa sudah memiliki QR Code</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <a
+                                    href="{{ route('attendance.qr.show', $student->nis) }}"
+                                    target="_blank"
+                                    class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-lg transition"
+                                >
+                                    Lihat
+                                </a>
+                            </div>
+                        </div>
+                    @else
+                        <div class="flex items-center p-4 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/10 dark:to-orange-900/10 border-l-4 border-yellow-500 rounded-xl">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-exclamation-triangle text-yellow-600 dark:text-yellow-400"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-yellow-800 dark:text-yellow-300">QR Code Belum Dibuat</p>
+                                <p class="text-xs text-yellow-600 dark:text-yellow-400 mt-1">Generate QR Code setelah menyimpan data</p>
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Action Buttons --}}
+                    <div class="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <a
+                            href="{{ route('attendance.students.index') }}"
+                            class="inline-flex items-center justify-center px-6 py-3 text-sm font-medium rounded-xl transition-all duration-200 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        >
                             Batal
                         </a>
-                        <button type="submit" 
-                                class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow">
-                            💾 Update Data
+                        <button
+                            type="submit"
+                            class="inline-flex items-center justify-center px-6 py-3 text-sm font-semibold rounded-xl transition-all duration-200 bg-gradient-to-r from-primary-500 to-blue-600 text-white hover:from-primary-600 hover:to-blue-700 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                        >
+                            <i class="fas fa-save mr-2"></i>
+                            Update Data
                         </button>
                     </div>
-                </form>
-            </div>
-        </div>
+                </div>
+            </form>
+        </x-card>
     </div>
 
+    @push('scripts')
     <script>
         function previewImage(event) {
             const preview = document.getElementById('preview');
@@ -243,5 +222,5 @@
             }
         }
     </script>
-</body>
-</html>
+    @endpush
+</x-app-layout>

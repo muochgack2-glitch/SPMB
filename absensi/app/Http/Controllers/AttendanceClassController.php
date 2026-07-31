@@ -16,7 +16,7 @@ class AttendanceClassController extends Controller
      */
     public function index(Request $request)
     {
-        $query = AttendanceClass::with('students');
+        $query = AttendanceClass::with('waliKelas')->withCount('students');
 
         // Search functionality
         if ($request->filled('search')) {
@@ -50,9 +50,8 @@ class AttendanceClassController extends Controller
      */
     public function create()
     {
-        $teachers = User::where('role', 'teacher')
-            ->orderBy('name', 'asc')
-            ->get();
+        // Get all users as potential wali kelas (since role column doesn't exist)
+        $teachers = User::orderBy('name', 'asc')->get();
 
         return view('attendance.classes.create', compact('teachers'));
     }
@@ -111,9 +110,8 @@ class AttendanceClassController extends Controller
      */
     public function edit(AttendanceClass $class)
     {
-        $teachers = User::where('role', 'teacher')
-            ->orderBy('name', 'asc')
-            ->get();
+        // Get all users as potential wali kelas (since role column doesn't exist)
+        $teachers = User::orderBy('name', 'asc')->get();
 
         return view('attendance.classes.edit', compact('class', 'teachers'));
     }

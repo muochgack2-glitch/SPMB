@@ -69,7 +69,7 @@ class AttendanceStudent extends Model
             return null;
         }
 
-        return Storage::url($this->qr_code_path);
+        return Storage::disk('public')->url($this->qr_code_path);
     }
 
     /**

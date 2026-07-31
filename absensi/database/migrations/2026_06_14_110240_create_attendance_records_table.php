@@ -19,7 +19,7 @@ return new class extends Migration
             $table->time('check_out_time')->nullable();
             $table->string('check_in_photo', 255)->nullable(); // Path to check-in photo
             $table->string('check_out_photo', 255)->nullable(); // Path to check-out photo
-            $table->enum('status', ['hadir', 'terlambat', 'alpha']);
+            $table->enum('status', ['hadir', 'terlambat', 'alpha', 'izin', 'sakit']);
             $table->text('notes')->nullable();
             $table->timestamps();
             

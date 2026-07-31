@@ -34,7 +34,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('attendance.dashboard');
 
     // QR Scanner
-    Route::get('/attendance/scanner', [AttendanceScanController::class, 'index'])
+    Route::get('/attendance/scanner', [AttendanceScanController::class, 'showScanner'])
         ->name('attendance.scanner');
     
     Route::post('/attendance/scan', [AttendanceScanController::class, 'scan'])
@@ -70,12 +70,21 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/attendance/reports/student/{student}', [AttendanceReportController::class, 'studentHistory'])
         ->name('attendance.reports.student');
     
-    Route::post('/attendance/reports/export', [AttendanceReportController::class, 'export'])
-        ->name('attendance.reports.export');
+    Route::post('/attendance/reports/generate', [AttendanceReportController::class, 'generate'])
+        ->name('attendance.reports.generate');
+    
+    Route::get('/attendance/reports/export-summary', [AttendanceReportController::class, 'exportSummary'])
+        ->name('attendance.reports.export-summary');
 
     // QR Code Display
     Route::get('/attendance/qr/{student}', [AttendanceQRController::class, 'show'])
         ->name('attendance.qr.show');
+    
+    Route::get('/attendance/qr/{student}/download', [AttendanceQRController::class, 'download'])
+        ->name('attendance.qr.download');
+    
+    Route::post('/attendance/qr/{student}/regenerate', [AttendanceQRController::class, 'regenerate'])
+        ->name('attendance.qr.regenerate');
 
     // Settings
     Route::get('/attendance/settings', [AttendanceSettingController::class, 'index'])
@@ -84,8 +93,12 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/attendance/settings', [AttendanceSettingController::class, 'update'])
         ->name('attendance.settings.update');
     
+    Route::post('/attendance/settings/reset', [AttendanceSettingController::class, 'reset'])
+        ->name('attendance.settings.reset');
+    
     Route::post('/attendance/settings/test-notification', [AttendanceSettingController::class, 'testNotification'])
         ->name('attendance.settings.test-notification');
+
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

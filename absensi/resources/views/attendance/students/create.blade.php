@@ -1,167 +1,119 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tambah Siswa - Sistem Absensi</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50">
-    <div class="min-h-screen">
-        <!-- Header -->
-        <nav class="bg-blue-600 text-white shadow-lg">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center h-16">
-                    <div class="flex items-center">
-                        <h1 class="text-xl font-bold">📚 Sistem Absensi QR Code</h1>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        <a href="{{ route('attendance.dashboard') }}" class="hover:bg-blue-700 px-3 py-2 rounded">Dashboard</a>
-                        <a href="{{ route('attendance.scanner') }}" class="hover:bg-blue-700 px-3 py-2 rounded">Scanner</a>
-                        <a href="{{ route('attendance.students.index') }}" class="bg-blue-800 px-3 py-2 rounded">Siswa</a>
-                        <a href="{{ route('attendance.classes.index') }}" class="hover:bg-blue-700 px-3 py-2 rounded">Kelas</a>
-                        <a href="{{ route('attendance.reports.daily') }}" class="hover:bg-blue-700 px-3 py-2 rounded">Laporan</a>
-                        <a href="{{ route('attendance.settings.index') }}" class="hover:bg-blue-700 px-3 py-2 rounded">Pengaturan</a>
-                    </div>
-                </div>
-            </div>
-        </nav>
+@php
+    $pageTitle = 'Tambah Siswa Baru';
+    $breadcrumbs = [
+        ['label' => 'Data Siswa', 'url' => route('attendance.students.index')],
+        ['label' => 'Tambah Siswa']
+    ];
+@endphp
 
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <!-- Back Button -->
-            <div class="mb-6">
-                <a href="{{ route('attendance.students.index') }}" 
-                   class="text-blue-600 hover:text-blue-800 inline-flex items-center">
-                    ← Kembali ke Daftar Siswa
-                </a>
-            </div>
+<x-app-layout>
+    <div class="max-w-4xl mx-auto space-y-6">
+        {{-- Page Header --}}
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Tambah Siswa Baru</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">QR Code akan otomatis di-generate setelah siswa disimpan</p>
+        </div>
 
-            <!-- Page Header -->
-            <div class="mb-6">
-                <h2 class="text-3xl font-bold text-gray-900">Tambah Siswa Baru</h2>
-                <p class="text-gray-600 mt-1">QR Code akan otomatis di-generate setelah siswa disimpan</p>
-            </div>
+        {{-- Form Card --}}
+        <x-card>
+            <form method="POST" action="{{ route('attendance.students.store') }}" enctype="multipart/form-data">
+                @csrf
 
-            <!-- Form Card -->
-            <div class="bg-white rounded-lg shadow-md p-8">
-                <form method="POST" action="{{ route('attendance.students.store') }}" enctype="multipart/form-data">
-                    @csrf
+                <div class="space-y-6">
+                    {{-- NIS --}}
+                    <x-input
+                        type="text"
+                        name="nis"
+                        label="NIS"
+                        :value="old('nis')"
+                        placeholder="Contoh: 24001"
+                        required
+                        :error="$errors->first('nis')"
+                    />
 
-                    <!-- NIS -->
-                    <div class="mb-6">
-                        <label for="nis" class="block text-sm font-medium text-gray-700 mb-2">
-                            NIS <span class="text-red-500">*</span>
-                        </label>
-                        <input type="text" 
-                               id="nis" 
-                               name="nis" 
-                               value="{{ old('nis') }}"
-                               required
-                               class="w-full px-4 py-2 border @error('nis') border-red-500 @else border-gray-300 @enderror rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                               placeholder="Contoh: 24001">
-                        @error('nis')
-                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
+                    {{-- Nama --}}
+                    <x-input
+                        type="text"
+                        name="nama"
+                        label="Nama Lengkap"
+                        :value="old('nama')"
+                        placeholder="Contoh: Budi Santoso"
+                        required
+                        :error="$errors->first('nama')"
+                    />
 
-                    <!-- Nama -->
-                    <div class="mb-6">
-                        <label for="nama" class="block text-sm font-medium text-gray-700 mb-2">
-                            Nama Lengkap <span class="text-red-500">*</span>
-                        </label>
-                        <input type="text" 
-                               id="nama" 
-                               name="nama" 
-                               value="{{ old('nama') }}"
-                               required
-                               class="w-full px-4 py-2 border @error('nama') border-red-500 @else border-gray-300 @enderror rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                               placeholder="Contoh: Budi Santoso">
-                        @error('nama')
-                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Kelas -->
-                    <div class="mb-6">
-                        <label for="kelas_id" class="block text-sm font-medium text-gray-700 mb-2">
-                            Kelas <span class="text-red-500">*</span>
-                        </label>
-                        <select id="kelas_id" 
-                                name="kelas_id" 
-                                required
-                                class="w-full px-4 py-2 border @error('kelas_id') border-red-500 @else border-gray-300 @enderror rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option value="">Pilih Kelas</option>
-                            @foreach($classes as $class)
+                    {{-- Kelas --}}
+                    <x-select
+                        name="kelas_id"
+                        label="Kelas"
+                        required
+                        :error="$errors->first('kelas_id')"
+                    >
+                        <option value="">Pilih Kelas</option>
+                        @foreach($classes as $class)
                             <option value="{{ $class->id }}" {{ old('kelas_id') == $class->id ? 'selected' : '' }}>
-                                {{ $class->tingkat }} {{ $class->nama_kelas }} {{ $class->jurusan ? '- ' . $class->jurusan : '' }}
+                                {{ $class->nama_kelas }}{{ $class->jurusan ? ' - ' . $class->jurusan : '' }}
                             </option>
-                            @endforeach
-                        </select>
-                        @error('kelas_id')
-                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
+                        @endforeach
+                    </x-select>
 
-                    <!-- No HP Orang Tua -->
-                    <div class="mb-6">
-                        <label for="no_hp_ortu" class="block text-sm font-medium text-gray-700 mb-2">
-                            No HP Orang Tua
-                        </label>
-                        <input type="text" 
-                               id="no_hp_ortu" 
-                               name="no_hp_ortu" 
-                               value="{{ old('no_hp_ortu') }}"
-                               class="w-full px-4 py-2 border @error('no_hp_ortu') border-red-500 @else border-gray-300 @enderror rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                               placeholder="Contoh: 628123456789">
-                        <p class="mt-1 text-xs text-gray-500">Format: 628XXXXXXXXX (untuk notifikasi WhatsApp)</p>
-                        @error('no_hp_ortu')
-                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
+                    {{-- No HP Orang Tua --}}
+                    <x-input
+                        type="text"
+                        name="no_hp_ortu"
+                        label="No HP Orang Tua"
+                        :value="old('no_hp_ortu')"
+                        placeholder="Contoh: 628123456789"
+                        helper="Format: 628XXXXXXXXX (untuk notifikasi WhatsApp)"
+                        :error="$errors->first('no_hp_ortu')"
+                    />
 
-                    <!-- Foto Profil -->
-                    <div class="mb-6">
-                        <label for="foto_profil" class="block text-sm font-medium text-gray-700 mb-2">
+                    {{-- Foto Profil --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Foto Profil
                         </label>
-                        <input type="file" 
-                               id="foto_profil" 
-                               name="foto_profil" 
-                               accept="image/*"
-                               onchange="previewImage(event)"
-                               class="w-full px-4 py-2 border @error('foto_profil') border-red-500 @else border-gray-300 @enderror rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <p class="mt-1 text-xs text-gray-500">Max 2MB, format: JPG, PNG, GIF</p>
+                        <input
+                            type="file"
+                            name="foto_profil"
+                            accept="image/*"
+                            onchange="previewImage(event)"
+                            class="block w-full text-sm text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-800 focus:outline-none"
+                        />
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Max 2MB, format: JPG, PNG, GIF</p>
                         @error('foto_profil')
-                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                            <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
                         @enderror
                         
-                        <!-- Image Preview -->
+                        {{-- Image Preview --}}
                         <div id="imagePreview" class="mt-4 hidden">
-                            <img id="preview" src="" alt="Preview" class="w-32 h-32 rounded-lg object-cover border-2 border-gray-300">
+                            <img id="preview" src="" alt="Preview" class="w-32 h-32 rounded-lg object-cover border-2 border-gray-300 dark:border-gray-600">
                         </div>
                     </div>
 
-                    <!-- Status Aktif -->
-                    <div class="mb-6">
+                    {{-- Status Aktif --}}
+                    <div>
                         <label class="flex items-center">
-                            <input type="checkbox" 
-                                   name="is_active" 
-                                   value="1" 
-                                   {{ old('is_active', true) ? 'checked' : '' }}
-                                   class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                            <span class="ml-2 text-sm text-gray-700">Siswa Aktif</span>
+                            <input
+                                type="checkbox"
+                                name="is_active"
+                                value="1"
+                                {{ old('is_active', true) ? 'checked' : '' }}
+                                class="w-5 h-5 text-primary-600 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500"
+                            />
+                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Siswa Aktif</span>
                         </label>
-                        <p class="mt-1 text-xs text-gray-500">Hanya siswa aktif yang bisa melakukan absensi</p>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Hanya siswa aktif yang bisa melakukan absensi</p>
                     </div>
 
-                    <!-- Info Box -->
-                    <div class="mb-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                    {{-- Info Box --}}
+                    <div class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded">
                         <div class="flex">
                             <div class="flex-shrink-0">
-                                ℹ️
+                                <i class="fas fa-info-circle text-blue-500"></i>
                             </div>
                             <div class="ml-3">
-                                <p class="text-sm text-blue-700">
+                                <p class="text-sm text-blue-700 dark:text-blue-300">
                                     <strong>Catatan:</strong> QR Code akan otomatis dibuat setelah data siswa disimpan. 
                                     QR Code dapat dilihat dan diunduh dari halaman daftar siswa.
                                 </p>
@@ -169,22 +121,28 @@
                         </div>
                     </div>
 
-                    <!-- Action Buttons -->
-                    <div class="flex justify-end space-x-3">
-                        <a href="{{ route('attendance.students.index') }}" 
-                           class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    {{-- Action Buttons --}}
+                    <div class="flex justify-end gap-3 pt-4">
+                        <a
+                            href="{{ route('attendance.students.index') }}"
+                            class="inline-flex items-center justify-center px-6 py-2 text-sm font-medium rounded-lg transition-all duration-200 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        >
                             Batal
                         </a>
-                        <button type="submit" 
-                                class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow">
-                            💾 Simpan Siswa
+                        <button
+                            type="submit"
+                            class="inline-flex items-center justify-center px-6 py-2 text-sm font-medium rounded-lg transition-all duration-200 bg-gradient-to-r from-primary-500 to-primary-600 text-white hover:from-primary-600 hover:to-primary-700 shadow-md hover:shadow-lg"
+                        >
+                            <i class="fas fa-save mr-2"></i>
+                            Simpan Siswa
                         </button>
                     </div>
-                </form>
-            </div>
-        </div>
+                </div>
+            </form>
+        </x-card>
     </div>
 
+    @push('scripts')
     <script>
         function previewImage(event) {
             const preview = document.getElementById('preview');
@@ -203,5 +161,5 @@
             }
         }
     </script>
-</body>
-</html>
+    @endpush
+</x-app-layout>

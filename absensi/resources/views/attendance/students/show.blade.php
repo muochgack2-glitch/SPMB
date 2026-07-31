@@ -1,269 +1,260 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detail Siswa - Sistem Absensi</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50">
-    <div class="min-h-screen">
-        <!-- Header -->
-        <nav class="bg-blue-600 text-white shadow-lg">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center h-16">
-                    <div class="flex items-center">
-                        <h1 class="text-xl font-bold">📚 Sistem Absensi QR Code</h1>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        <a href="{{ route('attendance.dashboard') }}" class="hover:bg-blue-700 px-3 py-2 rounded">Dashboard</a>
-                        <a href="{{ route('attendance.scanner') }}" class="hover:bg-blue-700 px-3 py-2 rounded">Scanner</a>
-                        <a href="{{ route('attendance.students.index') }}" class="bg-blue-800 px-3 py-2 rounded">Siswa</a>
-                        <a href="{{ route('attendance.classes.index') }}" class="hover:bg-blue-700 px-3 py-2 rounded">Kelas</a>
-                        <a href="{{ route('attendance.reports.daily') }}" class="hover:bg-blue-700 px-3 py-2 rounded">Laporan</a>
-                        <a href="{{ route('attendance.settings.index') }}" class="hover:bg-blue-700 px-3 py-2 rounded">Pengaturan</a>
-                    </div>
-                </div>
-            </div>
-        </nav>
+@php
+    $pageTitle = 'Detail Siswa - ' . $student->nama;
+    $breadcrumbs = [
+        ['label' => 'Data Siswa', 'url' => route('attendance.students.index')],
+        ['label' => $student->nama]
+    ];
+@endphp
 
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <!-- Back Button -->
-            <div class="mb-6">
-                <a href="{{ route('attendance.students.index') }}" 
-                   class="text-blue-600 hover:text-blue-800 inline-flex items-center">
-                    ← Kembali ke Daftar Siswa
-                </a>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Left Column: Student Info -->
-                <div class="lg:col-span-1">
-                    <!-- Profile Card -->
-                    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                        <div class="text-center">
-                            @if($student->foto_profil)
-                            <img src="{{ Storage::url($student->foto_profil) }}" 
-                                 alt="{{ $student->nama }}"
-                                 class="w-32 h-32 rounded-full object-cover mx-auto mb-4 border-4 border-blue-100">
-                            @else
-                            <div class="w-32 h-32 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-bold text-4xl mx-auto mb-4">
-                                {{ substr($student->nama, 0, 1) }}
-                            </div>
-                            @endif
-
-                            <h2 class="text-2xl font-bold text-gray-900 mb-1">{{ $student->nama }}</h2>
-                            <p class="text-gray-600 mb-2">NIS: {{ $student->nis }}</p>
-                            
-                            @if($student->is_active)
-                            <span class="px-3 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800">
-                                ✓ Aktif
-                            </span>
-                            @else
-                            <span class="px-3 py-1 text-sm font-semibold rounded-full bg-red-100 text-red-800">
-                                ✗ Tidak Aktif
-                            </span>
-                            @endif
+<x-app-layout>
+    <div class="space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {{-- Left Column: Student Info --}}
+            <div class="lg:col-span-1 space-y-6">
+                {{-- Profile Card --}}
+                <x-card>
+                    <div class="text-center">
+                        @if($student->foto_profil)
+                        <img src="{{ Storage::url($student->foto_profil) }}" 
+                             alt="{{ $student->nama }}"
+                             class="w-32 h-32 rounded-full object-cover mx-auto mb-4 border-4 border-primary-500 shadow-lg">
+                        @else
+                        <div class="w-32 h-32 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-bold text-4xl mx-auto mb-4 shadow-lg">
+                            {{ substr($student->nama, 0, 1) }}
                         </div>
+                        @endif
 
-                        <div class="mt-6 space-y-3 border-t pt-4">
-                            <div class="flex items-start">
-                                <div class="text-gray-500 w-32">Kelas:</div>
-                                <div class="font-medium text-gray-900">
-                                    {{ $student->kelas->tingkat }} {{ $student->kelas->nama_kelas }}
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">{{ $student->nama }}</h2>
+                        <p class="text-gray-600 dark:text-gray-400 mb-3">NIS: {{ $student->nis }}</p>
+                        
+                        @if($student->is_active)
+                        <x-badge variant="success" class="text-sm">
+                            <i class="fas fa-check-circle mr-1"></i> Aktif
+                        </x-badge>
+                        @else
+                        <x-badge variant="danger" class="text-sm">
+                            <i class="fas fa-times-circle mr-1"></i> Tidak Aktif
+                        </x-badge>
+                        @endif
+                    </div>
+
+                    <div class="mt-6 space-y-4 pt-6 border-t border-gray-200 dark:border-gray-700">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white mr-3">
+                                <i class="fas fa-school"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-sm text-gray-500 dark:text-gray-400">Kelas</div>
+                                <div class="font-semibold text-gray-900 dark:text-white">
+                                    {{ $student->kelas->nama_kelas }}
                                 </div>
                             </div>
-                            <div class="flex items-start">
-                                <div class="text-gray-500 w-32">Jurusan:</div>
-                                <div class="font-medium text-gray-900">
+                        </div>
+
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white mr-3">
+                                <i class="fas fa-book"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-sm text-gray-500 dark:text-gray-400">Jurusan</div>
+                                <div class="font-semibold text-gray-900 dark:text-white">
                                     {{ $student->kelas->jurusan ?? '-' }}
                                 </div>
                             </div>
-                            <div class="flex items-start">
-                                <div class="text-gray-500 w-32">HP Ortu:</div>
-                                <div class="font-medium text-gray-900">
+                        </div>
+
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white mr-3">
+                                <i class="fab fa-whatsapp"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-sm text-gray-500 dark:text-gray-400">HP Orang Tua</div>
+                                <div class="font-semibold text-gray-900 dark:text-white">
                                     {{ $student->no_hp_ortu ?? '-' }}
                                 </div>
                             </div>
                         </div>
-
-                        <div class="mt-6 pt-4 border-t">
-                            <a href="{{ route('attendance.students.edit', $student->id) }}" 
-                               class="block w-full text-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg mb-2">
-                                ✏️ Edit Data
-                            </a>
-                            @if($student->qr_code_path)
-                            <a href="{{ route('attendance.qr.show', $student->nis) }}" 
-                               class="block w-full text-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg"
-                               target="_blank">
-                                🔳 Lihat QR Code
-                            </a>
-                            @endif
-                        </div>
                     </div>
 
-                    <!-- QR Code Card -->
-                    @if($student->qr_code_path)
-                    <div class="bg-white rounded-lg shadow-md p-6">
-                        <h3 class="text-lg font-bold text-gray-900 mb-4">QR Code Absensi</h3>
-                        <div class="text-center">
+                    <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 space-y-2">
+                        <a href="{{ route('attendance.students.edit', $student->id) }}" 
+                           class="block w-full text-center px-4 py-2.5 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white rounded-lg transition-all duration-200 shadow-md hover:shadow-lg font-medium">
+                            <i class="fas fa-edit mr-2"></i> Edit Data
+                        </a>
+                        @if($student->qr_code_path)
+                        <a href="{{ route('attendance.qr.show', $student->nis) }}" 
+                           class="block w-full text-center px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition-all duration-200 shadow-md hover:shadow-lg font-medium"
+                           target="_blank">
+                            <i class="fas fa-qrcode mr-2"></i> Lihat QR Code
+                        </a>
+                        @endif
+                    </div>
+                </x-card>
+
+                {{-- QR Code Card --}}
+                @if($student->qr_code_path)
+                <x-card>
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+                        <i class="fas fa-qrcode mr-2 text-primary-500"></i>
+                        QR Code Absensi
+                    </h3>
+                    <div class="text-center">
+                        <div class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 p-4 rounded-lg inline-block">
                             <img src="{{ Storage::url($student->qr_code_path) }}" 
                                  alt="QR Code {{ $student->nis }}"
-                                 class="w-48 h-48 mx-auto border-2 border-gray-200 rounded">
-                            <a href="{{ route('attendance.qr.download', $student->nis) }}" 
-                               class="mt-4 inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm">
-                                💾 Download QR
-                            </a>
+                                 class="w-48 h-48 mx-auto border-2 border-primary-500 rounded">
                         </div>
+                        <a href="{{ route('attendance.qr.download', $student->nis) }}" 
+                           class="mt-4 inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm transition-all duration-200 shadow hover:shadow-md">
+                            <i class="fas fa-download mr-2"></i> Download QR
+                        </a>
                     </div>
+                </x-card>
+                @endif
+            </div>
+
+            {{-- Right Column: Attendance History --}}
+            <div class="lg:col-span-2 space-y-6">
+                {{-- Stats Cards --}}
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <x-stat-card
+                        title="Hadir"
+                        :value="$student->attendanceRecords->where('status', 'hadir')->count()"
+                        icon="fa-check-circle"
+                        color="green"
+                    />
+                    <x-stat-card
+                        title="Terlambat"
+                        :value="$student->attendanceRecords->where('status', 'terlambat')->count()"
+                        icon="fa-clock"
+                        color="yellow"
+                    />
+                    <x-stat-card
+                        title="Sakit/Izin"
+                        :value="$student->attendanceRecords->whereIn('status', ['sakit', 'izin'])->count()"
+                        icon="fa-notes-medical"
+                        color="blue"
+                    />
+                    <x-stat-card
+                        title="Alpha"
+                        :value="$student->attendanceRecords->where('status', 'alpha')->count()"
+                        icon="fa-times-circle"
+                        color="red"
+                    />
+                </div>
+
+                {{-- Attendance History --}}
+                <x-card>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+                        <i class="fas fa-history mr-2 text-primary-500"></i>
+                        Riwayat Absensi Terakhir
+                    </h3>
+                    
+                    @if($student->attendanceRecords->count() > 0)
+                    <div class="overflow-x-auto">
+                        <x-table>
+                            <x-table.header>
+                                <th>Tanggal</th>
+                                <th>Jam Masuk</th>
+                                <th>Jam Pulang</th>
+                                <th>Status</th>
+                                <th>Foto</th>
+                            </x-table.header>
+                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                                @foreach($student->attendanceRecords as $record)
+                                <x-table.row>
+                                    <x-table.cell>
+                                        <div class="font-medium">{{ $record->date->format('d M Y') }}</div>
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">{{ $record->date->format('l') }}</div>
+                                    </x-table.cell>
+                                    <x-table.cell>
+                                        {{ $record->check_in_time ? substr($record->check_in_time, 0, 5) : '-' }}
+                                    </x-table.cell>
+                                    <x-table.cell>
+                                        {{ $record->check_out_time ? substr($record->check_out_time, 0, 5) : '-' }}
+                                    </x-table.cell>
+                                    <x-table.cell>
+                                        @php
+                                            $statusVariants = [
+                                                'hadir' => 'success',
+                                                'terlambat' => 'warning',
+                                                'sakit' => 'info',
+                                                'izin' => 'info',
+                                                'alpha' => 'danger',
+                                            ];
+                                            $variant = $statusVariants[$record->status] ?? 'secondary';
+                                        @endphp
+                                        <x-badge :variant="$variant">
+                                            {{ ucfirst($record->status) }}
+                                        </x-badge>
+                                    </x-table.cell>
+                                    <x-table.cell>
+                                        <div class="flex gap-2">
+                                            @if($record->check_in_photo)
+                                            <img src="{{ Storage::url($record->check_in_photo) }}" 
+                                                 alt="Check In"
+                                                 class="w-12 h-12 rounded-lg object-cover cursor-pointer border-2 border-green-300 dark:border-green-700 hover:scale-110 transition-transform"
+                                                 data-photo-url="{{ Storage::url($record->check_in_photo) }}"
+                                                 data-photo-title="Check In - {{ $record->date->format('d M Y') }}"
+                                                 onclick="viewPhoto(this.dataset.photoUrl, this.dataset.photoTitle)">
+                                            @endif
+                                            @if($record->check_out_photo)
+                                            <img src="{{ Storage::url($record->check_out_photo) }}" 
+                                                 alt="Check Out"
+                                                 class="w-12 h-12 rounded-lg object-cover cursor-pointer border-2 border-blue-300 dark:border-blue-700 hover:scale-110 transition-transform"
+                                                 data-photo-url="{{ Storage::url($record->check_out_photo) }}"
+                                                 data-photo-title="Check Out - {{ $record->date->format('d M Y') }}"
+                                                 onclick="viewPhoto(this.dataset.photoUrl, this.dataset.photoTitle)">
+                                            @endif
+                                        </div>
+                                    </x-table.cell>
+                                </x-table.row>
+                                @endforeach
+                            </tbody>
+                        </x-table>
+                    </div>
+                    @else
+                    <x-empty-state
+                        icon="fa-calendar-times"
+                        title="Belum Ada Riwayat"
+                        message="Siswa ini belum memiliki riwayat absensi"
+                    />
                     @endif
-                </div>
-
-                <!-- Right Column: Attendance History -->
-                <div class="lg:col-span-2">
-                    <!-- Stats Cards -->
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                        <div class="bg-white rounded-lg shadow p-4">
-                            <div class="text-sm text-gray-600">Hadir</div>
-                            <div class="text-2xl font-bold text-green-600">
-                                {{ $student->attendanceRecords->where('status', 'hadir')->count() }}
-                            </div>
-                        </div>
-                        <div class="bg-white rounded-lg shadow p-4">
-                            <div class="text-sm text-gray-600">Terlambat</div>
-                            <div class="text-2xl font-bold text-yellow-600">
-                                {{ $student->attendanceRecords->where('status', 'terlambat')->count() }}
-                            </div>
-                        </div>
-                        <div class="bg-white rounded-lg shadow p-4">
-                            <div class="text-sm text-gray-600">Sakit/Izin</div>
-                            <div class="text-2xl font-bold text-blue-600">
-                                {{ $student->attendanceRecords->whereIn('status', ['sakit', 'izin'])->count() }}
-                            </div>
-                        </div>
-                        <div class="bg-white rounded-lg shadow p-4">
-                            <div class="text-sm text-gray-600">Alpha</div>
-                            <div class="text-2xl font-bold text-red-600">
-                                {{ $student->attendanceRecords->where('status', 'alpha')->count() }}
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Attendance History -->
-                    <div class="bg-white rounded-lg shadow-md">
-                        <div class="p-6 border-b border-gray-200">
-                            <h3 class="text-xl font-bold text-gray-900">Riwayat Absensi Terakhir</h3>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jam Masuk</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jam Pulang</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Foto</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    @forelse($student->attendanceRecords as $record)
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ $record->date->format('d M Y') }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ $record->check_in_time ? $record->check_in_time->format('H:i') : '-' }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ $record->check_out_time ? $record->check_out_time->format('H:i') : '-' }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            @php
-                                                $statusColors = [
-                                                    'hadir' => 'bg-green-100 text-green-800',
-                                                    'terlambat' => 'bg-yellow-100 text-yellow-800',
-                                                    'sakit' => 'bg-blue-100 text-blue-800',
-                                                    'izin' => 'bg-purple-100 text-purple-800',
-                                                    'alpha' => 'bg-red-100 text-red-800',
-                                                ];
-                                                $color = $statusColors[$record->status] ?? 'bg-gray-100 text-gray-800';
-                                            @endphp
-                                            <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $color }}">
-                                                {{ ucfirst($record->status) }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                            <div class="flex space-x-2">
-                                                @if($record->check_in_photo)
-                                                <img src="{{ Storage::url($record->check_in_photo) }}" 
-                                                     alt="Check In"
-                                                     class="w-10 h-10 rounded object-cover cursor-pointer border-2 border-green-300"
-                                                     onclick="viewPhoto('{{ Storage::url($record->check_in_photo) }}', 'Check In')">
-                                                @endif
-                                                @if($record->check_out_photo)
-                                                <img src="{{ Storage::url($record->check_out_photo) }}" 
-                                                     alt="Check Out"
-                                                     class="w-10 h-10 rounded object-cover cursor-pointer border-2 border-blue-300"
-                                                     onclick="viewPhoto('{{ Storage::url($record->check_out_photo) }}', 'Check Out')">
-                                                @endif
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    @empty
-                                    <tr>
-                                        <td colspan="5" class="px-6 py-12 text-center text-gray-500">
-                                            <div class="text-4xl mb-2">📭</div>
-                                            <p>Belum ada riwayat absensi</p>
-                                        </td>
-                                    </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+                </x-card>
             </div>
         </div>
     </div>
 
-    <!-- Photo Modal -->
-    <div id="photoModal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
-        <div class="relative max-w-4xl w-full">
-            <button onclick="closePhotoModal()" 
-                    class="absolute -top-10 right-0 text-white text-4xl hover:text-gray-300">
-                ×
-            </button>
-            <div class="bg-white rounded-lg p-4">
-                <h3 id="photoTitle" class="text-lg font-bold mb-4"></h3>
-                <img id="photoImage" src="" alt="Photo" class="w-full rounded">
-            </div>
+    {{-- Photo Modal --}}
+    <x-modal id="photoModal">
+        <div class="p-6">
+            <h3 id="photoTitle" class="text-lg font-bold text-gray-900 dark:text-white mb-4"></h3>
+            <img id="photoImage" src="" alt="Photo" class="w-full rounded-lg">
         </div>
-    </div>
+    </x-modal>
 
+    @push('scripts')
     <script>
-        function viewPhoto(url, type) {
+        function viewPhoto(url, title) {
             document.getElementById('photoImage').src = url;
-            document.getElementById('photoTitle').textContent = 'Foto ' + type;
+            document.getElementById('photoTitle').textContent = title;
             document.getElementById('photoModal').classList.remove('hidden');
         }
 
-        function closePhotoModal() {
-            document.getElementById('photoModal').classList.add('hidden');
-        }
-
         // Close modal on click outside
-        document.getElementById('photoModal').addEventListener('click', function(e) {
+        document.getElementById('photoModal')?.addEventListener('click', function(e) {
             if (e.target === this) {
-                closePhotoModal();
+                this.classList.add('hidden');
             }
         });
 
         // Close modal on ESC key
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
-                closePhotoModal();
+                document.getElementById('photoModal')?.classList.add('hidden');
             }
         });
     </script>
-</body>
-</html>
+    @endpush
+</x-app-layout>
+

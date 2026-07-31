@@ -32,7 +32,7 @@ class AttendanceStudentController extends Controller
         }
 
         // Filter by class
-        if ($classId = $request->input('class_id')) {
+        if ($classId = $request->input('kelas_id')) {
             $query->where('kelas_id', $classId);
         }
 
@@ -197,11 +197,25 @@ class AttendanceStudentController extends Controller
     }
 
     /**
+     * Download Excel template.
+     * 
+     * GET /attendance/students/export/template
+     */
+    public function exportTemplate()
+    {
+        // Generate and download template directly without storing
+        return Excel::download(
+            new \App\Exports\StudentTemplateExport(), 
+            'Template-Import-Siswa.xlsx'
+        );
+    }
+
+    /**
      * Import students from Excel file.
      * 
      * POST /attendance/students/import
      */
-    public function importExcel(Request $request)
+    public function import(Request $request)
     {
         $request->validate([
             'file' => 'required|mimes:xlsx,xls,csv|max:5120',
@@ -219,41 +233,5 @@ class AttendanceStudentController extends Controller
             return redirect()->back()
                 ->with('error', 'Import gagal: ' . $e->getMessage());
         }
-    }
-
-    /**
-     * Download Excel template.
-     * 
-     * GET /attendance/students/template
-     */
-    public function downloadTemplate()
-    {
-        $templatePath = storage_path('app/templates/template-siswa-absensi.xlsx');
-
-        if (!file_exists($templatePath)) {
-            // Create template if not exists
-            $this->createTemplate($templatePath);
-        }
-
-        return response()->download($templatePath);
-    }
-
-    /**
-     * Create Excel template file.
-     */
-    private function createTemplate(string $path)
-    {
-        $data = [
-            ['NIS', 'Nama', 'Kelas ID', 'No HP Orang Tua'],
-            ['24001', 'Contoh Siswa 1', '1', '628123456789'],
-            ['24002', 'Contoh Siswa 2', '1', '628123456790'],
-        ];
-
-        $directory = dirname($path);
-        if (!is_dir($directory)) {
-            mkdir($directory, 0755, true);
-        }
-
-        Excel::store(new \App\Exports\StudentTemplateExport($data), 'templates/template-siswa-absensi.xlsx');
     }
 }

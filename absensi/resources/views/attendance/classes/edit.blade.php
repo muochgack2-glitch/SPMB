@@ -1,99 +1,118 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Kelas - Sistem Absensi</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50">
-    <div class="min-h-screen">
-        <!-- Header -->
-        <nav class="bg-blue-600 text-white shadow-lg">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center h-16">
-                    <div class="flex items-center">
-                        <h1 class="text-xl font-bold">📚 Sistem Absensi QR Code</h1>
+@php
+    $pageTitle = 'Edit Kelas';
+    $breadcrumbs = [
+        ['label' => 'Data Kelas', 'url' => route('attendance.classes.index')],
+        ['label' => 'Edit Kelas']
+    ];
+@endphp
+
+<x-app-layout>
+    <div class="max-w-4xl mx-auto space-y-6">
+        {{-- Page Header --}}
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Edit Kelas</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">Perbarui informasi kelas {{ $class->nama_kelas }}</p>
+        </div>
+
+        {{-- Form Card --}}
+        <x-card>
+            <form method="POST" action="{{ route('attendance.classes.update', $class->id) }}">
+                @csrf
+                @method('PUT')
+
+                <div class="space-y-6">
+                    {{-- Nama Kelas --}}
+                    <x-input
+                        type="text"
+                        name="nama_kelas"
+                        label="Nama Kelas"
+                        :value="old('nama_kelas', $class->nama_kelas)"
+                        placeholder="Contoh: RPL A"
+                        required
+                        :error="$errors->first('nama_kelas')"
+                    />
+
+                    {{-- Tingkat & Jurusan --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <x-select
+                            name="tingkat"
+                            label="Tingkat"
+                            required
+                            :error="$errors->first('tingkat')"
+                        >
+                            <option value="">Pilih Tingkat</option>
+                            <option value="10" {{ old('tingkat', $class->tingkat) == 10 ? 'selected' : '' }}>Kelas 10</option>
+                            <option value="11" {{ old('tingkat', $class->tingkat) == 11 ? 'selected' : '' }}>Kelas 11</option>
+                            <option value="12" {{ old('tingkat', $class->tingkat) == 12 ? 'selected' : '' }}>Kelas 12</option>
+                        </x-select>
+
+                        <x-input
+                            type="text"
+                            name="jurusan"
+                            label="Jurusan"
+                            :value="old('jurusan', $class->jurusan)"
+                            placeholder="Contoh: RPL, TKJ, MM"
+                            :error="$errors->first('jurusan')"
+                        />
                     </div>
-                    <div class="flex items-center space-x-4">
-                        <a href="{{ route('attendance.dashboard') }}" class="hover:bg-blue-700 px-3 py-2 rounded">Dashboard</a>
-                        <a href="{{ route('attendance.classes.index') }}" class="bg-blue-800 px-3 py-2 rounded">Kelas</a>
+
+                    {{-- Wali Kelas (optional) --}}
+                    <x-input
+                        type="text"
+                        name="wali_kelas"
+                        label="Wali Kelas"
+                        :value="old('wali_kelas', $class->wali_kelas ?? '')"
+                        placeholder="Nama wali kelas (opsional)"
+                        :error="$errors->first('wali_kelas')"
+                    />
+
+                    {{-- Status Aktif --}}
+                    <div>
+                        <label class="flex items-center">
+                            <input
+                                type="checkbox"
+                                name="is_active"
+                                value="1"
+                                {{ old('is_active', $class->is_active) ? 'checked' : '' }}
+                                class="w-5 h-5 text-primary-600 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500"
+                            />
+                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Kelas Aktif</span>
+                        </label>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Hanya kelas aktif yang dapat digunakan untuk absensi</p>
                     </div>
-                </div>
-            </div>
-        </nav>
 
-        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="mb-6">
-                <a href="{{ route('attendance.classes.index') }}" 
-                   class="text-blue-600 hover:text-blue-800 inline-flex items-center">
-                    ← Kembali ke Daftar Kelas
-                </a>
-            </div>
-
-            <div class="bg-white rounded-lg shadow-md p-8">
-                <h2 class="text-2xl font-bold text-gray-900 mb-6">Edit Kelas</h2>
-
-                <form method="POST" action="{{ route('attendance.classes.update', $class->id) }}">
-                    @csrf
-                    @method('PUT')
-
-                    <div class="space-y-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Nama Kelas *</label>
-                            <input type="text" 
-                                   name="nama_kelas" 
-                                   value="{{ old('nama_kelas', $class->nama_kelas) }}"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                   required>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Tingkat *</label>
-                                <select name="tingkat" 
-                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                                        required>
-                                    <option value="10" {{ $class->tingkat == 10 ? 'selected' : '' }}>10</option>
-                                    <option value="11" {{ $class->tingkat == 11 ? 'selected' : '' }}>11</option>
-                                    <option value="12" {{ $class->tingkat == 12 ? 'selected' : '' }}>12</option>
-                                </select>
+                    {{-- Info Box - Student Count --}}
+                    <div class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-users text-blue-500"></i>
                             </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Jurusan</label>
-                                <input type="text" 
-                                       name="jurusan" 
-                                       value="{{ old('jurusan', $class->jurusan) }}"
-                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                            <div class="ml-3">
+                                <p class="text-sm text-blue-700 dark:text-blue-300">
+                                    <strong>Total Siswa:</strong> {{ $class->students->count() ?? 0 }} siswa terdaftar di kelas ini
+                                </p>
                             </div>
-                        </div>
-
-                        <div>
-                            <label class="flex items-center">
-                                <input type="checkbox" 
-                                       name="is_active" 
-                                       value="1"
-                                       {{ $class->is_active ? 'checked' : '' }}
-                                       class="w-4 h-4 text-blue-600 border-gray-300 rounded">
-                                <span class="ml-2 text-sm text-gray-700">Kelas Aktif</span>
-                            </label>
                         </div>
                     </div>
 
-                    <div class="flex justify-end space-x-3 mt-8">
-                        <a href="{{ route('attendance.classes.index') }}" 
-                           class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    {{-- Action Buttons --}}
+                    <div class="flex justify-end gap-3 pt-4">
+                        <a
+                            href="{{ route('attendance.classes.index') }}"
+                            class="inline-flex items-center justify-center px-6 py-2 text-sm font-medium rounded-lg transition-all duration-200 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        >
                             Batal
                         </a>
-                        <button type="submit" 
-                                class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
+                        <button
+                            type="submit"
+                            class="inline-flex items-center justify-center px-6 py-2 text-sm font-medium rounded-lg transition-all duration-200 bg-gradient-to-r from-primary-500 to-primary-600 text-white hover:from-primary-600 hover:to-primary-700 shadow-md hover:shadow-lg"
+                        >
+                            <i class="fas fa-save mr-2"></i>
                             Update Kelas
                         </button>
                     </div>
-                </form>
-            </div>
-        </div>
+                </div>
+            </form>
+        </x-card>
     </div>
-</body>
-</html>
+</x-app-layout>

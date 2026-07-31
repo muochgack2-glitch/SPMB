@@ -1,17 +1,17 @@
 <div class="qr-scanner-container">
     {{-- Action Selector --}}
     <div class="action-selector mb-4">
-        <h2 class="text-center text-2xl font-bold mb-4">Sistem Absensi Siswa</h2>
+        <h2 class="text-center text-2xl font-bold mb-4 text-gray-900 dark:text-white">Sistem Absensi Siswa</h2>
         <div class="flex justify-center gap-4 mb-6">
             <button 
                 wire:click="setAction('check_in')"
-                class="px-6 py-3 rounded-lg font-semibold transition-all {{ $action === 'check_in' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}"
+                class="px-6 py-3 rounded-lg font-semibold transition-all {{ $action === 'check_in' ? 'bg-green-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600' }}"
             >
                 📥 Check In (Masuk)
             </button>
             <button 
                 wire:click="setAction('check_out')"
-                class="px-6 py-3 rounded-lg font-semibold transition-all {{ $action === 'check_out' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}"
+                class="px-6 py-3 rounded-lg font-semibold transition-all {{ $action === 'check_out' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600' }}"
             >
                 📤 Check Out (Pulang)
             </button>
@@ -19,7 +19,7 @@
     </div>
 
     {{-- Scanner Area --}}
-    <div class="scanner-area bg-gray-900 rounded-lg p-6 mb-6">
+    <div class="scanner-area bg-gray-900 dark:bg-gray-950 rounded-lg p-6 mb-6">
         <div class="relative">
             {{-- Video Element for Webcam --}}
             <video id="qr-video" class="w-full rounded-lg" playsinline autoplay></video>
@@ -48,14 +48,14 @@
     @if($showResult || $errorMessage)
     <div 
         id="result-card"
-        class="result-card bg-white rounded-lg shadow-lg p-6 mb-4"
+        class="result-card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-6 mb-4"
         x-data="{ show: true }"
         x-show="show"
         x-transition
     >
         @if($errorMessage)
             {{-- Error Message --}}
-            <div class="error-message bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">
+            <div class="error-message bg-red-100 dark:bg-red-900/30 border-l-4 border-red-500 text-red-700 dark:text-red-300 p-4 mb-4">
                 <div class="flex items-center">
                     <span class="text-2xl mr-3">❌</span>
                     <div>
@@ -66,17 +66,17 @@
             </div>
             <button 
                 wire:click="hideResult"
-                class="w-full px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
+                class="w-full px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition"
             >
                 Tutup
             </button>
         @else
             {{-- Success/Loading State (will be updated by JavaScript) --}}
-            <div id="scan-result-content">
+            <div id="scan-result-content" class="text-gray-900 dark:text-gray-100">
                 <div class="flex items-center justify-center mb-4">
                     <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
                 </div>
-                <p class="text-center text-gray-600">Memproses scan...</p>
+                <p class="text-center text-gray-600 dark:text-gray-400">Memproses scan...</p>
             </div>
             
             {{-- Reject Button (hidden until scan succeeds) --}}
@@ -91,9 +91,9 @@
     @endif
 
     {{-- Instructions --}}
-    <div class="instructions bg-blue-50 rounded-lg p-4">
-        <h3 class="font-bold text-blue-900 mb-2">📋 Instruksi:</h3>
-        <ul class="list-disc list-inside text-blue-800 text-sm space-y-1">
+    <div class="instructions bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        <h3 class="font-bold text-blue-900 dark:text-blue-200 mb-2">📋 Instruksi:</h3>
+        <ul class="list-disc list-inside text-blue-800 dark:text-blue-300 text-sm space-y-1">
             <li>Pilih mode: Check In (masuk) atau Check Out (pulang)</li>
             <li>Pastikan kamera menghadap QR Code siswa</li>
             <li>Sistem akan otomatis mengambil foto saat QR terdeteksi</li>

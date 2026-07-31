@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable(['nama_kelas', 'tingkat', 'jurusan', 'wali_kelas_id', 'is_active'])]
 class AttendanceClass extends Model
@@ -37,6 +38,14 @@ class AttendanceClass extends Model
     public function students(): HasMany
     {
         return $this->hasMany(AttendanceStudent::class, 'kelas_id');
+    }
+
+    /**
+     * Get the wali kelas (homeroom teacher) for the class.
+     */
+    public function waliKelas(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'wali_kelas_id');
     }
 
     /**

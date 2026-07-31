@@ -1,111 +1,166 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daftar Kelas - Sistem Absensi</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50">
-    <div class="min-h-screen">
-        <!-- Header -->
-        <nav class="bg-blue-600 text-white shadow-lg">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center h-16">
-                    <div class="flex items-center">
-                        <h1 class="text-xl font-bold">📚 Sistem Absensi QR Code</h1>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        <a href="{{ route('attendance.dashboard') }}" class="hover:bg-blue-700 px-3 py-2 rounded">Dashboard</a>
-                        <a href="{{ route('attendance.scanner') }}" class="hover:bg-blue-700 px-3 py-2 rounded">Scanner</a>
-                        <a href="{{ route('attendance.students.index') }}" class="hover:bg-blue-700 px-3 py-2 rounded">Siswa</a>
-                        <a href="{{ route('attendance.classes.index') }}" class="bg-blue-800 px-3 py-2 rounded">Kelas</a>
-                        <a href="{{ route('attendance.reports.daily') }}" class="hover:bg-blue-700 px-3 py-2 rounded">Laporan</a>
-                        <a href="{{ route('attendance.settings.index') }}" class="hover:bg-blue-700 px-3 py-2 rounded">Pengaturan</a>
-                    </div>
-                </div>
+@php
+    $pageTitle = 'Manajemen Kelas';
+    $breadcrumbs = [
+        ['label' => 'Data Kelas']
+    ];
+@endphp
+
+<x-app-layout>
+    <div class="space-y-6">
+        {{-- Page Header --}}
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Manajemen Kelas</h1>
+                <p class="text-gray-600 dark:text-gray-400 mt-1">Kelola data kelas dan organisasi siswa</p>
             </div>
-        </nav>
+            
+            <a
+                href="{{ route('attendance.classes.create') }}"
+                class="inline-flex items-center justify-center px-6 py-3 text-sm font-semibold rounded-xl transition-all duration-200 bg-gradient-to-r from-primary-500 to-blue-600 text-white hover:from-primary-600 hover:to-blue-700 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+            >
+                <i class="fas fa-plus mr-2"></i>
+                Tambah Kelas
+            </a>
+        </div>
 
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <!-- Header -->
-            <div class="flex justify-between items-center mb-6">
-                <div>
-                    <h2 class="text-3xl font-bold text-gray-900">Manajemen Kelas</h2>
-                    <p class="text-gray-600 mt-1">Kelola data kelas dan QR code absensi</p>
-                </div>
-                <a href="{{ route('attendance.classes.create') }}" 
-                   class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow flex items-center">
-                    ➕ Tambah Kelas
-                </a>
-            </div>
+        {{-- Stats Cards --}}
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <x-stat-card
+                title="Total Kelas"
+                :value="\App\Models\AttendanceClass::count()"
+                icon="fas fa-school"
+                color="blue"
+            />
+            
+            <x-stat-card
+                title="Kelas Aktif"
+                :value="\App\Models\AttendanceClass::where('is_active', true)->count()"
+                icon="fas fa-check-circle"
+                color="success"
+            />
+            
+            <x-stat-card
+                title="Total Siswa"
+                :value="\App\Models\AttendanceStudent::count()"
+                icon="fas fa-users"
+                color="purple"
+            />
+            
+            <x-stat-card
+                title="Rata-rata Siswa/Kelas"
+                :value="round(\App\Models\AttendanceStudent::count() / max(\App\Models\AttendanceClass::count(), 1))"
+                icon="fas fa-chart-line"
+                color="info"
+            />
+        </div>
 
-            <!-- Classes Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                @forelse($classes as $class)
-                <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <h3 class="text-xl font-bold text-gray-900">{{ $class->nama_kelas }}</h3>
-                            <p class="text-sm text-gray-600">Tingkat {{ $class->tingkat }} - {{ $class->jurusan }}</p>
-                        </div>
-                        @if($class->is_active)
-                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                            Aktif
-                        </span>
-                        @else
-                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
-                            Tidak Aktif
-                        </span>
-                        @endif
-                    </div>
-
-                    <div class="border-t pt-4 mb-4">
-                        <div class="text-center">
-                            <div class="text-3xl font-bold text-blue-600">
-                                {{ $class->students_count ?? 0 }}
+        {{-- Classes Grid --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @forelse($classes as $class)
+                <x-card class="group hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
+                    <div class="space-y-4">
+                        {{-- Header --}}
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold shadow-lg">
+                                        {{ $class->tingkat }}
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">
+                                            {{ $class->nama_kelas }}
+                                        </h3>
+                                        @if($class->jurusan)
+                                            <p class="text-xs text-gray-600 dark:text-gray-400">{{ $class->jurusan }}</p>
+                                        @endif
+                                    </div>
+                                </div>
                             </div>
-                            <div class="text-sm text-gray-600">Siswa</div>
+                            
+                            @if($class->is_active)
+                                <x-badge variant="success">Aktif</x-badge>
+                            @else
+                                <x-badge variant="danger">Non-Aktif</x-badge>
+                            @endif
+                        </div>
+
+                        {{-- Wali Kelas --}}
+                        @if($class->wali_kelas)
+                            <div class="flex items-center space-x-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                <i class="fas fa-user-tie text-blue-600 dark:text-blue-400"></i>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Wali Kelas</p>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ $class->wali_kelas }}</p>
+                                </div>
+                            </div>
+                        @endif
+
+                        {{-- Stats --}}
+                        <div class="flex items-center justify-center p-4 bg-gradient-to-br from-primary-50 to-blue-50 dark:from-primary-900/10 dark:to-blue-900/10 rounded-xl">
+                            <div class="text-center">
+                                <div class="text-3xl font-bold bg-gradient-to-r from-primary-600 to-blue-600 bg-clip-text text-transparent">
+                                    {{ $class->students_count ?? 0 }}
+                                </div>
+                                <div class="text-sm text-gray-600 dark:text-gray-400 font-medium">Siswa Terdaftar</div>
+                            </div>
+                        </div>
+
+                        {{-- Actions --}}
+                        <div class="flex gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                            <a
+                                href="{{ route('attendance.classes.edit', $class->id) }}"
+                                class="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-200 dark:hover:bg-yellow-900/50"
+                            >
+                                <i class="fas fa-edit mr-2"></i>
+                                Edit
+                            </a>
+                            
+                            <form
+                                action="{{ route('attendance.classes.destroy', $class->id) }}"
+                                method="POST"
+                                onsubmit="return confirm('Yakin ingin menghapus kelas {{ $class->nama_kelas }}?')"
+                                class="flex-1"
+                            >
+                                @csrf
+                                @method('DELETE')
+                                <button
+                                    type="submit"
+                                    class="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50"
+                                >
+                                    <i class="fas fa-trash mr-2"></i>
+                                    Hapus
+                                </button>
+                            </form>
                         </div>
                     </div>
-
-                    <div class="flex space-x-2">
-                        <a href="{{ route('attendance.classes.edit', $class->id) }}" 
-                           class="flex-1 text-center px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm">
-                            ✏️ Edit
-                        </a>
-                        <form action="{{ route('attendance.classes.destroy', $class->id) }}" 
-                              method="POST" 
-                              onsubmit="return confirm('Yakin hapus kelas ini?')"
-                              class="flex-1">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" 
-                                    class="w-full px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm">
-                                🗑️ Hapus
-                            </button>
-                        </form>
-                    </div>
+                </x-card>
+            @empty
+                <div class="col-span-full">
+                    <x-card class="text-center py-12">
+                        <x-empty-state
+                            icon="fas fa-school"
+                            message="Belum ada data kelas"
+                        >
+                            <x-slot name="action">
+                                <a
+                                    href="{{ route('attendance.classes.create') }}"
+                                    class="inline-flex items-center justify-center px-6 py-3 text-sm font-semibold rounded-xl transition-all duration-200 bg-gradient-to-r from-primary-500 to-blue-600 text-white hover:from-primary-600 hover:to-blue-700 shadow-lg hover:shadow-xl mt-4"
+                                >
+                                    <i class="fas fa-plus mr-2"></i>
+                                    Tambah Kelas Pertama
+                                </a>
+                            </x-slot>
+                        </x-empty-state>
+                    </x-card>
                 </div>
-                @empty
-                <div class="col-span-full bg-white rounded-lg shadow p-12 text-center">
-                    <div class="text-6xl mb-4">📚</div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">Belum Ada Kelas</h3>
-                    <p class="text-gray-600 mb-4">Mulai dengan menambahkan kelas pertama</p>
-                    <a href="{{ route('attendance.classes.create') }}" 
-                       class="inline-block px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
-                        ➕ Tambah Kelas Pertama
-                    </a>
-                </div>
-                @endforelse
-            </div>
+            @endforelse
+        </div>
 
-            @if($classes->hasPages())
-            <div class="mt-6">
+        {{-- Pagination --}}
+        @if($classes->hasPages())
+            <div class="flex justify-center">
                 {{ $classes->links() }}
             </div>
-            @endif
-        </div>
+        @endif
     </div>
-</body>
-</html>
+</x-app-layout>

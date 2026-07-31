@@ -24,11 +24,11 @@ class QRCodeService
             ->errorCorrection('H')
             ->generate($qrContent);
         
-        // Define storage path
-        $path = "attendance/qrcodes/{$nis}.svg";
+        // Define storage path (relative to storage/app/public)
+        $path = "qrcodes/{$nis}.svg";
         
-        // Save to storage
-        Storage::put($path, $qrImage);
+        // Save to public storage disk so it's web-accessible
+        Storage::disk('public')->put($path, $qrImage);
         
         return $path;
     }
@@ -42,9 +42,9 @@ class QRCodeService
     public function regenerateQRCode(string $nis): string
     {
         // Delete old QR Code if exists
-        $oldPath = "attendance/qrcodes/{$nis}.svg";
-        if (Storage::exists($oldPath)) {
-            Storage::delete($oldPath);
+        $oldPath = "qrcodes/{$nis}.svg";
+        if (Storage::disk('public')->exists($oldPath)) {
+            Storage::disk('public')->delete($oldPath);
         }
         
         // Generate new QR Code
@@ -59,13 +59,13 @@ class QRCodeService
      */
     public function getQRCodeUrl(string $nis): ?string
     {
-        $path = "attendance/qrcodes/{$nis}.svg";
+        $path = "qrcodes/{$nis}.svg";
         
-        if (!Storage::exists($path)) {
+        if (!Storage::disk('public')->exists($path)) {
             return null;
         }
         
-        return Storage::url($path);
+        return Storage::disk('public')->url($path);
     }
 
     /**
@@ -111,10 +111,10 @@ class QRCodeService
      */
     public function deleteQRCode(string $nis): bool
     {
-        $path = "attendance/qrcodes/{$nis}.svg";
+        $path = "qrcodes/{$nis}.svg";
         
-        if (Storage::exists($path)) {
-            return Storage::delete($path);
+        if (Storage::disk('public')->exists($path)) {
+            return Storage::disk('public')->delete($path);
         }
         
         return true; // Already deleted
@@ -128,7 +128,7 @@ class QRCodeService
      */
     public function qrCodeExists(string $nis): bool
     {
-        $path = "attendance/qrcodes/{$nis}.svg";
-        return Storage::exists($path);
+        $path = "qrcodes/{$nis}.svg";
+        return Storage::disk('public')->exists($path);
     }
 }

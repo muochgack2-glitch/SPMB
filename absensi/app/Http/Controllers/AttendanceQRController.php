@@ -28,7 +28,7 @@ class AttendanceQRController extends Controller
             ->firstOrFail();
 
         // Generate QR if not exists
-        if (!$student->qr_code_path || !Storage::exists($student->qr_code_path)) {
+        if (!$student->qr_code_path || !Storage::disk('public')->exists($student->qr_code_path)) {
             $path = $this->qrCodeService->generateQRCode($student->nis);
             $student->update(['qr_code_path' => $path]);
         }
@@ -49,14 +49,14 @@ class AttendanceQRController extends Controller
         $student = AttendanceStudent::where('nis', $nis)->firstOrFail();
 
         // Generate QR if not exists
-        if (!$student->qr_code_path || !Storage::exists($student->qr_code_path)) {
+        if (!$student->qr_code_path || !Storage::disk('public')->exists($student->qr_code_path)) {
             $path = $this->qrCodeService->generateQRCode($student->nis);
             $student->update(['qr_code_path' => $path]);
         }
 
         $filename = "QR_{$student->nis}_{$student->nama}.svg";
 
-        return Storage::download($student->qr_code_path, $filename);
+        return Storage::disk('public')->download($student->qr_code_path, $filename);
     }
 
     /**

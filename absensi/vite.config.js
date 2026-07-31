@@ -6,7 +6,12 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js'],
+            input: [
+                'resources/css/app.css',
+                'resources/js/app.js',
+                'resources/js/charts.js',
+                'resources/js/qr-scanner.js',
+            ],
             refresh: true,
             fonts: [
                 bunny('Instrument Sans', {
@@ -16,6 +21,26 @@ export default defineConfig({
         }),
         tailwindcss(),
     ],
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks(id) {
+                    if (id.includes('alpinejs')) {
+                        return 'vendor';
+                    }
+                    if (id.includes('apexcharts')) {
+                        return 'charts';
+                    }
+                    if (id.includes('html5-qrcode')) {
+                        return 'qr';
+                    }
+                    if (id.includes('flatpickr')) {
+                        return 'date';
+                    }
+                }
+            }
+        }
+    },
     server: {
         watch: {
             ignored: ['**/storage/framework/views/**'],

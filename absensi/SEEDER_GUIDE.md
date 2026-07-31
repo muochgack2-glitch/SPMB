@@ -13,7 +13,7 @@ Seeder ini digunakan untuk mengisi database dengan data default yang diperlukan 
 Jalankan semua seeder sekaligus:
 
 ```bash
-php artisan db:seed
+
 ```
 
 Atau dengan flag force untuk production:
