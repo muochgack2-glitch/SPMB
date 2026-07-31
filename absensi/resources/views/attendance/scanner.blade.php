@@ -7,7 +7,7 @@
 
 <x-app-layout>
     {{-- Livewire Scanner Component --}}
-    @livewire('qr-scanner-interface')
+    @livewire(App\Livewire\QRScannerInterface::class)
 </x-app-layout>
 
 @push('styles')
