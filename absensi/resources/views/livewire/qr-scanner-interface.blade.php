@@ -5,15 +5,17 @@
         <div class="flex justify-center gap-4 mb-6">
             <button 
                 type="button"
-                wire:click="setAction('check_in')"
-                class="px-6 py-3 rounded-lg font-semibold transition-all {{ $action === 'check_in' ? 'bg-green-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600' }}"
+                id="btn-check-in"
+                onclick="switchAction('check_in')"
+                class="px-6 py-3 rounded-lg font-semibold transition-all bg-green-600 text-white"
             >
                 📥 Check In (Masuk)
             </button>
             <button 
                 type="button"
-                wire:click="setAction('check_out')"
-                class="px-6 py-3 rounded-lg font-semibold transition-all {{ $action === 'check_out' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600' }}"
+                id="btn-check-out"
+                onclick="switchAction('check_out')"
+                class="px-6 py-3 rounded-lg font-semibold transition-all bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
             >
                 📤 Check Out (Pulang)
             </button>
@@ -42,7 +44,7 @@
         
         <div class="text-center text-white mt-4">
             <p class="text-lg">Arahkan kamera ke QR Code siswa</p>
-            <p class="text-sm text-gray-400">Mode: <span class="font-bold">{{ $action === 'check_in' ? 'CHECK IN (Masuk)' : 'CHECK OUT (Pulang)' }}</span></p>
+            <p class="text-sm text-gray-400">Mode: <span id="action-mode-text" class="font-bold">CHECK IN (Masuk)</span></p>
         </div>
     </div>
 
@@ -118,12 +120,35 @@
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <script>
         let cameraInitialized = false; // Flag to prevent re-init
+        let currentAction = 'check_in'; // Track current action in JavaScript
         
         document.addEventListener('DOMContentLoaded', function() {
             if (!cameraInitialized) {
                 initQRScanner();
             }
         });
+
+        // Switch action without Livewire (pure JavaScript)
+        function switchAction(action) {
+            currentAction = action;
+            
+            // Update button styles
+            const btnCheckIn = document.getElementById('btn-check-in');
+            const btnCheckOut = document.getElementById('btn-check-out');
+            const modeText = document.getElementById('action-mode-text');
+            
+            if (action === 'check_in') {
+                btnCheckIn.className = 'px-6 py-3 rounded-lg font-semibold transition-all bg-green-600 text-white';
+                btnCheckOut.className = 'px-6 py-3 rounded-lg font-semibold transition-all bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600';
+                modeText.textContent = 'CHECK IN (Masuk)';
+            } else {
+                btnCheckIn.className = 'px-6 py-3 rounded-lg font-semibold transition-all bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600';
+                btnCheckOut.className = 'px-6 py-3 rounded-lg font-semibold transition-all bg-blue-600 text-white';
+                modeText.textContent = 'CHECK OUT (Pulang)';
+            }
+            
+            console.log('Action switched to:', action);
+        }
 
         let video, canvas, ctx, scanning = false;
         let lastScannedCode = null;
@@ -198,8 +223,8 @@
             photoCtx.drawImage(video, 0, 0);
             const photoBase64 = photoCanvas.toDataURL('image/jpeg', 0.85);
 
-            // Get current action
-            const action = @this.get('action');
+            // Get current action from JavaScript variable
+            const action = currentAction;
 
             // Show loading state
             @this.set('showResult', true);
