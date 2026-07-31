@@ -7,8 +7,9 @@
             <div class="flex items-center space-x-4">
                 <!-- Mobile Menu Toggle -->
                 <button 
-                    @click="sidebarOpen = !sidebarOpen"
+                    @click="window.dispatchEvent(new CustomEvent('toggle-sidebar'))"
                     class="lg:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    title="Toggle Sidebar"
                 >
                     <i class="fas fa-bars text-lg"></i>
                 </button>

@@ -34,18 +34,7 @@
                 document.documentElement.classList.add('dark');
             }
             
-            // Apply sidebar state before render to prevent flash
-            const sidebarOpen = localStorage.getItem('sidebarOpen') !== 'false';
-            const sidebarWidth = sidebarOpen ? '16rem' : '5rem';
-            
-            // Create style element to immediately apply sidebar width
-            const style = document.createElement('style');
-            style.textContent = `
-                aside[data-sidebar] {
-                    width: ${sidebarWidth} !important;
-                }
-            `;
-            document.head.appendChild(style);
+            // NO LONGER forcing sidebar width here - let Alpine handle it
         })();
         if (localStorage.getItem('darkMode') === 'true') {
             document.documentElement.classList.add('dark');
@@ -102,7 +91,7 @@
         <div class="transition-all duration-300" 
              x-data="{ sidebarOpen: localStorage.getItem('sidebarOpen') !== 'false' }" 
              @sidebar-toggled.window="sidebarOpen = $event.detail"
-             :class="sidebarOpen ? 'ml-64' : 'ml-20'">
+             :style="{ marginLeft: sidebarOpen ? '16rem' : '5rem' }">
             
             <!-- Top Navbar -->
             @include('layouts.navbar')

@@ -11,7 +11,12 @@ export default defineConfig({
                 'resources/js/charts.js',
                 'resources/js/qr-scanner.js',
             ],
-            refresh: true,
+            refresh: [
+                'resources/views/**/*.blade.php',
+                'routes/**',
+                'app/Http/Controllers/**',
+                'app/Livewire/**',
+            ],
             fonts: [
                 bunny('Instrument Sans', {
                     weights: [400, 500, 600],

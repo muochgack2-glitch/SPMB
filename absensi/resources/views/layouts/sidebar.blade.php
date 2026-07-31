@@ -1,27 +1,41 @@
 <!-- Sidebar Component -->
 <aside 
     data-sidebar
-    x-data="{ 
-        sidebarOpen: localStorage.getItem('sidebarOpen') !== 'false',
-        activeMenu: '{{ request()->route()->getName() }}',
-        tooltipShow: null,
-        isInitialLoad: true,
-        toggleSidebar() {
-            this.isInitialLoad = false;
-            this.sidebarOpen = !this.sidebarOpen;
-            localStorage.setItem('sidebarOpen', this.sidebarOpen);
-            window.dispatchEvent(new CustomEvent('sidebar-toggled', { detail: this.sidebarOpen }));
-        }
-    }"
-    x-init="
-        // Remove transition during initial load
-        setTimeout(() => { isInitialLoad = false; }, 100);
-    "
+    id="main-sidebar"
+    x-data="sidebarData()"
+    x-init="initSidebar()"
     style="pointer-events: auto !important;"
     class="fixed top-0 left-0 h-screen bg-gradient-to-b from-primary-900 via-primary-800 to-primary-900 shadow-2xl z-50 overflow-hidden"
     :class="isInitialLoad ? '' : 'transition-all duration-300'"
     :style="{ width: sidebarOpen ? '16rem' : '5rem' }"
 >
+<script>
+function sidebarData() {
+    return {
+        sidebarOpen: localStorage.getItem('sidebarOpen') !== 'false',
+        activeMenu: '{{ request()->route()->getName() }}',
+        tooltipShow: null,
+        isInitialLoad: true,
+        
+        toggleSidebar() {
+            this.isInitialLoad = false;
+            this.sidebarOpen = !this.sidebarOpen;
+            localStorage.setItem('sidebarOpen', this.sidebarOpen);
+            window.dispatchEvent(new CustomEvent('sidebar-toggled', { detail: this.sidebarOpen }));
+        },
+        
+        initSidebar() {
+            // Remove transition during initial load
+            setTimeout(() => { this.isInitialLoad = false; }, 100);
+            
+            // Listen for external toggle events from hamburger button
+            window.addEventListener('toggle-sidebar', () => {
+                this.toggleSidebar();
+            });
+        }
+    }
+}
+</script>
     <div class="flex flex-col h-full">
         
         <!-- Logo Section -->
@@ -202,9 +216,17 @@
             <!-- Collapse/Expand Toggle -->
             <button 
                 @click="toggleSidebar()"
-                class="w-full flex items-center justify-center px-4 py-3 rounded-lg text-primary-200 hover:bg-primary-800/50 hover:text-white transition-all duration-200"
+                @mouseenter="!sidebarOpen && (tooltipShow = 'toggle')"
+                @mouseleave="tooltipShow = null"
+                class="relative w-full flex items-center justify-center px-4 py-3 rounded-lg text-primary-200 hover:bg-primary-800/50 hover:text-white transition-all duration-200"
             >
                 <i class="fas text-lg transition-transform duration-300" :class="sidebarOpen ? 'fa-angles-left' : 'fa-angles-right'"></i>
+                
+                <div x-show="!sidebarOpen && tooltipShow === 'toggle'" 
+                     class="absolute left-full ml-2 px-3 py-1.5 bg-gray-900 text-white text-sm rounded-lg shadow-lg whitespace-nowrap z-50"
+                     x-transition>
+                    Perbesar
+                </div>
             </button>
         </div>
 
