@@ -129,7 +129,7 @@
         function initQRScanner() {
             video = document.getElementById('qr-video');
             canvas = document.getElementById('qr-canvas');
-            ctx = canvas.getContext('2d');
+            ctx = canvas.getContext('2d', { willReadFrequently: true }); // Optimize for frequent reads
 
             // Request camera access
             navigator.mediaDevices.getUserMedia({ 
