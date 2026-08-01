@@ -173,10 +173,15 @@
                                                 method: 'POST',
                                                 headers: {
                                                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                                    'Content-Type': 'application/json'
+                                                    'Content-Type': 'application/json',
+                                                    'Accept': 'application/json',
+                                                    'X-Requested-With': 'XMLHttpRequest'
                                                 }
                                             })
-                                            .then(r => r.json())
+                                            .then(r => {
+                                                if (!r.ok) throw new Error('HTTP ' + r.status);
+                                                return r.json();
+                                            })
                                             .then(data => {
                                                 alert(data.message);
                                                 if (data.success) {
@@ -200,10 +205,15 @@
                                                 method: 'POST',
                                                 headers: {
                                                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                                    'Content-Type': 'application/json'
+                                                    'Content-Type': 'application/json',
+                                                    'Accept': 'application/json',
+                                                    'X-Requested-With': 'XMLHttpRequest'
                                                 }
                                             })
-                                            .then(r => r.json())
+                                            .then(r => {
+                                                if (!r.ok) throw new Error('HTTP ' + r.status);
+                                                return r.json();
+                                            })
                                             .then(data => {
                                                 alert(data.message);
                                                 if (data.success) {
