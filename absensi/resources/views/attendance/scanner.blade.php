@@ -168,8 +168,12 @@
     </div>
 
     @push('scripts')
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    <script>
+    <script type="module">
+        // Import html5-qrcode from npm instead of CDN
+        import { Html5Qrcode } from '/node_modules/html5-qrcode/html5-qrcode.min.js';
+        
+        window.Html5Qrcode = Html5Qrcode; // Make it globally available
+        
         let currentAction = 'check_in';
         let html5QrCode = null;
         let lastScannedNis = null;
@@ -363,6 +367,7 @@
             hideError();
             lastScannedNis = null;
         }
+    </script>
     </script>
 
     <style>
