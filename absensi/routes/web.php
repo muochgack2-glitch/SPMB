@@ -10,13 +10,10 @@ use App\Http\Controllers\AttendanceSettingController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
-// Redirect root ke login atau dashboard
+// Public Scanner Landing Page (no auth required)
 Route::get('/', function () {
-    if (auth()->check()) {
-        return redirect()->route('attendance.dashboard');
-    }
-    return redirect()->route('login');
-});
+    return view('welcome');
+})->name('home');
 
 // Auth routes
 require __DIR__.'/auth.php';
