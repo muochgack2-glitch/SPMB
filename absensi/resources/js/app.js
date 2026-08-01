@@ -66,5 +66,10 @@ Alpine.start();
 
 console.log('Alpine started');
 
+// Import and export html5-qrcode for scanner page
+import { Html5Qrcode } from 'html5-qrcode';
+window.Html5Qrcode = Html5Qrcode;
+console.log('Html5Qrcode loaded:', typeof Html5Qrcode);
+
 // Import Toast notification system
 import './toast.js';

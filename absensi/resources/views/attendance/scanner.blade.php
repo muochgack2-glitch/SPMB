@@ -168,11 +168,9 @@
     </div>
 
     @push('scripts')
-    <script type="module">
-        // Import html5-qrcode from npm instead of CDN
-        import { Html5Qrcode } from '/node_modules/html5-qrcode/html5-qrcode.min.js';
-        
-        window.Html5Qrcode = Html5Qrcode; // Make it globally available
+    <script>
+        // Use Html5Qrcode from global scope (loaded by app.js)
+        const Html5Qrcode = window.Html5Qrcode;
         
         let currentAction = 'check_in';
         let html5QrCode = null;
@@ -180,6 +178,7 @@
 
         // Initialize scanner on page load
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('Scanner page loaded, Html5Qrcode available:', typeof Html5Qrcode);
             initScanner();
         });
 
