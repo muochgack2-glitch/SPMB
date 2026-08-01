@@ -209,8 +209,12 @@ function sidebarData() {
                     }
                 }"
                 x-init="
-                    // Sync with store if available
-                    $watch('$store.darkMode.isDark', value => isDark = value);
+                    // Sync with store if available after Alpine fully initializes
+                    $nextTick(() => {
+                        if ($store.darkMode) {
+                            $watch('$store.darkMode.isDark', value => isDark = value);
+                        }
+                    });
                 "
                 @click="toggleDarkMode()"
                 @mouseenter="!sidebarOpen && (tooltipShow = 'darkmode')"
