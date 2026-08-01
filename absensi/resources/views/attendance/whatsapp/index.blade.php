@@ -119,19 +119,54 @@
                         Gateway Control
                     </h4>
                     <div class="space-y-2">
-                        {{-- Start/Stop Buttons --}}
-                        <div x-data="{ processRunning: false, checking: false }" x-init="
+                        {{-- PM2 Start/Stop Section --}}
+                        <div x-data="{ processRunning: false, checking: true, pm2Available: true, errorMsg: '' }" x-init="
                             // Check process status on load
-                            checking = true;
                             fetch('/whatsapp/gateway/process-status')
                                 .then(r => r.json())
                                 .then(data => {
-                                    processRunning = data.running || false;
+                                    if (data.status === 'pm2_not_installed') {
+                                        pm2Available = false;
+                                        errorMsg = data.message;
+                                    } else {
+                                        processRunning = data.running || false;
+                                    }
+                                    checking = false;
+                                })
+                                .catch(e => {
+                                    pm2Available = false;
+                                    errorMsg = 'Failed to check PM2 status';
                                     checking = false;
                                 });
                         ">
-                            <template x-if="!checking">
+                            {{-- Loading State --}}
+                            <template x-if="checking">
+                                <div class="w-full px-4 py-2 bg-gray-400 text-white rounded-lg text-center text-sm">
+                                    <i class="fas fa-spinner fa-spin mr-2"></i>
+                                    Checking PM2 status...
+                                </div>
+                            </template>
+
+                            {{-- PM2 Not Available --}}
+                            <template x-if="!checking && !pm2Available">
+                                <div class="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-lg">
+                                    <p class="text-sm text-yellow-800 dark:text-yellow-300 mb-2">
+                                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                                        PM2 not installed
+                                    </p>
+                                    <p class="text-xs text-yellow-700 dark:text-yellow-400 mb-2">
+                                        Install PM2 for automatic start/stop: <code class="bg-yellow-200 dark:bg-yellow-800 px-1 rounded">npm install -g pm2</code>
+                                    </p>
+                                    <p class="text-xs text-yellow-700 dark:text-yellow-400">
+                                        Or start manually: <code class="bg-yellow-200 dark:bg-yellow-800 px-1 rounded">cd ../whatsapp-server-absensi && node server.js</code>
+                                    </p>
+                                </div>
+                            </template>
+                            
+                            {{-- PM2 Available - Show Start/Stop Buttons --}}
+                            <template x-if="!checking && pm2Available">
                                 <div>
+                                    {{-- Start Button --}}
                                     <button @click="
                                         if (confirm('Start WhatsApp Gateway server dengan PM2?')) {
                                             fetch('/whatsapp/gateway/start', {
@@ -155,9 +190,10 @@
                                     x-show="!processRunning"
                                     class="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all duration-200 font-medium text-sm">
                                         <i class="fas fa-play mr-2"></i>
-                                        Start Gateway Server
+                                        Start Gateway Server (PM2)
                                     </button>
                                     
+                                    {{-- Stop Button --}}
                                     <button @click="
                                         if (confirm('Stop WhatsApp Gateway server?')) {
                                             fetch('/whatsapp/gateway/stop', {
@@ -181,20 +217,16 @@
                                     x-show="processRunning"
                                     class="w-full px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-all duration-200 font-medium text-sm">
                                         <i class="fas fa-stop mr-2"></i>
-                                        Stop Gateway Server
+                                        Stop Gateway Server (PM2)
                                     </button>
-                                </div>
-                            </template>
-                            
-                            <template x-if="checking">
-                                <div class="w-full px-4 py-2 bg-gray-400 text-white rounded-lg text-center text-sm">
-                                    <i class="fas fa-spinner fa-spin mr-2"></i>
-                                    Checking status...
                                 </div>
                             </template>
                         </div>
 
-                        {{-- Logout & Restart --}}
+                        {{-- Separator --}}
+                        <div class="border-t border-blue-300 dark:border-blue-700 my-3"></div>
+
+                        {{-- Logout & Restart (always visible) --}}
                         <button @click="logout()" 
                                 :disabled="!status.connected"
                                 class="w-full px-4 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-400 text-white rounded-lg transition-all duration-200 font-medium text-sm">

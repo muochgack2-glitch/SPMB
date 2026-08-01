@@ -445,27 +445,61 @@ class WhatsAppController extends Controller
     public function getGatewayProcessStatus()
     {
         try {
-            $checkCommand = "pm2 jlist";
-            exec($checkCommand . " 2>&1", $output);
-            $processList = json_decode(implode('', $output), true);
+            // Check if PM2 is installed
+            $pm2Check = shell_exec('pm2 -v 2>&1');
+            if (empty($pm2Check) || strpos($pm2Check, 'command not found') !== false) {
+                return response()->json([
+                    'success' => true,
+                    'running' => false,
+                    'status' => 'pm2_not_installed',
+                    'message' => 'PM2 not installed. Install with: npm install -g pm2'
+                ]);
+            }
 
+            // Get PM2 process list
+            $output = shell_exec('pm2 jlist 2>&1');
+            
+            if (empty($output)) {
+                return response()->json([
+                    'success' => true,
+                    'running' => false,
+                    'status' => 'no_processes',
+                    'message' => 'No PM2 processes running'
+                ]);
+            }
+
+            // Parse JSON
+            $processList = json_decode($output, true);
+            
+            if (!is_array($processList)) {
+                return response()->json([
+                    'success' => true,
+                    'running' => false,
+                    'status' => 'parse_error',
+                    'message' => 'Failed to parse PM2 list'
+                ]);
+            }
+
+            // Find gateway process
             $gatewayProcess = null;
-            if (is_array($processList)) {
-                foreach ($processList as $process) {
-                    if (isset($process['name']) && $process['name'] === 'whatsapp-gateway-absensi') {
-                        $gatewayProcess = $process;
-                        break;
-                    }
+            foreach ($processList as $process) {
+                if (isset($process['name']) && $process['name'] === 'whatsapp-gateway-absensi') {
+                    $gatewayProcess = $process;
+                    break;
                 }
             }
 
             if ($gatewayProcess) {
+                $isOnline = isset($gatewayProcess['pm2_env']['status']) && 
+                           $gatewayProcess['pm2_env']['status'] === 'online';
+                
                 return response()->json([
                     'success' => true,
-                    'running' => $gatewayProcess['pm2_env']['status'] === 'online',
-                    'status' => $gatewayProcess['pm2_env']['status'],
+                    'running' => $isOnline,
+                    'status' => $gatewayProcess['pm2_env']['status'] ?? 'unknown',
                     'uptime' => $gatewayProcess['pm2_env']['pm_uptime'] ?? 0,
-                    'memory' => $gatewayProcess['monit']['memory'] ?? 0,
+                    'memory' => isset($gatewayProcess['monit']['memory']) ? 
+                               round($gatewayProcess['monit']['memory'] / 1024 / 1024, 2) : 0,
                     'cpu' => $gatewayProcess['monit']['cpu'] ?? 0,
                 ]);
             }
@@ -473,17 +507,19 @@ class WhatsAppController extends Controller
             return response()->json([
                 'success' => true,
                 'running' => false,
-                'status' => 'stopped',
-                'message' => 'Gateway not running'
+                'status' => 'not_found',
+                'message' => 'Gateway process not found in PM2'
             ]);
 
         } catch (\Exception $e) {
             Log::error('Failed to get process status: ' . $e->getMessage());
             
             return response()->json([
-                'success' => false,
-                'message' => 'Error: ' . $e->getMessage()
-            ], 500);
+                'success' => true,
+                'running' => false,
+                'status' => 'error',
+                'message' => 'Error checking status'
+            ]);
         }
     }
 }
