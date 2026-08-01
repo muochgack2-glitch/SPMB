@@ -7,71 +7,100 @@ use App\Models\AttendanceRecord;
 use App\Models\AttendanceStudent;
 use App\Services\AttendanceService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
 class AttendanceDashboardController extends Controller
 {
-    protected $attendanceService;
-
-    public function __construct(AttendanceService $attendanceService)
-    {
-        $this->attendanceService = $attendanceService;
-    }
+    public function __construct(
+        private AttendanceService $attendanceService
+    ) {}
 
     /**
-     * Display the attendance dashboard
+     * Display attendance dashboard
      */
     public function index(Request $request)
     {
-        return view('attendance.dashboard.index');
+        $selectedDate = $request->get('date', Carbon::today()->format('Y-m-d'));
+        $selectedClass = $request->get('class', null);
+
+        // Get statistics
+        $stats = $this->attendanceService->getAttendanceStats($selectedDate, $selectedClass);
+
+        // Get attendance records
+        $attendanceRecords = $this->getAttendanceRecords($selectedDate, $selectedClass);
+
+        // Get absent students
+        $absentStudents = $this->getAbsentStudents($selectedDate, $selectedClass);
+
+        // Get all active classes for filter
+        $classes = AttendanceClass::where('is_active', true)
+            ->orderBy('tingkat', 'asc')
+            ->orderBy('nama_kelas', 'asc')
+            ->get();
+
+        return view('attendance.dashboard.index', compact(
+            'selectedDate',
+            'selectedClass',
+            'stats',
+            'attendanceRecords',
+            'absentStudents',
+            'classes'
+        ));
     }
 
     /**
-     * Get real-time statistics (for AJAX refresh)
+     * Get attendance records for display
      */
-    public function stats(Request $request)
+    private function getAttendanceRecords($date, $classId = null)
     {
-        $date = $request->input('date', Carbon::today()->format('Y-m-d'));
-        $classId = $request->input('class_id');
+        $query = AttendanceRecord::with(['student.kelas'])
+            ->whereDate('date', $date);
 
-        $stats = $this->attendanceService->getAttendanceStats($date, $classId);
-
-        return response()->json([
-            'success' => true,
-            'data' => $stats
-        ]);
-    }
-
-    /**
-     * Get today's attendance summary
-     */
-    public function todaySummary(Request $request)
-    {
-        $classId = $request->input('class_id');
-        $attendance = $this->attendanceService->getTodayAttendance($classId);
-
-        return response()->json([
-            'success' => true,
-            'data' => $attendance
-        ]);
-    }
-
-    /**
-     * Show photo in modal/lightbox
-     */
-    public function showPhoto($recordId, $type)
-    {
-        $record = AttendanceRecord::findOrFail($recordId);
-
-        $photoPath = $type === 'check_in' 
-            ? $record->check_in_photo 
-            : $record->check_out_photo;
-
-        if (!$photoPath || !Storage::exists($photoPath)) {
-            abort(404, 'Photo not found');
+        if ($classId) {
+            $query->whereHas('student', function ($q) use ($classId) {
+                $q->where('kelas_id', $classId);
+            });
         }
 
-        return response()->file(storage_path('app/' . $photoPath));
+        return $query->orderBy('check_in_time', 'asc')->get();
+    }
+
+    /**
+     * Get students who haven't checked in
+     */
+    private function getAbsentStudents($date, $classId = null)
+    {
+        $query = AttendanceStudent::with('kelas')
+            ->where('is_active', true)
+            ->whereDoesntHave('attendanceRecords', function ($q) use ($date) {
+                $q->whereDate('date', $date);
+            });
+
+        if ($classId) {
+            $query->where('kelas_id', $classId);
+        }
+
+        return $query->get();
+    }
+
+    /**
+     * AJAX: Refresh dashboard data
+     */
+    public function refresh(Request $request)
+    {
+        $selectedDate = $request->get('date', Carbon::today()->format('Y-m-d'));
+        $selectedClass = $request->get('class', null);
+
+        $stats = $this->attendanceService->getAttendanceStats($selectedDate, $selectedClass);
+        $attendanceRecords = $this->getAttendanceRecords($selectedDate, $selectedClass);
+        $absentStudents = $this->getAbsentStudents($selectedDate, $selectedClass);
+
+        return response()->json([
+            'success' => true,
+            'stats' => $stats,
+            'attendanceRecords' => $attendanceRecords,
+            'absentStudents' => $absentStudents,
+        ]);
     }
 }
+

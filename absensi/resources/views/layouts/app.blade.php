@@ -19,9 +19,6 @@
     <!-- CSS Only -->
     @vite(['resources/css/app.css'])
     
-    <!-- Livewire Styles -->
-    @livewireStyles
-    
     <!-- Additional Styles -->
     @stack('styles')
     
@@ -135,10 +132,7 @@
     <!-- Toast Container (Fixed bottom-right) -->
     <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
 
-    <!-- Livewire Scripts (includes Alpine.js) -->
-    @livewireScripts
-    
-    <!-- Custom JS after Livewire -->
+    <!-- Scripts -->
     @vite(['resources/js/app.js'])
     
     <!-- Additional Scripts -->

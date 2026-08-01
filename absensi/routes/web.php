@@ -32,6 +32,9 @@ Route::middleware(['auth'])->group(function () {
     // Attendance Dashboard
     Route::get('/attendance/dashboard', [AttendanceDashboardController::class, 'index'])
         ->name('attendance.dashboard');
+    
+    Route::get('/attendance/dashboard/refresh', [AttendanceDashboardController::class, 'refresh'])
+        ->name('attendance.dashboard.refresh');
 
     // QR Scanner
     Route::get('/attendance/scanner', [AttendanceScanController::class, 'showScanner'])
