@@ -152,9 +152,13 @@ class AttendanceWhatsAppService
 
             if ($response->successful()) {
                 $data = $response->json();
+                
+                // Check both 'connected' field and 'status' field for compatibility
+                $isConnected = ($data['connected'] ?? false) || ($data['status'] ?? '') === 'connected';
+                
                 return [
-                    'connected' => $data['connected'] ?? false,
-                    'message' => 'Gateway is connected',
+                    'connected' => $isConnected,
+                    'message' => $isConnected ? 'Gateway is connected' : 'Gateway is disconnected',
                     'data' => $data,
                 ];
             }

@@ -192,7 +192,7 @@
                                             .catch(e => alert('Error: ' + e.message));
                                         }
                                     " 
-                                    x-show="!processRunning"
+                                    x-show="!processRunning && !status.connected"
                                     class="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all duration-200 font-medium text-sm">
                                         <i class="fas fa-play mr-2"></i>
                                         Start Gateway Server (PM2)
@@ -224,7 +224,7 @@
                                             .catch(e => alert('Error: ' + e.message));
                                         }
                                     " 
-                                    x-show="processRunning"
+                                    x-show="processRunning && status.connected"
                                     class="w-full px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-all duration-200 font-medium text-sm">
                                         <i class="fas fa-stop mr-2"></i>
                                         Stop Gateway Server (PM2)
