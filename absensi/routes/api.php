@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AttendanceScanController;
 use App\Http\Controllers\Api\AttendanceStatsController;
+use App\Http\Controllers\AttendanceSSEController;
 
 // Attendance Scan API (untuk scanner frontend)
 Route::prefix('attendance')->group(function () {
@@ -12,6 +13,10 @@ Route::prefix('attendance')->group(function () {
     // Stats API for public landing page
     Route::get('/stats/today', [AttendanceStatsController::class, 'todayStats']);
     Route::get('/school-hours', [AttendanceStatsController::class, 'schoolHours']);
+    Route::get('/recent-scans', [AttendanceStatsController::class, 'recentScans']);
+    
+    // SSE for real-time updates
+    Route::get('/sse', [AttendanceSSEController::class, 'stream']);
 });
 
 // Announcement API

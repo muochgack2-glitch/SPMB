@@ -33,6 +33,17 @@ class AttendanceScanController extends Controller
             $validated['action']
         );
 
+        // If successful, broadcast to SSE clients
+        if ($result['success'] && isset($result['data'])) {
+            cache()->put('latest_attendance_scan', [
+                'nama' => $result['data']['nama'] ?? '',
+                'nis' => $result['data']['nis'] ?? '',
+                'kelas' => $result['data']['kelas'] ?? '',
+                'status' => $result['data']['status'] ?? '',
+                'time' => now()->format('H:i'),
+            ], now()->addSeconds(5)); // Cache for 5 seconds
+        }
+
         // Return response
         $statusCode = $result['success'] ? 200 : 422;
 

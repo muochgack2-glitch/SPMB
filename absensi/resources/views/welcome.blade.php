@@ -308,6 +308,8 @@
                 loadTodayStats();
                 loadSchoolHours();
                 loadAnnouncement();
+                loadRecentScans(); // Load initial recent scans
+                connectSSE(); // Connect to SSE for real-time updates
             } else {
                 console.log('Waiting for Html5Qrcode...');
                 setTimeout(waitForHtml5Qrcode, 100);
@@ -630,6 +632,68 @@
             } catch (error) {
                 console.error('Failed to load announcement:', error);
             }
+        }
+
+        async function loadRecentScans() {
+            try {
+                const response = await fetch('/api/attendance/recent-scans', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    // Load initial data from database
+                    recentScans = result.data;
+                    updateRecentScansUI();
+                    console.log(`✅ Loaded ${recentScans.length} recent scans from database`);
+                } else {
+                    console.error('Failed to load recent scans:', result.message);
+                }
+            } catch (error) {
+                console.error('Failed to load recent scans:', error);
+            }
+        }
+
+        function connectSSE() {
+            // Connect to Server-Sent Events for real-time updates
+            const eventSource = new EventSource('/api/attendance/sse');
+            
+            eventSource.addEventListener('new-scan', function(event) {
+                try {
+                    const scanData = JSON.parse(event.data);
+                    console.log('🔔 New scan received via SSE:', scanData);
+                    
+                    // Add to recent scans
+                    addToRecentScans(scanData);
+                    
+                    // Update stats
+                    loadTodayStats();
+                    
+                    // Show notification (optional)
+                    showNotification(scanData);
+                } catch (error) {
+                    console.error('Error parsing SSE data:', error);
+                }
+            });
+            
+            eventSource.onerror = function(error) {
+                console.error('SSE connection error:', error);
+                // Reconnect after 5 seconds
+                eventSource.close();
+                setTimeout(connectSSE, 5000);
+            };
+            
+            console.log('🔌 Connected to SSE for real-time updates');
+        }
+
+        function showNotification(scanData) {
+            // Optional: Show a small toast notification for new scans
+            // You can implement this with a library or custom toast component
+            console.log(`📢 ${scanData.nama} just scanned (${scanData.status})`);
         }
 
         function showError(message) {

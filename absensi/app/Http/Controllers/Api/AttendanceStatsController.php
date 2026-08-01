@@ -109,4 +109,46 @@ class AttendanceStatsController extends Controller
             ],
         ]);
     }
+
+    /**
+     * Get recent attendance scans (last 10 for today).
+     * 
+     * GET /api/attendance/recent-scans
+     * 
+     * @return JsonResponse
+     */
+    public function recentScans(): JsonResponse
+    {
+        $today = Carbon::today();
+        
+        // Get last 10 attendance records with check-in time from today
+        $recentScans = AttendanceRecord::with(['student', 'student.kelas'])
+            ->whereDate('date', $today)
+            ->whereNotNull('check_in_time')
+            ->orderBy('check_in_time', 'desc')
+            ->limit(10)
+            ->get()
+            ->map(function ($record) {
+                $student = $record->student;
+                
+                // Parse check_in_time if it's a string
+                $checkInTime = $record->check_in_time;
+                if (is_string($checkInTime)) {
+                    $checkInTime = Carbon::parse($checkInTime);
+                }
+                
+                return [
+                    'nama' => $student->nama ?? '-',
+                    'nis' => $student->nis ?? '-',
+                    'kelas' => $student->kelas?->nama_kelas ?? '-',
+                    'status' => $record->status,
+                    'time' => $checkInTime->format('H:i'),
+                ];
+            });
+        
+        return response()->json([
+            'success' => true,
+            'data' => $recentScans,
+        ]);
+    }
 }
