@@ -119,6 +119,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/settings', [App\Http\Controllers\WhatsAppController::class, 'updateSettings'])->name('settings.update');
         Route::post('/settings/reset', [App\Http\Controllers\WhatsAppController::class, 'resetSettings'])->name('settings.reset');
         
+        // Gateway Control
+        Route::post('/gateway/start', [App\Http\Controllers\WhatsAppController::class, 'startGateway'])->name('gateway.start');
+        Route::post('/gateway/stop', [App\Http\Controllers\WhatsAppController::class, 'stopGateway'])->name('gateway.stop');
+        Route::get('/gateway/process-status', [App\Http\Controllers\WhatsAppController::class, 'getGatewayProcessStatus'])->name('gateway.process-status');
+        
         Route::post('/logout', [App\Http\Controllers\WhatsAppController::class, 'logout'])->name('logout');
         Route::post('/restart', [App\Http\Controllers\WhatsAppController::class, 'restart'])->name('restart');
     });

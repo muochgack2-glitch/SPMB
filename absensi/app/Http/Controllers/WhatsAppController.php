@@ -351,4 +351,139 @@ class WhatsAppController extends Controller
             return back()->with('error', 'Gagal reset pengaturan: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Start WhatsApp Gateway server
+     */
+    public function startGateway()
+    {
+        try {
+            $gatewayPath = base_path('../whatsapp-server-absensi');
+            
+            // Check if gateway directory exists
+            if (!is_dir($gatewayPath)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gateway directory not found: ' . $gatewayPath
+                ], 404);
+            }
+
+            // Check if already running
+            $checkCommand = "pm2 jlist";
+            $output = [];
+            exec($checkCommand, $output);
+            $processList = implode('', $output);
+            
+            if (strpos($processList, 'whatsapp-gateway-absensi') !== false) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gateway sudah running!'
+                ]);
+            }
+
+            // Start with PM2
+            $startCommand = "cd " . escapeshellarg($gatewayPath) . " && pm2 start server.js --name whatsapp-gateway-absensi";
+            exec($startCommand . " 2>&1", $output, $returnCode);
+
+            if ($returnCode === 0) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Gateway berhasil distart! Tunggu 5 detik lalu refresh status.'
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal start gateway: ' . implode("\n", $output)
+            ], 500);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to start gateway: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Stop WhatsApp Gateway server
+     */
+    public function stopGateway()
+    {
+        try {
+            // Stop with PM2
+            $stopCommand = "pm2 stop whatsapp-gateway-absensi";
+            exec($stopCommand . " 2>&1", $output, $returnCode);
+
+            if ($returnCode === 0) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Gateway berhasil distop!'
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal stop gateway: ' . implode("\n", $output)
+            ], 500);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to stop gateway: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get gateway process status from PM2
+     */
+    public function getGatewayProcessStatus()
+    {
+        try {
+            $checkCommand = "pm2 jlist";
+            exec($checkCommand . " 2>&1", $output);
+            $processList = json_decode(implode('', $output), true);
+
+            $gatewayProcess = null;
+            if (is_array($processList)) {
+                foreach ($processList as $process) {
+                    if (isset($process['name']) && $process['name'] === 'whatsapp-gateway-absensi') {
+                        $gatewayProcess = $process;
+                        break;
+                    }
+                }
+            }
+
+            if ($gatewayProcess) {
+                return response()->json([
+                    'success' => true,
+                    'running' => $gatewayProcess['pm2_env']['status'] === 'online',
+                    'status' => $gatewayProcess['pm2_env']['status'],
+                    'uptime' => $gatewayProcess['pm2_env']['pm_uptime'] ?? 0,
+                    'memory' => $gatewayProcess['monit']['memory'] ?? 0,
+                    'cpu' => $gatewayProcess['monit']['cpu'] ?? 0,
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'running' => false,
+                'status' => 'stopped',
+                'message' => 'Gateway not running'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to get process status: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

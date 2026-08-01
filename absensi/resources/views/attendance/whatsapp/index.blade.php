@@ -116,9 +116,85 @@
                 <div class="p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-2 border-blue-200 dark:border-blue-700 rounded-lg">
                     <h4 class="font-semibold text-blue-900 dark:text-blue-300 mb-3 flex items-center">
                         <i class="fas fa-tools mr-2"></i>
-                        Actions
+                        Gateway Control
                     </h4>
                     <div class="space-y-2">
+                        {{-- Start/Stop Buttons --}}
+                        <div x-data="{ processRunning: false, checking: false }" x-init="
+                            // Check process status on load
+                            checking = true;
+                            fetch('/whatsapp/gateway/process-status')
+                                .then(r => r.json())
+                                .then(data => {
+                                    processRunning = data.running || false;
+                                    checking = false;
+                                });
+                        ">
+                            <template x-if="!checking">
+                                <div>
+                                    <button @click="
+                                        if (confirm('Start WhatsApp Gateway server dengan PM2?')) {
+                                            fetch('/whatsapp/gateway/start', {
+                                                method: 'POST',
+                                                headers: {
+                                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                                    'Content-Type': 'application/json'
+                                                }
+                                            })
+                                            .then(r => r.json())
+                                            .then(data => {
+                                                alert(data.message);
+                                                if (data.success) {
+                                                    processRunning = true;
+                                                    setTimeout(() => refreshStatus(), 5000);
+                                                }
+                                            })
+                                            .catch(e => alert('Error: ' + e.message));
+                                        }
+                                    " 
+                                    x-show="!processRunning"
+                                    class="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all duration-200 font-medium text-sm">
+                                        <i class="fas fa-play mr-2"></i>
+                                        Start Gateway Server
+                                    </button>
+                                    
+                                    <button @click="
+                                        if (confirm('Stop WhatsApp Gateway server?')) {
+                                            fetch('/whatsapp/gateway/stop', {
+                                                method: 'POST',
+                                                headers: {
+                                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                                    'Content-Type': 'application/json'
+                                                }
+                                            })
+                                            .then(r => r.json())
+                                            .then(data => {
+                                                alert(data.message);
+                                                if (data.success) {
+                                                    processRunning = false;
+                                                    refreshStatus();
+                                                }
+                                            })
+                                            .catch(e => alert('Error: ' + e.message));
+                                        }
+                                    " 
+                                    x-show="processRunning"
+                                    class="w-full px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-all duration-200 font-medium text-sm">
+                                        <i class="fas fa-stop mr-2"></i>
+                                        Stop Gateway Server
+                                    </button>
+                                </div>
+                            </template>
+                            
+                            <template x-if="checking">
+                                <div class="w-full px-4 py-2 bg-gray-400 text-white rounded-lg text-center text-sm">
+                                    <i class="fas fa-spinner fa-spin mr-2"></i>
+                                    Checking status...
+                                </div>
+                            </template>
+                        </div>
+
+                        {{-- Logout & Restart --}}
                         <button @click="logout()" 
                                 :disabled="!status.connected"
                                 class="w-full px-4 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-400 text-white rounded-lg transition-all duration-200 font-medium text-sm">
