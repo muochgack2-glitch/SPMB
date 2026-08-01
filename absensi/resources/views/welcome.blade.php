@@ -2,7 +2,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-4" id="scanner-container">
         
         {{-- LEFT SIDEBAR: Stats Cards --}}
-        <div class="lg:col-span-2 space-y-3">
+        <div class="lg:col-span-3 space-y-3">
             {{-- Header with Clock --}}
             <div class="bg-gradient-to-br from-primary-600 to-purple-600 rounded-xl shadow-lg p-4 text-white text-center">
                 <div class="inline-flex items-center justify-center w-10 h-10 bg-white/20 backdrop-blur-lg rounded-lg mb-2">
@@ -69,7 +69,7 @@
         </div>
 
         {{-- CENTER: Scanner Area --}}
-        <div class="lg:col-span-7 space-y-4">
+        <div class="lg:col-span-6 space-y-4">
 
         {{-- Action Toggle with Modern Design + Login Button --}}
         <div class="flex justify-center items-center gap-4">
