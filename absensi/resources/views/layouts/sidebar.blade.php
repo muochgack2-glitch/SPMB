@@ -145,6 +145,24 @@ function sidebarData() {
                 </div>
             </a>
 
+            <!-- WhatsApp Gateway -->
+            <a 
+                href="{{ route('whatsapp.index') }}"
+                @mouseenter="!sidebarOpen && (tooltipShow = 'whatsapp')"
+                @mouseleave="tooltipShow = null"
+                class="relative flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 group"
+                :class="activeMenu === 'whatsapp.index' || activeMenu.includes('whatsapp.') ? 'bg-gradient-to-r from-green-500 to-green-600 shadow-lg shadow-green-500/50' : 'text-primary-200 hover:bg-primary-800/50 hover:text-white'"
+            >
+                <i class="fab fa-whatsapp text-lg w-5 text-center" :class="activeMenu.includes('whatsapp.') ? 'text-white' : ''"></i>
+                <span x-show="sidebarOpen" x-transition class="font-medium" :class="activeMenu.includes('whatsapp.') ? 'text-white' : ''">WA Gateway</span>
+                
+                <div x-show="!sidebarOpen && tooltipShow === 'whatsapp'" 
+                     class="absolute left-full ml-2 px-3 py-1.5 bg-gray-900 text-white text-sm rounded-lg shadow-lg whitespace-nowrap z-50"
+                     x-transition>
+                    WhatsApp Gateway
+                </div>
+            </a>
+
             <!-- Settings -->
             <a 
                 href="{{ route('attendance.settings.index') }}"

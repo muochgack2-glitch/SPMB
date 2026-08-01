@@ -99,6 +99,29 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/attendance/settings/test-notification', [AttendanceSettingController::class, 'testNotification'])
         ->name('attendance.settings.test-notification');
 
+    // WhatsApp Gateway
+    Route::prefix('whatsapp')->name('whatsapp.')->group(function () {
+        Route::get('/', [App\Http\Controllers\WhatsAppController::class, 'index'])->name('index');
+        Route::get('/status', [App\Http\Controllers\WhatsAppController::class, 'getStatus'])->name('status');
+        Route::get('/qr', [App\Http\Controllers\WhatsAppController::class, 'getQRCode'])->name('qr');
+        Route::get('/health', [App\Http\Controllers\WhatsAppController::class, 'health'])->name('health');
+        
+        Route::get('/send', [App\Http\Controllers\WhatsAppController::class, 'sendPage'])->name('send');
+        Route::post('/send', [App\Http\Controllers\WhatsAppController::class, 'sendMessage'])->name('send.submit');
+        Route::post('/test', [App\Http\Controllers\WhatsAppController::class, 'testNotification'])->name('test');
+        
+        // Message Logs
+        Route::get('/logs', [App\Http\Controllers\WhatsAppController::class, 'logs'])->name('logs');
+        Route::get('/student/{studentId}/messages', [App\Http\Controllers\WhatsAppController::class, 'getStudentMessages'])->name('student.messages');
+        
+        // Settings
+        Route::get('/settings', [App\Http\Controllers\WhatsAppController::class, 'settings'])->name('settings');
+        Route::post('/settings', [App\Http\Controllers\WhatsAppController::class, 'updateSettings'])->name('settings.update');
+        Route::post('/settings/reset', [App\Http\Controllers\WhatsAppController::class, 'resetSettings'])->name('settings.reset');
+        
+        Route::post('/logout', [App\Http\Controllers\WhatsAppController::class, 'logout'])->name('logout');
+        Route::post('/restart', [App\Http\Controllers\WhatsAppController::class, 'restart'])->name('restart');
+    });
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

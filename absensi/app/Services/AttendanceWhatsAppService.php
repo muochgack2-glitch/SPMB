@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\WhatsAppMessage;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -18,14 +19,32 @@ class AttendanceWhatsAppService
      * @param string $phone Phone number (628xxx format)
      * @param string $message Message text
      * @param string|null $photoPath Optional photo path for media message
+     * @param int|null $studentId Optional student ID for logging
+     * @param string $type Message type (manual, auto_checkin, auto_checkout, auto_alpha)
      * @return array Response with success status
      */
-    public function sendParentNotification(string $phone, string $message, ?string $photoPath = null): array
+    public function sendParentNotification(
+        string $phone, 
+        string $message, 
+        ?string $photoPath = null,
+        ?int $studentId = null,
+        string $type = 'manual'
+    ): array
     {
-        try {
-            // Normalize phone number
-            $normalizedPhone = $this->normalizePhone($phone);
+        // Normalize phone number
+        $normalizedPhone = $this->normalizePhone($phone);
 
+        // Create message log (pending)
+        $messageLog = WhatsAppMessage::create([
+            'student_id' => $studentId,
+            'phone' => $phone,
+            'phone_normalized' => $normalizedPhone,
+            'message' => $message,
+            'type' => $type,
+            'status' => 'pending',
+        ]);
+
+        try {
             // Gateway lama hanya support text message via /send endpoint
             // Photo sending tidak supported di gateway baileys ini
             $endpoint = '/send';
@@ -50,10 +69,14 @@ class AttendanceWhatsAppService
                 ->post($url, $data);
 
             if ($response->successful()) {
+                // Mark as sent
+                $messageLog->markAsSent($response->json());
+
                 return [
                     'success' => true,
                     'message' => 'Notification sent successfully',
                     'response' => $response->json(),
+                    'log_id' => $messageLog->id,
                 ];
             }
 
@@ -63,19 +86,25 @@ class AttendanceWhatsAppService
                 'body' => $response->body(),
             ]);
 
+            $messageLog->markAsFailed('Gateway returned error: ' . $response->status(), $response->json());
+
             return [
                 'success' => false,
                 'message' => 'Failed to send notification',
                 'error' => $response->body(),
+                'log_id' => $messageLog->id,
             ];
 
         } catch (\Exception $e) {
             Log::error('WhatsApp notification exception: ' . $e->getMessage());
 
+            $messageLog->markAsFailed($e->getMessage());
+
             return [
                 'success' => false,
                 'message' => 'Exception occurred',
                 'error' => $e->getMessage(),
+                'log_id' => $messageLog->id,
             ];
         }
     }
@@ -172,6 +201,6 @@ class AttendanceWhatsAppService
                    "Waktu: " . now()->format('Y-m-d H:i:s') . "\n" .
                    "Jika Anda menerima pesan ini, gateway WhatsApp berfungsi dengan baik.";
 
-        return $this->sendParentNotification($phone, $message);
+        return $this->sendParentNotification($phone, $message, null, null, 'manual');
     }
 }
