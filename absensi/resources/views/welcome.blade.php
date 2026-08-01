@@ -444,13 +444,15 @@
             html5QrCode = new Html5Qrcode("reader");
             
             const config = {
-                fps: 10,
-                qrbox: 250,
+                fps: 30,                    // Increase from 10 to 30 FPS for faster detection
+                qrbox: 300,                 // Increase from 250 to 300 for larger scan area
                 aspectRatio: 1.0,
+                disableFlip: false,         // Allow flipped QR codes
+                rememberLastUsedCamera: true, // Remember camera selection
                 videoConstraints: {
                     facingMode: "environment",
-                    width: { ideal: 640 },
-                    height: { ideal: 480 }
+                    width: { ideal: 1280, max: 1920 },   // Higher resolution
+                    height: { ideal: 720, max: 1080 }
                 }
             };
 
