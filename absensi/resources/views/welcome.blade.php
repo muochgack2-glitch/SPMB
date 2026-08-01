@@ -58,20 +58,6 @@
 
         {{-- CENTER: Scanner Area --}}
         <div class="lg:col-span-7 space-y-4">
-        
-        {{-- Header Section with Gradient --}}
-        <div class="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-500 to-purple-600 rounded-2xl shadow-xl p-4 text-white">
-            <div class="absolute top-0 right-0 -mt-8 -mr-8 w-48 h-48 bg-white/10 rounded-full blur-3xl"></div>
-            <div class="absolute bottom-0 left-0 -mb-8 -ml-8 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl"></div>
-            
-            <div class="relative z-10 text-center">
-                <div class="inline-flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-lg rounded-xl mb-2 shadow-xl">
-                    <i class="fas fa-qrcode text-2xl"></i>
-                </div>
-                <h1 class="text-2xl font-black mb-1">QR Scanner Premium</h1>
-                <p class="text-sm text-primary-100">Scan untuk absensi real-time</p>
-            </div>
-        </div>
 
         {{-- Action Toggle with Modern Design --}}
         <div class="flex justify-center gap-4">
