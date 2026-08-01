@@ -238,7 +238,7 @@
             </div>
 
             {{-- Recent Scans Timeline --}}
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-3 border border-gray-200 dark:border-gray-700 flex flex-col flex-1">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-3 border border-gray-200 dark:border-gray-700">
                 <div class="flex items-center gap-2 mb-3">
                     <div class="w-7 h-7 bg-gradient-to-br from-primary-500 to-purple-500 rounded-lg flex items-center justify-center text-white">
                         <i class="fas fa-history text-xs"></i>
@@ -246,8 +246,9 @@
                     <h3 class="text-base font-bold text-gray-900 dark:text-white">Recent Scans</h3>
                 </div>
 
-                <div id="recentScansTimeline" class="space-y-2 overflow-y-auto flex-1">
+                <div id="recentScansTimeline" class="space-y-2 overflow-y-auto" style="max-height: calc(5 * 88px);">
                     {{-- Timeline items will be added here dynamically --}}
+                    {{-- Each item is approximately 88px tall (72px content + 16px gap) --}}
                     <div class="text-center text-gray-400 dark:text-gray-500 py-4">
                         <i class="fas fa-qrcode text-2xl mb-2"></i>
                         <p class="text-xs">Belum ada scan</p>
@@ -612,8 +613,8 @@
                 time: timeNow
             });
             
-            // Keep only last 10 scans
-            if (recentScans.length > 10) {
+            // Keep only last 5 scans (visible without scroll)
+            if (recentScans.length > 5) {
                 recentScans.pop();
             }
             
