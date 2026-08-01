@@ -168,7 +168,7 @@
                             </button>
                         </div>
                         <p class="text-xs text-yellow-800 dark:text-yellow-200 mt-2">
-                            Pastikan WhatsApp Gateway sudah berjalan di http://localhost:3001
+                            Pastikan WhatsApp Gateway sudah berjalan di http://localhost:3002
                         </p>
                     </div>
                 </div>

@@ -61,7 +61,7 @@
                         <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Gateway URL</span>
                         <i class="fas fa-server text-gray-400"></i>
                     </div>
-                    <p class="text-lg font-semibold text-gray-900 dark:text-white">localhost:3001</p>
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white">localhost:3002</p>
                 </div>
 
                 {{-- Uptime --}}
@@ -257,7 +257,7 @@
                         </li>
                         <li class="flex items-start">
                             <i class="fas fa-check-circle text-green-500 mt-0.5 mr-3"></i>
-                            <span><strong>Gateway harus running</strong> di http://localhost:3001 agar notifikasi berfungsi</span>
+                            <span><strong>Gateway harus running</strong> di http://localhost:3002 agar notifikasi berfungsi</span>
                         </li>
                         <li class="flex items-start">
                             <i class="fas fa-check-circle text-green-500 mt-0.5 mr-3"></i>

@@ -43,7 +43,7 @@ class WhatsAppController extends Controller
     {
         try {
             $response = Http::timeout(10)
-                ->get('http://localhost:3001/qr');
+                ->get('http://localhost:3002/qr');
 
             if ($response->successful()) {
                 $data = $response->json();
@@ -126,7 +126,7 @@ class WhatsAppController extends Controller
     {
         try {
             $response = Http::timeout(15)
-                ->post('http://localhost:3001/logout');
+                ->post('http://localhost:3002/logout');
 
             if ($response->successful()) {
                 return response()->json([
@@ -157,7 +157,7 @@ class WhatsAppController extends Controller
     {
         try {
             $response = Http::timeout(15)
-                ->post('http://localhost:3001/restart');
+                ->post('http://localhost:3002/restart');
 
             if ($response->successful()) {
                 return response()->json([
@@ -188,7 +188,7 @@ class WhatsAppController extends Controller
     {
         try {
             $response = Http::timeout(10)
-                ->get('http://localhost:3001/health');
+                ->get('http://localhost:3002/health');
 
             if ($response->successful()) {
                 return response()->json($response->json());

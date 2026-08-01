@@ -11,7 +11,7 @@ class AttendanceWhatsAppService
     /**
      * WhatsApp Gateway base URL.
      */
-    private const GATEWAY_URL = 'http://localhost:3001';
+    private const GATEWAY_URL = 'http://localhost:3002';
 
     /**
      * Send parent notification via WhatsApp.
