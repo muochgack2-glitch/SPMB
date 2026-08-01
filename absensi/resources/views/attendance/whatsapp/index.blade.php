@@ -148,17 +148,17 @@
                             {{-- PM2 Available - Show Start/Stop Buttons --}}
                             <template x-if="!processStatus.checking && processStatus.pm2Available">
                                 <div>
-                                    {{-- Start Button --}}
+                                    {{-- Start Button - show when PM2 not running --}}
                                     <button @click="startGateway()" 
-                                    x-show="!processStatus.running && !status.connected"
+                                    x-show="!processStatus.running"
                                     class="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all duration-200 font-medium text-sm">
                                         <i class="fas fa-play mr-2"></i>
                                         Start Gateway Server (PM2)
                                     </button>
                                     
-                                    {{-- Stop Button --}}
+                                    {{-- Stop Button - show when PM2 is running --}}
                                     <button @click="stopGateway()" 
-                                    x-show="processStatus.running && status.connected"
+                                    x-show="processStatus.running"
                                     class="w-full px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-all duration-200 font-medium text-sm">
                                         <i class="fas fa-stop mr-2"></i>
                                         Stop Gateway Server (PM2)
