@@ -358,13 +358,21 @@ class WhatsAppController extends Controller
     public function startGateway()
     {
         try {
+            // Try production path first, then local path
             $gatewayPath = base_path('../whatsapp-server-absensi');
+            $processName = 'whatsapp-gateway-absensi';
+            
+            if (!is_dir($gatewayPath)) {
+                // Try local Windows path
+                $gatewayPath = base_path('../whatsapp-server');
+                $processName = 'whatsapp-gateway-local';
+            }
             
             // Check if gateway directory exists
             if (!is_dir($gatewayPath)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Gateway directory not found: ' . $gatewayPath
+                    'message' => 'Gateway directory not found. Tried: ' . $gatewayPath
                 ], 404);
             }
 
@@ -374,15 +382,23 @@ class WhatsAppController extends Controller
             \exec($checkCommand, $output);
             $processList = implode('', $output);
             
-            if (strpos($processList, 'whatsapp-gateway-absensi') !== false) {
+            if (strpos($processList, $processName) !== false) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Gateway sudah running!'
                 ]);
             }
 
-            // Start with PM2
-            $startCommand = "cd " . escapeshellarg($gatewayPath) . " && pm2 start server.js --name whatsapp-gateway-absensi";
+            // Start with PM2 - use different command for Windows vs Linux
+            if (PHP_OS_FAMILY === 'Windows') {
+                // Windows: use chdir + pm2 start
+                chdir($gatewayPath);
+                $startCommand = "pm2 start server.js --name " . escapeshellarg($processName);
+            } else {
+                // Linux: use cd && pm2 start
+                $startCommand = "cd " . escapeshellarg($gatewayPath) . " && pm2 start server.js --name " . escapeshellarg($processName);
+            }
+            
             \exec($startCommand . " 2>&1", $output, $returnCode);
 
             if ($returnCode === 0) {
@@ -413,8 +429,26 @@ class WhatsAppController extends Controller
     public function stopGateway()
     {
         try {
+            // Check which process is running (production or local)
+            $checkCommand = "pm2 jlist";
+            $output = [];
+            \exec($checkCommand, $output);
+            $processList = implode('', $output);
+            
+            $processName = null;
+            if (strpos($processList, 'whatsapp-gateway-absensi') !== false) {
+                $processName = 'whatsapp-gateway-absensi';
+            } elseif (strpos($processList, 'whatsapp-gateway-local') !== false) {
+                $processName = 'whatsapp-gateway-local';
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gateway tidak ditemukan dalam PM2 process list'
+                ], 404);
+            }
+            
             // Stop with PM2
-            $stopCommand = "pm2 stop whatsapp-gateway-absensi";
+            $stopCommand = "pm2 stop " . escapeshellarg($processName);
             \exec($stopCommand . " 2>&1", $output, $returnCode);
 
             if ($returnCode === 0) {
@@ -480,10 +514,11 @@ class WhatsAppController extends Controller
                 ]);
             }
 
-            // Find gateway process
+            // Find gateway process (check both names)
             $gatewayProcess = null;
             foreach ($processList as $process) {
-                if (isset($process['name']) && $process['name'] === 'whatsapp-gateway-absensi') {
+                if (isset($process['name']) && 
+                    ($process['name'] === 'whatsapp-gateway-absensi' || $process['name'] === 'whatsapp-gateway-local')) {
                     $gatewayProcess = $process;
                     break;
                 }
