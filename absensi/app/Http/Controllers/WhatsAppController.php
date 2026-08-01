@@ -421,8 +421,6 @@ class WhatsAppController extends Controller
                     $startCommand = "cd " . escapeshellarg($gatewayPath) . " && pm2 start server.js --name " . escapeshellarg($processName);
                 }
             }
-                $startCommand = "cd " . escapeshellarg($gatewayPath) . " && pm2 start server.js --name " . escapeshellarg($processName);
-            }
             
             \exec($startCommand . " 2>&1", $output, $returnCode);
 
