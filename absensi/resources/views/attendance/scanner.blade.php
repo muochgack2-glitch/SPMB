@@ -169,20 +169,29 @@
 
     @push('scripts')
     <script>
-        // Use Html5Qrcode from global scope (loaded by app.js)
-        const Html5Qrcode = window.Html5Qrcode;
-        
         let currentAction = 'check_in';
         let html5QrCode = null;
         let lastScannedNis = null;
 
+        // Wait for Html5Qrcode to be available (loaded by app.js via Vite)
+        function waitForHtml5Qrcode() {
+            if (typeof window.Html5Qrcode !== 'undefined') {
+                console.log('Html5Qrcode loaded successfully');
+                initScanner();
+            } else {
+                console.log('Waiting for Html5Qrcode...');
+                setTimeout(waitForHtml5Qrcode, 100);
+            }
+        }
+
         // Initialize scanner on page load
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Scanner page loaded, Html5Qrcode available:', typeof Html5Qrcode);
-            initScanner();
+            console.log('Scanner page loaded, checking Html5Qrcode availability...');
+            waitForHtml5Qrcode();
         });
 
         function initScanner() {
+            const Html5Qrcode = window.Html5Qrcode;
             html5QrCode = new Html5Qrcode("reader");
             
             const config = {
