@@ -201,8 +201,53 @@
         </div>
         </div>
 
-        {{-- RIGHT SIDEBAR: Recent Scans Timeline --}}
-        <div class="lg:col-span-3">
+        {{-- RIGHT SIDEBAR: Branding + Quick Stats + Recent Scans --}}
+        <div class="lg:col-span-3 space-y-4">
+            {{-- Logo & School Name --}}
+            <div class="bg-gradient-to-br from-primary-600 to-purple-600 rounded-xl shadow-lg p-4 text-white text-center">
+                <div class="inline-flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-lg rounded-lg mb-2">
+                    <i class="fas fa-graduation-cap text-2xl"></i>
+                </div>
+                <h2 class="text-lg font-black mb-1">SMK PGRI BLORA</h2>
+                <p class="text-xs text-primary-100">Sistem Absensi QR Code</p>
+            </div>
+
+            {{-- Pengumuman Card --}}
+            <div class="bg-gradient-to-br from-orange-500 to-red-500 rounded-xl shadow-lg p-4 text-white">
+                <div class="flex items-start gap-3">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-bullhorn text-3xl"></i>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="text-base font-black mb-2">📢 PENGUMUMAN</h3>
+                        <p class="text-sm leading-relaxed">"Siswa harap scan saat masuk gerbang sekolah"</p>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Quick Stats Hari Ini --}}
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 border border-gray-200 dark:border-gray-700">
+                <h3 class="text-base font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <i class="fas fa-chart-pie text-primary-500"></i>
+                    Hari Ini:
+                </h3>
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">✓ Hadir</span>
+                        <span class="text-lg font-black text-green-600 dark:text-green-400" id="statHadirMini">66</span>
+                    </div>
+                    <div class="flex items-center justify-between p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">⏰ Terlambat</span>
+                        <span class="text-lg font-black text-yellow-600 dark:text-yellow-400" id="statTerlambatMini">8</span>
+                    </div>
+                    <div class="flex items-center justify-between p-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">✗ Alpha</span>
+                        <span class="text-lg font-black text-red-600 dark:text-red-400" id="statAlphaMini">0</span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Recent Scans Timeline --}}
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-3 border border-gray-200 dark:border-gray-700">
                 <div class="flex items-center gap-2 mb-3">
                     <div class="w-7 h-7 bg-gradient-to-br from-primary-500 to-purple-500 rounded-lg flex items-center justify-center text-white">
@@ -211,9 +256,9 @@
                     <h3 class="text-base font-bold text-gray-900 dark:text-white">Recent Scans</h3>
                 </div>
 
-                <div id="recentScansTimeline" class="space-y-2 max-h-[550px] overflow-y-auto">
+                <div id="recentScansTimeline" class="space-y-2 max-h-[300px] overflow-y-auto">
                     {{-- Timeline items will be added here dynamically --}}
-                    <div class="text-center text-gray-400 dark:text-gray-500 py-6">
+                    <div class="text-center text-gray-400 dark:text-gray-500 py-4">
                         <i class="fas fa-qrcode text-2xl mb-2"></i>
                         <p class="text-xs">Belum ada scan</p>
                     </div>
@@ -493,10 +538,16 @@
                     total: 100
                 };
                 
+                // Update left sidebar stats
                 document.getElementById('statHadir').textContent = dummyStats.hadir;
                 document.getElementById('statTerlambat').textContent = dummyStats.terlambat;
                 document.getElementById('statAlpha').textContent = dummyStats.alpha;
                 document.getElementById('statTotal').textContent = dummyStats.total;
+                
+                // Update right sidebar mini stats
+                document.getElementById('statHadirMini').textContent = dummyStats.hadir;
+                document.getElementById('statTerlambatMini').textContent = dummyStats.terlambat;
+                document.getElementById('statAlphaMini').textContent = dummyStats.alpha;
             } catch (error) {
                 console.error('Failed to load stats:', error);
             }
