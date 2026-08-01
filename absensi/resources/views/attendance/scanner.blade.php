@@ -58,13 +58,13 @@
                     </div>
 
                     {{-- QR Scanner Video with Frame --}}
-                    <div class="relative inline-block">
+                    <div class="relative inline-block w-full max-w-xl mx-auto">
                         <div class="absolute -inset-4 bg-gradient-to-r from-primary-500 via-purple-500 to-pink-500 rounded-3xl opacity-30 blur-xl animate-pulse"></div>
-                        <div class="relative bg-gray-900 rounded-2xl p-2 shadow-2xl">
-                            <div id="reader" class="mx-auto rounded-xl overflow-hidden" style="max-width: 400px;"></div>
+                        <div class="relative bg-gray-900 rounded-2xl p-4 shadow-2xl">
+                            <div id="reader" class="mx-auto rounded-xl overflow-hidden" style="width: 100%; max-width: 500px; min-height: 400px;"></div>
                             
                             {{-- Scanning Animation Overlay --}}
-                            <div id="scanOverlay" class="absolute inset-0 pointer-events-none">
+                            <div id="scanOverlay" class="absolute inset-4 pointer-events-none rounded-xl overflow-hidden">
                                 <div class="scan-line"></div>
                             </div>
                         </div>
@@ -196,8 +196,13 @@
             
             const config = {
                 fps: 10,
-                qrbox: { width: 250, height: 250 },
-                aspectRatio: 1.0
+                qrbox: 250,
+                aspectRatio: 1.0,
+                videoConstraints: {
+                    facingMode: "environment",
+                    width: { ideal: 640 },
+                    height: { ideal: 480 }
+                }
             };
 
             html5QrCode.start(
@@ -465,6 +470,22 @@
         
         #reader:hover {
             box-shadow: 0 0 30px rgba(59, 130, 246, 0.4);
+        }
+        
+        /* Ensure video is visible and properly sized */
+        #reader video {
+            width: 100% !important;
+            height: auto !important;
+            display: block !important;
+            border-radius: 0.75rem;
+        }
+        
+        #reader canvas {
+            display: none !important;
+        }
+        
+        #reader__scan_region {
+            min-height: 400px !important;
         }
         
         /* Card Entrance Animation */
