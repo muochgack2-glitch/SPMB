@@ -61,16 +61,16 @@
     </header>
 
     {{-- Main Content --}}
-    <main class="pt-24 pb-8 px-6 min-h-screen">
+    <main class="pt-20 pb-4 px-4 min-h-screen">
         <div class="max-w-screen-2xl mx-auto">
             {{ $slot }}
         </div>
     </main>
 
     {{-- Footer --}}
-    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-4">
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-3">
         <div class="max-w-screen-2xl mx-auto px-6 text-center">
-            <p class="text-sm text-gray-600 dark:text-gray-400">
+            <p class="text-xs text-gray-600 dark:text-gray-400">
                 © {{ date('Y') }} SMK PGRI BLORA. Sistem Absensi QR Code.
             </p>
         </div>

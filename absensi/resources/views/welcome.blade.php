@@ -1,99 +1,99 @@
 <x-public-layout>
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6" id="scanner-container">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4" id="scanner-container">
         
         {{-- LEFT SIDEBAR: Stats Cards --}}
-        <div class="lg:col-span-2 space-y-4">
+        <div class="lg:col-span-2 space-y-3">
             {{-- Header with Clock --}}
-            <div class="bg-gradient-to-br from-primary-600 to-purple-600 rounded-2xl shadow-xl p-6 text-white text-center">
-                <div class="inline-flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-lg rounded-xl mb-3">
-                    <i class="fas fa-clock text-2xl"></i>
+            <div class="bg-gradient-to-br from-primary-600 to-purple-600 rounded-xl shadow-lg p-4 text-white text-center">
+                <div class="inline-flex items-center justify-center w-10 h-10 bg-white/20 backdrop-blur-lg rounded-lg mb-2">
+                    <i class="fas fa-clock text-xl"></i>
                 </div>
-                <div id="currentTime" class="text-3xl font-black mb-1">00:00:00</div>
-                <div id="currentDate" class="text-sm text-primary-100">Loading...</div>
+                <div id="currentTime" class="text-2xl font-black mb-1">00:00:00</div>
+                <div id="currentDate" class="text-xs text-primary-100">Loading...</div>
             </div>
 
             {{-- Stats Cards --}}
-            <div class="space-y-3">
-                <div class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg p-4 text-white">
+            <div class="space-y-2">
+                <div class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg shadow-lg p-3 text-white">
                     <div class="flex items-center justify-between">
                         <div>
-                            <div class="text-2xl font-black" id="statHadir">0</div>
+                            <div class="text-xl font-black" id="statHadir">0</div>
                             <div class="text-xs text-green-100">Hadir</div>
                         </div>
-                        <i class="fas fa-check-circle text-3xl opacity-50"></i>
+                        <i class="fas fa-check-circle text-2xl opacity-50"></i>
                     </div>
                 </div>
 
-                <div class="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl shadow-lg p-4 text-white">
+                <div class="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg shadow-lg p-3 text-white">
                     <div class="flex items-center justify-between">
                         <div>
-                            <div class="text-2xl font-black" id="statTerlambat">0</div>
+                            <div class="text-xl font-black" id="statTerlambat">0</div>
                             <div class="text-xs text-yellow-100">Terlambat</div>
                         </div>
-                        <i class="fas fa-clock text-3xl opacity-50"></i>
+                        <i class="fas fa-clock text-2xl opacity-50"></i>
                     </div>
                 </div>
 
-                <div class="bg-gradient-to-br from-red-500 to-pink-600 rounded-xl shadow-lg p-4 text-white">
+                <div class="bg-gradient-to-br from-red-500 to-pink-600 rounded-lg shadow-lg p-3 text-white">
                     <div class="flex items-center justify-between">
                         <div>
-                            <div class="text-2xl font-black" id="statAlpha">0</div>
+                            <div class="text-xl font-black" id="statAlpha">0</div>
                             <div class="text-xs text-red-100">Alpha</div>
                         </div>
-                        <i class="fas fa-times-circle text-3xl opacity-50"></i>
+                        <i class="fas fa-times-circle text-2xl opacity-50"></i>
                     </div>
                 </div>
 
-                <div class="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg p-4 text-white">
+                <div class="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg shadow-lg p-3 text-white">
                     <div class="flex items-center justify-between">
                         <div>
-                            <div class="text-2xl font-black" id="statTotal">0</div>
+                            <div class="text-xl font-black" id="statTotal">0</div>
                             <div class="text-xs text-blue-100">Total Siswa</div>
                         </div>
-                        <i class="fas fa-users text-3xl opacity-50"></i>
+                        <i class="fas fa-users text-2xl opacity-50"></i>
                     </div>
                 </div>
             </div>
         </div>
 
         {{-- CENTER: Scanner Area --}}
-        <div class="lg:col-span-7 space-y-6">
+        <div class="lg:col-span-7 space-y-4">
         
         {{-- Header Section with Gradient --}}
-        <div class="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-500 to-purple-600 rounded-3xl shadow-2xl p-6 text-white">
-            <div class="absolute top-0 right-0 -mt-12 -mr-12 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
-            <div class="absolute bottom-0 left-0 -mb-12 -ml-12 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl"></div>
+        <div class="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-500 to-purple-600 rounded-2xl shadow-xl p-4 text-white">
+            <div class="absolute top-0 right-0 -mt-8 -mr-8 w-48 h-48 bg-white/10 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-0 left-0 -mb-8 -ml-8 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl"></div>
             
             <div class="relative z-10 text-center">
-                <div class="inline-flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-lg rounded-2xl mb-3 shadow-xl">
-                    <i class="fas fa-qrcode text-3xl"></i>
+                <div class="inline-flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-lg rounded-xl mb-2 shadow-xl">
+                    <i class="fas fa-qrcode text-2xl"></i>
                 </div>
-                <h1 class="text-3xl font-black mb-1">QR Scanner Premium</h1>
-                <p class="text-primary-100">Scan untuk absensi real-time</p>
+                <h1 class="text-2xl font-black mb-1">QR Scanner Premium</h1>
+                <p class="text-sm text-primary-100">Scan untuk absensi real-time</p>
             </div>
         </div>
 
         {{-- Action Toggle with Modern Design --}}
-        <div class="flex justify-center gap-6">
+        <div class="flex justify-center gap-4">
             <button 
                 onclick="setAction('check_in')" 
                 id="btnCheckIn"
-                class="action-btn active group relative px-10 py-5 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-2xl"
+                class="action-btn active group relative px-8 py-3 rounded-xl font-bold text-base transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-2xl"
             >
-                <div class="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-500 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div class="relative flex items-center gap-3">
-                    <i class="fas fa-sign-in-alt text-2xl"></i>
+                <div class="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-500 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div class="relative flex items-center gap-2">
+                    <i class="fas fa-sign-in-alt text-xl"></i>
                     <span>Check In</span>
                 </div>
             </button>
             <button 
                 onclick="setAction('check_out')" 
                 id="btnCheckOut"
-                class="action-btn group relative px-10 py-5 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-2xl"
+                class="action-btn group relative px-8 py-3 rounded-xl font-bold text-base transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-2xl"
             >
-                <div class="absolute inset-0 bg-gradient-to-r from-red-400 to-pink-500 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div class="relative flex items-center gap-3">
-                    <i class="fas fa-sign-out-alt text-2xl"></i>
+                <div class="absolute inset-0 bg-gradient-to-r from-red-400 to-pink-500 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div class="relative flex items-center gap-2">
+                    <i class="fas fa-sign-out-alt text-xl"></i>
                     <span>Check Out</span>
                 </div>
             </button>
@@ -101,60 +101,47 @@
 
         {{-- Scanner Card with Premium Design --}}
         <div class="relative">
-            <div class="absolute inset-0 bg-gradient-to-br from-primary-100 to-purple-100 dark:from-primary-900/20 dark:to-purple-900/20 rounded-3xl blur-2xl transform scale-95"></div>
+            <div class="absolute inset-0 bg-gradient-to-br from-primary-100 to-purple-100 dark:from-primary-900/20 dark:to-purple-900/20 rounded-2xl blur-xl transform scale-95"></div>
             <x-card class="relative backdrop-blur-sm bg-white/80 dark:bg-gray-800/80 border-2 border-primary-200 dark:border-primary-800/50">
-                <div class="text-center space-y-6">
-                    <div class="flex items-center justify-center gap-4">
-                        <div class="w-1 h-8 bg-gradient-to-b from-primary-500 to-purple-500 rounded-full"></div>
-                        <h2 class="text-3xl font-black text-gray-900 dark:text-white">
-                            <span id="scannerTitle">Scan QR Code untuk Check In</span>
-                        </h2>
-                        <div class="w-1 h-8 bg-gradient-to-b from-purple-500 to-primary-500 rounded-full"></div>
-                    </div>
+                <div class="text-center space-y-3">
+                    <h2 class="text-xl font-black text-gray-900 dark:text-white">
+                        <span id="scannerTitle">Scan QR Code untuk Check In</span>
+                    </h2>
 
                     {{-- QR Scanner Video with Frame --}}
-                    <div class="relative inline-block w-full max-w-xl mx-auto">
-                        <div class="absolute -inset-4 bg-gradient-to-r from-primary-500 via-purple-500 to-pink-500 rounded-3xl opacity-30 blur-xl animate-pulse"></div>
-                        <div class="relative bg-gray-900 rounded-2xl p-4 shadow-2xl">
-                            <div id="reader" class="mx-auto rounded-xl overflow-hidden" style="width: 100%; max-width: 500px; min-height: 400px;"></div>
+                    <div class="relative inline-block w-full max-w-lg mx-auto">
+                        <div class="absolute -inset-3 bg-gradient-to-r from-primary-500 via-purple-500 to-pink-500 rounded-2xl opacity-30 blur-lg animate-pulse"></div>
+                        <div class="relative bg-gray-900 rounded-xl p-3 shadow-xl">
+                            <div id="reader" class="mx-auto rounded-lg overflow-hidden" style="width: 100%; max-width: 400px; min-height: 300px;"></div>
                             
                             {{-- Scanning Animation Overlay --}}
-                            <div id="scanOverlay" class="absolute inset-4 pointer-events-none rounded-xl overflow-hidden">
+                            <div id="scanOverlay" class="absolute inset-3 pointer-events-none rounded-lg overflow-hidden">
                                 <div class="scan-line"></div>
                             </div>
                         </div>
                     </div>
 
                     {{-- Modern Instructions --}}
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
-                        <div class="flex items-start gap-3 p-4 bg-primary-50 dark:bg-primary-900/20 rounded-xl">
-                            <div class="flex-shrink-0 w-10 h-10 bg-primary-500 text-white rounded-lg flex items-center justify-center">
-                                <i class="fas fa-mobile-alt"></i>
+                    <div class="grid grid-cols-3 gap-3 max-w-2xl mx-auto">
+                        <div class="flex flex-col items-center gap-2 p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
+                            <div class="w-8 h-8 bg-primary-500 text-white rounded-lg flex items-center justify-center">
+                                <i class="fas fa-mobile-alt text-sm"></i>
                             </div>
-                            <div class="text-left">
-                                <p class="font-semibold text-gray-900 dark:text-white text-sm">Posisi QR Code</p>
-                                <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Di tengah frame kamera</p>
-                            </div>
+                            <p class="font-semibold text-gray-900 dark:text-white text-xs">Posisi Tengah</p>
                         </div>
                         
-                        <div class="flex items-start gap-3 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
-                            <div class="flex-shrink-0 w-10 h-10 bg-purple-500 text-white rounded-lg flex items-center justify-center">
-                                <i class="fas fa-sun"></i>
+                        <div class="flex flex-col items-center gap-2 p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                            <div class="w-8 h-8 bg-purple-500 text-white rounded-lg flex items-center justify-center">
+                                <i class="fas fa-sun text-sm"></i>
                             </div>
-                            <div class="text-left">
-                                <p class="font-semibold text-gray-900 dark:text-white text-sm">Pencahayaan</p>
-                                <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Pastikan cukup terang</p>
-                            </div>
+                            <p class="font-semibold text-gray-900 dark:text-white text-xs">Cukup Terang</p>
                         </div>
                         
-                        <div class="flex items-start gap-3 p-4 bg-green-50 dark:bg-green-900/20 rounded-xl">
-                            <div class="flex-shrink-0 w-10 h-10 bg-green-500 text-white rounded-lg flex items-center justify-center">
-                                <i class="fas fa-check-circle"></i>
+                        <div class="flex flex-col items-center gap-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                            <div class="w-8 h-8 bg-green-500 text-white rounded-lg flex items-center justify-center">
+                                <i class="fas fa-check-circle text-sm"></i>
                             </div>
-                            <div class="text-left">
-                                <p class="font-semibold text-gray-900 dark:text-white text-sm">Auto Scan</p>
-                                <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Deteksi otomatis</p>
-                            </div>
+                            <p class="font-semibold text-gray-900 dark:text-white text-xs">Auto Scan</p>
                         </div>
                     </div>
                 </div>
@@ -223,20 +210,20 @@
         </div>
 
         {{-- RIGHT SIDEBAR: Recent Scans Timeline --}}
-        <div class="lg:col-span-3 space-y-4">
-            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 border-2 border-gray-200 dark:border-gray-700">
-                <div class="flex items-center gap-2 mb-4">
-                    <div class="w-8 h-8 bg-gradient-to-br from-primary-500 to-purple-500 rounded-lg flex items-center justify-center text-white">
-                        <i class="fas fa-history text-sm"></i>
+        <div class="lg:col-span-3">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-3 border border-gray-200 dark:border-gray-700">
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="w-7 h-7 bg-gradient-to-br from-primary-500 to-purple-500 rounded-lg flex items-center justify-center text-white">
+                        <i class="fas fa-history text-xs"></i>
                     </div>
-                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Recent Scans</h3>
+                    <h3 class="text-base font-bold text-gray-900 dark:text-white">Recent Scans</h3>
                 </div>
 
-                <div id="recentScansTimeline" class="space-y-3 max-h-[600px] overflow-y-auto">
+                <div id="recentScansTimeline" class="space-y-2 max-h-[550px] overflow-y-auto">
                     {{-- Timeline items will be added here dynamically --}}
-                    <div class="text-center text-gray-400 dark:text-gray-500 py-8">
-                        <i class="fas fa-qrcode text-3xl mb-2"></i>
-                        <p class="text-sm">Belum ada scan</p>
+                    <div class="text-center text-gray-400 dark:text-gray-500 py-6">
+                        <i class="fas fa-qrcode text-2xl mb-2"></i>
+                        <p class="text-xs">Belum ada scan</p>
                     </div>
                 </div>
             </div>
