@@ -169,7 +169,7 @@
                                     {{-- Start Button --}}
                                     <button @click="
                                         if (confirm('Start WhatsApp Gateway server dengan PM2?')) {
-                                            fetch('/whatsapp/gateway/start', {
+                                            fetch('{{ url('/whatsapp/gateway/start') }}', {
                                                 method: 'POST',
                                                 headers: {
                                                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -201,7 +201,7 @@
                                     {{-- Stop Button --}}
                                     <button @click="
                                         if (confirm('Stop WhatsApp Gateway server?')) {
-                                            fetch('/whatsapp/gateway/stop', {
+                                            fetch('{{ url('/whatsapp/gateway/stop') }}', {
                                                 method: 'POST',
                                                 headers: {
                                                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
