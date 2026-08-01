@@ -24,6 +24,19 @@
                 </div>
             </div>
 
+            {{-- Pengumuman Card --}}
+            <div class="bg-gradient-to-br from-orange-500 to-red-500 rounded-xl shadow-lg p-4 text-white">
+                <div class="flex items-start gap-3">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-bullhorn text-3xl"></i>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="text-base font-black mb-2">📢 PENGUMUMAN</h3>
+                        <p class="text-sm leading-relaxed">"Siswa harap scan saat masuk gerbang sekolah"</p>
+                    </div>
+                </div>
+            </div>
+
             {{-- Stats Cards --}}
             <div class="space-y-2">
                 <div class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg shadow-lg p-3 text-white">
@@ -222,19 +235,6 @@
                 </div>
                 <h2 class="text-lg font-black mb-1">SMK PGRI BLORA</h2>
                 <p class="text-xs text-primary-100">Sistem Absensi QR Code</p>
-            </div>
-
-            {{-- Pengumuman Card --}}
-            <div class="bg-gradient-to-br from-orange-500 to-red-500 rounded-xl shadow-lg p-4 text-white">
-                <div class="flex items-start gap-3">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-bullhorn text-3xl"></i>
-                    </div>
-                    <div class="text-left">
-                        <h3 class="text-base font-black mb-2">📢 PENGUMUMAN</h3>
-                        <p class="text-sm leading-relaxed">"Siswa harap scan saat masuk gerbang sekolah"</p>
-                    </div>
-                </div>
             </div>
 
             {{-- Quick Stats Hari Ini --}}
