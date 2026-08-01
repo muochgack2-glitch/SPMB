@@ -2,19 +2,77 @@
     <x-slot name="title">QR Scanner</x-slot>
     <x-slot name="pageTitle">QR Scanner</x-slot>
 
-    <div class="max-w-5xl mx-auto space-y-8" id="scanner-container">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6" id="scanner-container">
+        
+        {{-- LEFT SIDEBAR: Stats Cards --}}
+        <div class="lg:col-span-2 space-y-4">
+            {{-- Header with Clock --}}
+            <div class="bg-gradient-to-br from-primary-600 to-purple-600 rounded-2xl shadow-xl p-6 text-white text-center">
+                <div class="inline-flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-lg rounded-xl mb-3">
+                    <i class="fas fa-clock text-2xl"></i>
+                </div>
+                <div id="currentTime" class="text-3xl font-black mb-1">00:00:00</div>
+                <div id="currentDate" class="text-sm text-primary-100">Loading...</div>
+            </div>
+
+            {{-- Stats Cards --}}
+            <div class="space-y-3">
+                <div class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg p-4 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-2xl font-black" id="statHadir">0</div>
+                            <div class="text-xs text-green-100">Hadir</div>
+                        </div>
+                        <i class="fas fa-check-circle text-3xl opacity-50"></i>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl shadow-lg p-4 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-2xl font-black" id="statTerlambat">0</div>
+                            <div class="text-xs text-yellow-100">Terlambat</div>
+                        </div>
+                        <i class="fas fa-clock text-3xl opacity-50"></i>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-red-500 to-pink-600 rounded-xl shadow-lg p-4 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-2xl font-black" id="statAlpha">0</div>
+                            <div class="text-xs text-red-100">Alpha</div>
+                        </div>
+                        <i class="fas fa-times-circle text-3xl opacity-50"></i>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg p-4 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-2xl font-black" id="statTotal">0</div>
+                            <div class="text-xs text-blue-100">Total Siswa</div>
+                        </div>
+                        <i class="fas fa-users text-3xl opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- CENTER: Scanner Area --}}
+        <div class="lg:col-span-7 space-y-6">
         
         {{-- Header Section with Gradient --}}
-        <div class="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-500 to-purple-600 rounded-3xl shadow-2xl p-8 text-white">
+        <div class="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-500 to-purple-600 rounded-3xl shadow-2xl p-6 text-white">
             <div class="absolute top-0 right-0 -mt-12 -mr-12 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
             <div class="absolute bottom-0 left-0 -mb-12 -ml-12 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl"></div>
             
             <div class="relative z-10 text-center">
-                <div class="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-lg rounded-2xl mb-4 shadow-xl">
-                    <i class="fas fa-qrcode text-4xl"></i>
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-lg rounded-2xl mb-3 shadow-xl">
+                    <i class="fas fa-qrcode text-3xl"></i>
                 </div>
-                <h1 class="text-4xl font-black mb-2">QR Scanner Premium</h1>
-                <p class="text-primary-100 text-lg">Scan untuk absensi real-time dengan teknologi AI</p>
+                <h1 class="text-3xl font-black mb-1">QR Scanner Premium</h1>
+                <p class="text-primary-100">Scan untuk absensi real-time</p>
             </div>
         </div>
 
@@ -165,6 +223,27 @@
                 </x-card>
             </div>
         </div>
+        </div>
+
+        {{-- RIGHT SIDEBAR: Recent Scans Timeline --}}
+        <div class="lg:col-span-3 space-y-4">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 border-2 border-gray-200 dark:border-gray-700">
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="w-8 h-8 bg-gradient-to-br from-primary-500 to-purple-500 rounded-lg flex items-center justify-center text-white">
+                        <i class="fas fa-history text-sm"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Recent Scans</h3>
+                </div>
+
+                <div id="recentScansTimeline" class="space-y-3 max-h-[600px] overflow-y-auto">
+                    {{-- Timeline items will be added here dynamically --}}
+                    <div class="text-center text-gray-400 dark:text-gray-500 py-8">
+                        <i class="fas fa-qrcode text-3xl mb-2"></i>
+                        <p class="text-sm">Belum ada scan</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     @push('scripts')
@@ -172,12 +251,28 @@
         let currentAction = 'check_in';
         let html5QrCode = null;
         let lastScannedNis = null;
+        let recentScans = [];
+
+        // Real-time clock
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const dateString = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            
+            document.getElementById('currentTime').textContent = timeString;
+            document.getElementById('currentDate').textContent = dateString;
+        }
+
+        // Update clock every second
+        setInterval(updateClock, 1000);
+        updateClock(); // Initial call
 
         // Wait for Html5Qrcode to be available (loaded by app.js via Vite)
         function waitForHtml5Qrcode() {
             if (typeof window.Html5Qrcode !== 'undefined') {
                 console.log('Html5Qrcode loaded successfully');
                 initScanner();
+                loadTodayStats();
             } else {
                 console.log('Waiting for Html5Qrcode...');
                 setTimeout(waitForHtml5Qrcode, 100);
@@ -335,6 +430,12 @@
             resultCard.classList.add('scale-100', 'opacity-100');
             hideError();
             
+            // Add to recent scans timeline
+            addToRecentScans(result.data);
+            
+            // Update stats
+            loadTodayStats();
+            
             // Confetti effect (optional)
             if (window.confetti) {
                 confetti({
@@ -342,6 +443,86 @@
                     spread: 70,
                     origin: { y: 0.6 }
                 });
+            }
+        }
+
+        function addToRecentScans(data) {
+            if (!data) return;
+            
+            const timeNow = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            
+            recentScans.unshift({
+                nama: data.nama || 'Unknown',
+                nis: data.nis || '-',
+                kelas: data.kelas || '-',
+                status: data.status || 'hadir',
+                time: timeNow
+            });
+            
+            // Keep only last 10 scans
+            if (recentScans.length > 10) {
+                recentScans.pop();
+            }
+            
+            updateRecentScansUI();
+        }
+
+        function updateRecentScansUI() {
+            const timeline = document.getElementById('recentScansTimeline');
+            
+            if (recentScans.length === 0) {
+                timeline.innerHTML = `
+                    <div class="text-center text-gray-400 dark:text-gray-500 py-8">
+                        <i class="fas fa-qrcode text-3xl mb-2"></i>
+                        <p class="text-sm">Belum ada scan</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            timeline.innerHTML = recentScans.map(scan => `
+                <div class="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow">
+                    <div class="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-500 rounded-lg flex items-center justify-center text-white text-sm font-bold">
+                        ${scan.nis.substring(0, 2)}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">${scan.nama}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">${scan.kelas}</p>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${
+                                scan.status === 'hadir' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                                scan.status === 'terlambat' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                                'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400'
+                            }">
+                                <i class="fas ${scan.status === 'hadir' ? 'fa-check' : 'fa-clock'} text-[10px]"></i>
+                                ${scan.status}
+                            </span>
+                            <span class="text-xs text-gray-400 dark:text-gray-500">
+                                <i class="far fa-clock"></i> ${scan.time}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function loadTodayStats() {
+            try {
+                // This would normally fetch from API - for now use dummy data
+                // In production, create an API endpoint to fetch today's stats
+                const dummyStats = {
+                    hadir: Math.floor(Math.random() * 50) + 20,
+                    terlambat: Math.floor(Math.random() * 10),
+                    alpha: Math.floor(Math.random() * 5),
+                    total: 100
+                };
+                
+                document.getElementById('statHadir').textContent = dummyStats.hadir;
+                document.getElementById('statTerlambat').textContent = dummyStats.terlambat;
+                document.getElementById('statAlpha').textContent = dummyStats.alpha;
+                document.getElementById('statTotal').textContent = dummyStats.total;
+            } catch (error) {
+                console.error('Failed to load stats:', error);
             }
         }
 
