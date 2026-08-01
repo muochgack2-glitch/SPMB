@@ -237,28 +237,6 @@
                 <p class="text-xs text-primary-100">Sistem Absensi QR Code</p>
             </div>
 
-            {{-- Quick Stats Hari Ini --}}
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 border border-gray-200 dark:border-gray-700">
-                <h3 class="text-base font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                    <i class="fas fa-chart-pie text-primary-500"></i>
-                    Hari Ini:
-                </h3>
-                <div class="space-y-2">
-                    <div class="flex items-center justify-between p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">✓ Hadir</span>
-                        <span class="text-lg font-black text-green-600 dark:text-green-400" id="statHadirMini">66</span>
-                    </div>
-                    <div class="flex items-center justify-between p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">⏰ Terlambat</span>
-                        <span class="text-lg font-black text-yellow-600 dark:text-yellow-400" id="statTerlambatMini">8</span>
-                    </div>
-                    <div class="flex items-center justify-between p-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">✗ Alpha</span>
-                        <span class="text-lg font-black text-red-600 dark:text-red-400" id="statAlphaMini">0</span>
-                    </div>
-                </div>
-            </div>
-
             {{-- Recent Scans Timeline --}}
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-3 border border-gray-200 dark:border-gray-700">
                 <div class="flex items-center gap-2 mb-3">
@@ -700,11 +678,6 @@
                     document.getElementById('statTerlambat').textContent = stats.terlambat;
                     document.getElementById('statAlpha').textContent = stats.alpha;
                     document.getElementById('statTotal').textContent = stats.total;
-                    
-                    // Update right sidebar mini stats
-                    document.getElementById('statHadirMini').textContent = stats.hadir;
-                    document.getElementById('statTerlambatMini').textContent = stats.terlambat;
-                    document.getElementById('statAlphaMini').textContent = stats.alpha;
                 } else {
                     console.error('Failed to load stats:', result.message);
                 }
