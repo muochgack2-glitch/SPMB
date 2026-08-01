@@ -226,8 +226,8 @@
         </div>
         </div>
 
-        {{-- RIGHT SIDEBAR: Branding + Quick Stats + Recent Scans --}}
-        <div class="lg:col-span-3 space-y-4">
+        {{-- RIGHT SIDEBAR: Branding + Recent Scans --}}
+        <div class="lg:col-span-3 flex flex-col gap-4">
             {{-- Logo & School Name --}}
             <div class="bg-gradient-to-br from-primary-600 to-purple-600 rounded-xl shadow-lg p-4 text-white text-center">
                 <div class="inline-flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-lg rounded-lg mb-2">
@@ -238,7 +238,7 @@
             </div>
 
             {{-- Recent Scans Timeline --}}
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-3 border border-gray-200 dark:border-gray-700">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-3 border border-gray-200 dark:border-gray-700 flex flex-col flex-1">
                 <div class="flex items-center gap-2 mb-3">
                     <div class="w-7 h-7 bg-gradient-to-br from-primary-500 to-purple-500 rounded-lg flex items-center justify-center text-white">
                         <i class="fas fa-history text-xs"></i>
@@ -246,7 +246,7 @@
                     <h3 class="text-base font-bold text-gray-900 dark:text-white">Recent Scans</h3>
                 </div>
 
-                <div id="recentScansTimeline" class="space-y-2 max-h-[300px] overflow-y-auto">
+                <div id="recentScansTimeline" class="space-y-2 overflow-y-auto flex-1">
                     {{-- Timeline items will be added here dynamically --}}
                     <div class="text-center text-gray-400 dark:text-gray-500 py-4">
                         <i class="fas fa-qrcode text-2xl mb-2"></i>
