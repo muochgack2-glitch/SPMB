@@ -2,15 +2,25 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Attributes\Description;
-use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use App\Services\AttendanceService;
 
-#[Signature('attendance:mark-absent')]
-#[Description('Mark all students who have not checked in as absent')]
 class MarkAbsentStudents extends Command
 {
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = 'attendance:mark-absent';
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'Mark all students who have not checked in as absent';
+
     protected AttendanceService $attendanceService;
 
     public function __construct(AttendanceService $attendanceService)
