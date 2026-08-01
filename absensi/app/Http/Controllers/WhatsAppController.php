@@ -371,7 +371,7 @@ class WhatsAppController extends Controller
             // Check if already running
             $checkCommand = "pm2 jlist";
             $output = [];
-            exec($checkCommand, $output);
+            \exec($checkCommand, $output);
             $processList = implode('', $output);
             
             if (strpos($processList, 'whatsapp-gateway-absensi') !== false) {
@@ -383,7 +383,7 @@ class WhatsAppController extends Controller
 
             // Start with PM2
             $startCommand = "cd " . escapeshellarg($gatewayPath) . " && pm2 start server.js --name whatsapp-gateway-absensi";
-            exec($startCommand . " 2>&1", $output, $returnCode);
+            \exec($startCommand . " 2>&1", $output, $returnCode);
 
             if ($returnCode === 0) {
                 return response()->json([
@@ -415,7 +415,7 @@ class WhatsAppController extends Controller
         try {
             // Stop with PM2
             $stopCommand = "pm2 stop whatsapp-gateway-absensi";
-            exec($stopCommand . " 2>&1", $output, $returnCode);
+            \exec($stopCommand . " 2>&1", $output, $returnCode);
 
             if ($returnCode === 0) {
                 return response()->json([
@@ -446,7 +446,7 @@ class WhatsAppController extends Controller
     {
         try {
             // Check if PM2 is installed
-            $pm2Check = shell_exec('pm2 -v 2>&1');
+            $pm2Check = \shell_exec('pm2 -v 2>&1');
             if (empty($pm2Check) || strpos($pm2Check, 'command not found') !== false) {
                 return response()->json([
                     'success' => true,
@@ -457,7 +457,7 @@ class WhatsAppController extends Controller
             }
 
             // Get PM2 process list
-            $output = shell_exec('pm2 jlist 2>&1');
+            $output = \shell_exec('pm2 jlist 2>&1');
             
             if (empty($output)) {
                 return response()->json([
