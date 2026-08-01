@@ -279,7 +279,145 @@
         </div>
     </div>
 
+    {{-- Toast Container --}}
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+    @push('styles')
+    <style>
+        /* Toast Notification Styles */
+        .toast {
+            min-width: 300px;
+            max-width: 400px;
+            padding: 16px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideInRight 0.4s ease-out, pulse 0.5s ease-in-out 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .toast::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, #fff, transparent);
+        }
+
+        .toast-icon {
+            font-size: 32px;
+            flex-shrink: 0;
+            animation: bounceIn 0.6s ease-out 0.2s backwards;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .toast-message {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .toast-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .toast-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
+        /* Toast Variants */
+        .toast.success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .toast.warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .toast.info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        /* Animations */
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        @keyframes bounceIn {
+            0% {
+                transform: scale(0.3);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.02);
+            }
+        }
+
+        .toast.removing {
+            animation: slideOutRight 0.3s ease-out forwards;
+        }
+    </style>
+    @endpush
+
     @push('scripts')
+
     <script>
         let currentAction = 'check_in';
         let html5QrCode = null;
@@ -690,11 +828,124 @@
             console.log('🔌 Connected to SSE for real-time updates');
         }
 
-        function showNotification(scanData) {
-            // Optional: Show a small toast notification for new scans
-            // You can implement this with a library or custom toast component
-            console.log(`📢 ${scanData.nama} just scanned (${scanData.status})`);
+        // ============================================
+        // TOAST NOTIFICATION SYSTEM
+        // ============================================
+
+        /**
+         * Play notification sound using Web Audio API
+         */
+        function playNotificationSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                // Create pleasant "ding" sound
+                oscillator.frequency.value = 800; // Hz
+                oscillator.type = 'sine';
+                
+                // Envelope for smooth sound
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.01);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
+            } catch (error) {
+                console.error('Failed to play sound:', error);
+            }
         }
+
+        /**
+         * Show toast notification
+         * @param {string} title - Toast title
+         * @param {string} message - Toast message
+         * @param {string} type - Toast type: success, warning, info
+         * @param {number} duration - Auto-dismiss duration in ms (0 = no auto-dismiss)
+         */
+        function showToast(title, message, type = 'success', duration = 4000) {
+            const container = document.getElementById('toast-container');
+            
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            // Icon based on type
+            const icons = {
+                success: '✅',
+                warning: '⚠️',
+                info: 'ℹ️',
+                error: '❌'
+            };
+            
+            toast.innerHTML = `
+                <div class="toast-icon">${icons[type] || icons.success}</div>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close" onclick="dismissToast(this)">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+            `;
+            
+            // Add to container
+            container.appendChild(toast);
+            
+            // Play sound
+            playNotificationSound();
+            
+            // Auto-dismiss after duration
+            if (duration > 0) {
+                setTimeout(() => {
+                    dismissToast(toast.querySelector('.toast-close'));
+                }, duration);
+            }
+            
+            return toast;
+        }
+
+        /**
+         * Dismiss toast notification
+         */
+        function dismissToast(closeButton) {
+            const toast = closeButton.closest('.toast');
+            if (toast) {
+                toast.classList.add('removing');
+                setTimeout(() => toast.remove(), 300);
+            }
+        }
+
+        /**
+         * Show notification for new scan (enhanced)
+         */
+        function showNotification(scanData) {
+            if (!scanData) return;
+            
+            // Determine notification type and message
+            let type = 'success';
+            let icon = '🎉';
+            let action = 'Check In';
+            
+            if (scanData.status === 'terlambat') {
+                type = 'warning';
+                icon = '⏰';
+            }
+            
+            // Show toast notification
+            const title = `${icon} ${scanData.nama} baru scan!`;
+            const message = `${scanData.kelas} • ${scanData.status.toUpperCase()} • ${scanData.time}`;
+            
+            showToast(title, message, type, 5000);
+            
+            // Log for debugging
+            console.log(`📢 ${scanData.nama} (${scanData.nis}) - ${scanData.status} at ${scanData.time}`);
+        }
+
 
         function showError(message) {
             const errorCard = document.getElementById('errorCard');

@@ -1,0 +1,6 @@
+# Notification Sound
+# Use free notification sound from: https://notificationsounds.com/
+# Or generate beep sound using Web Audio API
+
+# For now, we'll use Web Audio API to generate beep in JavaScript
+# See welcome.blade.php for implementation
