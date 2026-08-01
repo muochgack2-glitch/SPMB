@@ -306,6 +306,8 @@
                 console.log('Html5Qrcode loaded successfully');
                 initScanner();
                 loadTodayStats();
+                loadSchoolHours();
+                loadAnnouncement();
             } else {
                 console.log('Waiting for Html5Qrcode...');
                 setTimeout(waitForHtml5Qrcode, 100);
@@ -541,27 +543,92 @@
 
         async function loadTodayStats() {
             try {
-                // This would normally fetch from API - for now use dummy data
-                // In production, create an API endpoint to fetch today's stats
-                const dummyStats = {
-                    hadir: Math.floor(Math.random() * 50) + 20,
-                    terlambat: Math.floor(Math.random() * 10),
-                    alpha: Math.floor(Math.random() * 5),
-                    total: 100
-                };
+                const response = await fetch('/api/attendance/stats/today', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
                 
-                // Update left sidebar stats
-                document.getElementById('statHadir').textContent = dummyStats.hadir;
-                document.getElementById('statTerlambat').textContent = dummyStats.terlambat;
-                document.getElementById('statAlpha').textContent = dummyStats.alpha;
-                document.getElementById('statTotal').textContent = dummyStats.total;
+                const result = await response.json();
                 
-                // Update right sidebar mini stats
-                document.getElementById('statHadirMini').textContent = dummyStats.hadir;
-                document.getElementById('statTerlambatMini').textContent = dummyStats.terlambat;
-                document.getElementById('statAlphaMini').textContent = dummyStats.alpha;
+                if (result.success) {
+                    const stats = result.data;
+                    
+                    // Update left sidebar stats
+                    document.getElementById('statHadir').textContent = stats.hadir;
+                    document.getElementById('statTerlambat').textContent = stats.terlambat;
+                    document.getElementById('statAlpha').textContent = stats.alpha;
+                    document.getElementById('statTotal').textContent = stats.total;
+                    
+                    // Update right sidebar mini stats
+                    document.getElementById('statHadirMini').textContent = stats.hadir;
+                    document.getElementById('statTerlambatMini').textContent = stats.terlambat;
+                    document.getElementById('statAlphaMini').textContent = stats.alpha;
+                } else {
+                    console.error('Failed to load stats:', result.message);
+                }
             } catch (error) {
                 console.error('Failed to load stats:', error);
+            }
+        }
+
+        async function loadSchoolHours() {
+            try {
+                const response = await fetch('/api/attendance/school-hours', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    const hours = result.data;
+                    
+                    // Update jam masuk & pulang di left sidebar
+                    const jamMasukEl = document.querySelector('.text-primary-100:nth-of-type(1)').nextElementSibling;
+                    const jamPulangEl = document.querySelector('.text-primary-100:nth-of-type(2)').nextElementSibling;
+                    
+                    if (jamMasukEl) {
+                        jamMasukEl.textContent = `${hours.check_in_start} - ${hours.check_in_end}`;
+                    }
+                    if (jamPulangEl) {
+                        jamPulangEl.textContent = `${hours.check_out_start} - ${hours.check_out_end}`;
+                    }
+                } else {
+                    console.error('Failed to load school hours:', result.message);
+                }
+            } catch (error) {
+                console.error('Failed to load school hours:', error);
+            }
+        }
+
+        async function loadAnnouncement() {
+            try {
+                const response = await fetch('/api/announcement/active', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    const announcement = result.data;
+                    
+                    // Update pengumuman text di right sidebar
+                    const announcementEl = document.querySelector('.from-orange-500 p.text-sm');
+                    if (announcementEl) {
+                        announcementEl.textContent = `"${announcement.message}"`;
+                    }
+                } else {
+                    console.error('Failed to load announcement:', result.message);
+                }
+            } catch (error) {
+                console.error('Failed to load announcement:', error);
             }
         }
 
