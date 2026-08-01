@@ -376,17 +376,29 @@ class WhatsAppController extends Controller
                 ], 404);
             }
 
-            // Check if already running
+            // Check if already running (online)
             $checkCommand = "pm2 jlist";
             $output = [];
             \exec($checkCommand, $output);
-            $processList = implode('', $output);
+            $processList = json_decode(implode('', $output), true);
             
-            if (strpos($processList, $processName) !== false) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Gateway sudah running!'
-                ]);
+            if (is_array($processList)) {
+                foreach ($processList as $process) {
+                    if (isset($process['name']) && $process['name'] === $processName) {
+                        // Check if process is online
+                        if (isset($process['pm2_env']['status']) && $process['pm2_env']['status'] === 'online') {
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'Gateway sudah running!'
+                            ]);
+                        }
+                        // If stopped, delete it first before starting new one
+                        if (isset($process['pm2_env']['status']) && $process['pm2_env']['status'] === 'stopped') {
+                            \exec("pm2 delete " . escapeshellarg($processName) . " 2>&1");
+                        }
+                        break;
+                    }
+                }
             }
 
             // Start with PM2 - use different command for Windows vs Linux
