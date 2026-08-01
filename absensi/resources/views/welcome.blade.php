@@ -9,7 +9,19 @@
                     <i class="fas fa-clock text-xl"></i>
                 </div>
                 <div id="currentTime" class="text-2xl font-black mb-1">00:00:00</div>
-                <div id="currentDate" class="text-xs text-primary-100">Loading...</div>
+                <div id="currentDate" class="text-xs text-primary-100 mb-3">Loading...</div>
+                
+                {{-- Jam Masuk & Pulang Info --}}
+                <div class="pt-3 border-t border-white/20 space-y-2">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-primary-100">⏰ Jam Masuk:</span>
+                        <span class="font-bold">06:30 - 07:00</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-primary-100">🏠 Jam Pulang:</span>
+                        <span class="font-bold">15:00 - 15:30</span>
+                    </div>
+                </div>
             </div>
 
             {{-- Stats Cards --}}
