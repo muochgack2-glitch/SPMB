@@ -120,27 +120,9 @@
                     </h4>
                     <div class="space-y-2">
                         {{-- PM2 Start/Stop Section --}}
-                        <div x-data="{ processRunning: false, checking: true, pm2Available: true, errorMsg: '' }" x-init="
-                            // Check process status on load
-                            fetch('/whatsapp/gateway/process-status')
-                                .then(r => r.json())
-                                .then(data => {
-                                    if (data.status === 'pm2_not_installed') {
-                                        pm2Available = false;
-                                        errorMsg = data.message;
-                                    } else {
-                                        processRunning = data.running || false;
-                                    }
-                                    checking = false;
-                                })
-                                .catch(e => {
-                                    pm2Available = false;
-                                    errorMsg = 'Failed to check PM2 status';
-                                    checking = false;
-                                });
-                        ">
+                        <div>
                             {{-- Loading State --}}
-                            <template x-if="checking">
+                            <template x-if="processStatus.checking">
                                 <div class="w-full px-4 py-2 bg-gray-400 text-white rounded-lg text-center text-sm">
                                     <i class="fas fa-spinner fa-spin mr-2"></i>
                                     Checking PM2 status...
@@ -148,7 +130,7 @@
                             </template>
 
                             {{-- PM2 Not Available --}}
-                            <template x-if="!checking && !pm2Available">
+                            <template x-if="!processStatus.checking && !processStatus.pm2Available">
                                 <div class="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-lg">
                                     <p class="text-sm text-yellow-800 dark:text-yellow-300 mb-2">
                                         <i class="fas fa-exclamation-triangle mr-1"></i>
@@ -158,73 +140,25 @@
                                         Install PM2 for automatic start/stop: <code class="bg-yellow-200 dark:bg-yellow-800 px-1 rounded">npm install -g pm2</code>
                                     </p>
                                     <p class="text-xs text-yellow-700 dark:text-yellow-400">
-                                        Or start manually: <code class="bg-yellow-200 dark:bg-yellow-800 px-1 rounded">cd ../whatsapp-server-absensi && node server.js</code>
+                                        Or start manually: <code class="bg-yellow-200 dark:bg-yellow-800 px-1 rounded">cd ../whatsapp-server && node server.js</code>
                                     </p>
                                 </div>
                             </template>
                             
                             {{-- PM2 Available - Show Start/Stop Buttons --}}
-                            <template x-if="!checking && pm2Available">
+                            <template x-if="!processStatus.checking && processStatus.pm2Available">
                                 <div>
                                     {{-- Start Button --}}
-                                    <button @click="
-                                        if (confirm('Start WhatsApp Gateway server dengan PM2?')) {
-                                            fetch('{{ url('/whatsapp/gateway/start') }}', {
-                                                method: 'POST',
-                                                headers: {
-                                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                                    'Content-Type': 'application/json',
-                                                    'Accept': 'application/json',
-                                                    'X-Requested-With': 'XMLHttpRequest'
-                                                }
-                                            })
-                                            .then(r => {
-                                                if (!r.ok) throw new Error('HTTP ' + r.status);
-                                                return r.json();
-                                            })
-                                            .then(data => {
-                                                alert(data.message);
-                                                if (data.success) {
-                                                    processRunning = true;
-                                                    setTimeout(() => refreshStatus(), 5000);
-                                                }
-                                            })
-                                            .catch(e => alert('Error: ' + e.message));
-                                        }
-                                    " 
-                                    x-show="!processRunning && !status.connected"
+                                    <button @click="startGateway()" 
+                                    x-show="!processStatus.running && !status.connected"
                                     class="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all duration-200 font-medium text-sm">
                                         <i class="fas fa-play mr-2"></i>
                                         Start Gateway Server (PM2)
                                     </button>
                                     
                                     {{-- Stop Button --}}
-                                    <button @click="
-                                        if (confirm('Stop WhatsApp Gateway server?')) {
-                                            fetch('{{ url('/whatsapp/gateway/stop') }}', {
-                                                method: 'POST',
-                                                headers: {
-                                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                                    'Content-Type': 'application/json',
-                                                    'Accept': 'application/json',
-                                                    'X-Requested-With': 'XMLHttpRequest'
-                                                }
-                                            })
-                                            .then(r => {
-                                                if (!r.ok) throw new Error('HTTP ' + r.status);
-                                                return r.json();
-                                            })
-                                            .then(data => {
-                                                alert(data.message);
-                                                if (data.success) {
-                                                    processRunning = false;
-                                                    refreshStatus();
-                                                }
-                                            })
-                                            .catch(e => alert('Error: ' + e.message));
-                                        }
-                                    " 
-                                    x-show="processRunning && status.connected"
+                                    <button @click="stopGateway()" 
+                                    x-show="processStatus.running && status.connected"
                                     class="w-full px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-all duration-200 font-medium text-sm">
                                         <i class="fas fa-stop mr-2"></i>
                                         Stop Gateway Server (PM2)
@@ -391,6 +325,12 @@
                     message: ''
                 },
                 health: {},
+                processStatus: {
+                    running: false,
+                    checking: true,
+                    pm2Available: true,
+                    errorMsg: ''
+                },
                 loading: false,
                 loadingQR: false,
                 showQRModal: false,
@@ -406,9 +346,10 @@
                 async refreshStatus() {
                     this.loading = true;
                     try {
-                        const [statusRes, healthRes] = await Promise.all([
+                        const [statusRes, healthRes, processRes] = await Promise.all([
                             fetch('/whatsapp/status'),
-                            fetch('/whatsapp/health')
+                            fetch('/whatsapp/health'),
+                            fetch('/whatsapp/gateway/process-status')
                         ]);
 
                         if (statusRes.ok) {
@@ -417,8 +358,19 @@
                         if (healthRes.ok) {
                             this.health = await healthRes.json();
                         }
+                        if (processRes.ok) {
+                            const data = await processRes.json();
+                            if (data.status === 'pm2_not_installed') {
+                                this.processStatus.pm2Available = false;
+                                this.processStatus.errorMsg = data.message;
+                            } else {
+                                this.processStatus.running = data.running || false;
+                            }
+                            this.processStatus.checking = false;
+                        }
                     } catch (error) {
                         console.error('Failed to refresh status:', error);
+                        this.processStatus.checking = false;
                     } finally {
                         this.loading = false;
                     }
@@ -479,6 +431,64 @@
                             alert('Gateway sedang direstart... Tunggu 10 detik lalu refresh status.');
                         } else {
                             alert('Gagal restart: ' + data.message);
+                        }
+                    } catch (error) {
+                        alert('Error: ' + error.message);
+                    }
+                },
+
+                async startGateway() {
+                    if (!confirm('Start WhatsApp Gateway server dengan PM2?')) {
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch('/whatsapp/gateway/start', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+
+                        if (!response.ok) throw new Error('HTTP ' + response.status);
+                        const data = await response.json();
+
+                        alert(data.message);
+                        if (data.success) {
+                            this.processStatus.running = true;
+                            setTimeout(() => this.refreshStatus(), 5000);
+                        }
+                    } catch (error) {
+                        alert('Error: ' + error.message);
+                    }
+                },
+
+                async stopGateway() {
+                    if (!confirm('Stop WhatsApp Gateway server?')) {
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch('/whatsapp/gateway/stop', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+
+                        if (!response.ok) throw new Error('HTTP ' + response.status);
+                        const data = await response.json();
+
+                        alert(data.message);
+                        if (data.success) {
+                            this.processStatus.running = false;
+                            this.refreshStatus();
                         }
                     } catch (error) {
                         alert('Error: ' + error.message);
