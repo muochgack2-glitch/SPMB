@@ -36,45 +36,12 @@
 </head>
 <body class="font-sans antialiased bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
     
-    {{-- Fixed Header dengan Login Button --}}
-    <header class="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700">
-        <div class="max-w-screen-2xl mx-auto px-6 py-4">
-            <div class="flex items-center justify-between">
-                {{-- Logo & School Name --}}
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-gradient-to-br from-primary-500 to-purple-500 rounded-xl flex items-center justify-center text-white shadow-lg">
-                        <i class="fas fa-graduation-cap text-2xl"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-xl font-black text-gray-900 dark:text-white">SMK PGRI BLORA</h1>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">Sistem Absensi QR Code</p>
-                    </div>
-                </div>
-
-                {{-- Login Button --}}
-                <a href="{{ route('login') }}" class="group relative px-6 py-3 bg-gradient-to-r from-primary-500 to-purple-600 hover:from-primary-600 hover:to-purple-700 text-white rounded-xl font-bold transition-all transform hover:scale-105 shadow-lg hover:shadow-2xl">
-                    <i class="fas fa-sign-in-alt mr-2"></i>
-                    Login Admin
-                </a>
-            </div>
-        </div>
-    </header>
-
-    {{-- Main Content --}}
-    <main class="pt-20 pb-4 px-4 min-h-screen">
+    {{-- Main Content (No Header) --}}
+    <main class="pt-4 pb-4 px-4 min-h-screen">
         <div class="max-w-screen-2xl mx-auto">
             {{ $slot }}
         </div>
     </main>
-
-    {{-- Footer --}}
-    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-3">
-        <div class="max-w-screen-2xl mx-auto px-6 text-center">
-            <p class="text-xs text-gray-600 dark:text-gray-400">
-                © {{ date('Y') }} SMK PGRI BLORA. Sistem Absensi QR Code.
-            </p>
-        </div>
-    </footer>
 
     {{-- Toast Container --}}
     <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>

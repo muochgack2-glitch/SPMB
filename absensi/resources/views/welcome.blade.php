@@ -59,8 +59,8 @@
         {{-- CENTER: Scanner Area --}}
         <div class="lg:col-span-7 space-y-4">
 
-        {{-- Action Toggle with Modern Design --}}
-        <div class="flex justify-center gap-4">
+        {{-- Action Toggle with Modern Design + Login Button --}}
+        <div class="flex justify-center items-center gap-4">
             <button 
                 onclick="setAction('check_in')" 
                 id="btnCheckIn"
@@ -83,6 +83,12 @@
                     <span>Check Out</span>
                 </div>
             </button>
+            
+            {{-- Login Admin Button --}}
+            <a href="{{ route('login') }}" class="group relative px-8 py-3 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-xl font-bold text-base transition-all transform hover:scale-105 shadow-lg hover:shadow-2xl">
+                <i class="fas fa-user-shield text-xl mr-2"></i>
+                Login Admin
+            </a>
         </div>
 
         {{-- Scanner Card with Premium Design --}}
