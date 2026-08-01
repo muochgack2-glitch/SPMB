@@ -401,13 +401,26 @@ class WhatsAppController extends Controller
                 }
             }
 
-            // Start with PM2 - use different command for Windows vs Linux
-            if (PHP_OS_FAMILY === 'Windows') {
-                // Windows: use chdir + pm2 start
-                chdir($gatewayPath);
-                $startCommand = "pm2 start server.js --name " . escapeshellarg($processName);
+            // Start with PM2 - use ecosystem file if exists, otherwise use direct start
+            $ecosystemFile = $gatewayPath . '/ecosystem.config.js';
+            
+            if (file_exists($ecosystemFile)) {
+                // Use ecosystem file (has PORT env configured)
+                if (PHP_OS_FAMILY === 'Windows') {
+                    chdir($gatewayPath);
+                    $startCommand = "pm2 start ecosystem.config.js";
+                } else {
+                    $startCommand = "cd " . escapeshellarg($gatewayPath) . " && pm2 start ecosystem.config.js";
+                }
             } else {
-                // Linux: use cd && pm2 start
+                // Fallback to direct start (may not have PORT set correctly)
+                if (PHP_OS_FAMILY === 'Windows') {
+                    chdir($gatewayPath);
+                    $startCommand = "pm2 start server.js --name " . escapeshellarg($processName);
+                } else {
+                    $startCommand = "cd " . escapeshellarg($gatewayPath) . " && pm2 start server.js --name " . escapeshellarg($processName);
+                }
+            }
                 $startCommand = "cd " . escapeshellarg($gatewayPath) . " && pm2 start server.js --name " . escapeshellarg($processName);
             }
             
