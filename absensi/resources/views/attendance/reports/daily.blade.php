@@ -80,15 +80,15 @@
             <div class="overflow-x-auto">
                 <x-table>
                     <x-table.header>
-                        <th>No</th>
-                        <th>Foto Check In</th>
-                        <th>Foto Check Out</th>
-                        <th>NIS</th>
+                        <th class="w-12">No</th>
+                        <th class="w-20">Check In</th>
+                        <th class="w-20">Check Out</th>
+                        <th class="w-28">NIS</th>
                         <th>Nama</th>
-                        <th>Kelas</th>
-                        <th>Jam Masuk</th>
-                        <th>Jam Pulang</th>
-                        <th>Status</th>
+                        <th class="w-32">Kelas</th>
+                        <th class="w-24">Jam Masuk</th>
+                        <th class="w-24">Jam Pulang</th>
+                        <th class="w-24">Status</th>
                     </x-table.header>
                     <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                         @foreach($records as $index => $record)
@@ -99,17 +99,17 @@
                             <x-table.cell>
                                 @if($record->check_in_photo)
                                     <button onclick="showPhotoModal('{{ $record->check_in_photo_url }}', '{{ $record->student->nama }}', 'Check In')"
-                                            class="group relative">
+                                            class="group relative block">
                                         <img src="{{ $record->check_in_photo_url }}" 
-                                             class="w-16 h-16 rounded-lg object-cover border-2 border-green-500 dark:border-green-700 hover:scale-110 hover:shadow-lg transition-all cursor-pointer"
+                                             class="w-12 h-12 rounded-lg object-cover border-2 border-green-500 dark:border-green-700 hover:scale-110 hover:shadow-lg transition-all cursor-pointer"
                                              alt="Foto Check In">
                                         <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 rounded-lg transition-all flex items-center justify-center">
-                                            <i class="fas fa-search-plus text-white opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                            <i class="fas fa-search-plus text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
                                         </div>
                                     </button>
                                 @else
-                                    <div class="w-16 h-16 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                                        <i class="fas fa-user text-gray-400"></i>
+                                    <div class="w-12 h-12 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                                        <i class="fas fa-user text-gray-400 text-xs"></i>
                                     </div>
                                 @endif
                             </x-table.cell>
@@ -118,17 +118,17 @@
                             <x-table.cell>
                                 @if($record->check_out_photo)
                                     <button onclick="showPhotoModal('{{ $record->check_out_photo_url }}', '{{ $record->student->nama }}', 'Check Out')"
-                                            class="group relative">
+                                            class="group relative block">
                                         <img src="{{ $record->check_out_photo_url }}" 
-                                             class="w-16 h-16 rounded-lg object-cover border-2 border-blue-500 dark:border-blue-700 hover:scale-110 hover:shadow-lg transition-all cursor-pointer"
+                                             class="w-12 h-12 rounded-lg object-cover border-2 border-blue-500 dark:border-blue-700 hover:scale-110 hover:shadow-lg transition-all cursor-pointer"
                                              alt="Foto Check Out">
                                         <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 rounded-lg transition-all flex items-center justify-center">
-                                            <i class="fas fa-search-plus text-white opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                            <i class="fas fa-search-plus text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
                                         </div>
                                     </button>
                                 @else
-                                    <div class="w-16 h-16 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                                        <i class="fas fa-user-slash text-gray-400 text-sm"></i>
+                                    <div class="w-12 h-12 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                                        <i class="fas fa-user-slash text-gray-400 text-xs"></i>
                                     </div>
                                 @endif
                             </x-table.cell>
@@ -257,12 +257,21 @@
     @push('scripts')
     <script>
         function showPhotoModal(photoUrl, studentName, type) {
+            console.log('showPhotoModal called:', { photoUrl, studentName, type });
+            
             const modal = document.getElementById('photoModal');
             const image = document.getElementById('photoModalImage');
             const title = document.getElementById('photoModalTitle');
             const subtitle = document.getElementById('photoModalSubtitle');
             
+            // Set image source and alt
             image.src = photoUrl;
+            image.alt = `Foto ${type} - ${studentName}`;
+            image.onerror = function() {
+                console.error('Failed to load image:', photoUrl);
+                this.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23ddd" width="400" height="300"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dominant-baseline="middle" font-family="sans-serif" font-size="18"%3EGagal memuat foto%3C/text%3E%3C/svg%3E';
+            };
+            
             title.textContent = `Foto ${type}`;
             subtitle.textContent = studentName;
             
