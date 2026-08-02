@@ -186,15 +186,32 @@
                     </div>
                 </div>
 
-                <x-input
-                    type="text"
-                    name="settings[school_name]"
-                    label="Nama Sekolah"
-                    :value="old('settings.school_name', $settings['general']['school_name'] ?? 'SMK Negeri 1')"
-                    maxlength="100"
-                    helper="Nama ini akan muncul di notifikasi WhatsApp"
-                    required
-                />
+                <div class="space-y-6">
+                    <x-input
+                        type="text"
+                        name="settings[school_name]"
+                        label="Nama Sekolah"
+                        :value="old('settings.school_name', $settings['general']['school_name'] ?? 'SMK Negeri 1')"
+                        maxlength="100"
+                        helper="Nama ini akan muncul di notifikasi WhatsApp"
+                        required
+                    />
+
+                    {{-- Announcement Field --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            📢 Pengumuman
+                        </label>
+                        <textarea
+                            name="settings[announcement]"
+                            rows="3"
+                            maxlength="255"
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            placeholder="Siswa harap scan QR Code saat masuk gerbang sekolah"
+                        >{{ old('settings.announcement', $settings['general']['announcement'] ?? 'Siswa harap scan QR Code saat masuk gerbang sekolah. Jangan lupa bawa kartu siswa!') }}</textarea>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Pengumuman ini akan ditampilkan di landing page scanner</p>
+                    </div>
+                </div>
             </x-card>
 
             {{-- Action Buttons --}}
