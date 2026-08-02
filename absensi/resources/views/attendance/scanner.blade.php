@@ -492,6 +492,11 @@
                     origin: { y: 0.6 }
                 });
             }
+            
+            // Auto-close after 3 seconds
+            setTimeout(() => {
+                hideResult();
+            }, 3000);
         }
 
         function addToRecentScans(data) {
