@@ -1419,8 +1419,10 @@
             const btnCheckIn = document.getElementById('btnCheckIn');
             const btnCheckOut = document.getElementById('btnCheckOut');
             
-            btnCheckIn.classList.toggle('active', action === 'check_in');
-            btnCheckOut.classList.toggle('active', action === 'check_out');
+            if (btnCheckIn && btnCheckOut) {
+                btnCheckIn.classList.toggle('active', action === 'check_in');
+                btnCheckOut.classList.toggle('active', action === 'check_out');
+            }
             
             // Update title with emoji
             const title = action === 'check_in' 
@@ -1566,17 +1568,26 @@
     <style>
         /* Premium Action Button Styles */
         .action-btn {
-            @apply relative bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700 dark:from-gray-700 dark:to-gray-800 dark:text-gray-300 shadow-xl;
+            position: relative;
+            background: linear-gradient(to bottom right, rgb(243, 244, 246), rgb(229, 231, 235));
+            color: rgb(55, 65, 81);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
             transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
         
+        .dark .action-btn {
+            background: linear-gradient(to bottom right, rgb(55, 65, 81), rgb(31, 41, 55));
+            color: rgb(209, 213, 219);
+        }
+        
         .action-btn.active {
-            @apply bg-gradient-to-br from-primary-500 to-purple-600 text-white shadow-2xl;
-            box-shadow: 0 20px 40px -10px rgba(59, 130, 246, 0.5);
+            background: linear-gradient(to bottom right, rgb(59, 130, 246), rgb(147, 51, 234)) !important;
+            color: white !important;
+            box-shadow: 0 20px 40px -10px rgba(59, 130, 246, 0.5) !important;
         }
         
         .action-btn:hover:not(.active) {
-            @apply transform -translate-y-1;
+            transform: translateY(-4px);
             box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.2);
         }
         
