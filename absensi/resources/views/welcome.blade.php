@@ -1424,7 +1424,11 @@
                             body: formData
                         });
                         
+                        console.log('Response status:', response.status);
+                        console.log('Response headers:', response.headers);
+                        
                         const result = await response.json();
+                        console.log('Response data:', result);
                         
                         if (response.ok && result.success !== false) {
                             // Login success - redirect to dashboard
