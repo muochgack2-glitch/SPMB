@@ -524,15 +524,23 @@
         }
 
         function onScanSuccess(decodedText, decodedResult) {
-            // Prevent duplicate scans within cooldown period
             const now = Date.now();
+            
+            // Check if this is same QR within cooldown period
             if (lastScannedNis === decodedText && window.lastScanTime && (now - window.lastScanTime) < 3000) {
                 console.log('Duplicate scan prevented (within 3s cooldown)');
                 return;
             }
             
+            // Check if currently processing a scan
+            if (window.isProcessingScan) {
+                console.log('Already processing a scan, please wait...');
+                return;
+            }
+            
             lastScannedNis = decodedText;
             window.lastScanTime = now;
+            window.isProcessingScan = true;
             
             console.log('QR Code detected:', decodedText);
             
@@ -552,6 +560,8 @@
                 // Capture photo from video (optional, bisa pakai dummy)
                 const photoBase64 = await capturePhoto();
 
+                console.log('Sending scan request to server...');
+                
                 const response = await fetch('/api/attendance/scan', {
                     method: 'POST',
                     headers: {
@@ -567,6 +577,10 @@
                 });
 
                 const result = await response.json();
+                console.log('Server response:', result);
+
+                // Clear processing flag
+                window.isProcessingScan = false;
 
                 if (result.success) {
                     showSuccess(result);
@@ -580,6 +594,7 @@
 
             } catch (error) {
                 console.error('Scan processing error:', error);
+                window.isProcessingScan = false;
                 showError('Terjadi kesalahan saat memproses scan', null);
             }
         }
