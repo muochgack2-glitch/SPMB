@@ -568,11 +568,55 @@
                 loadSchoolHours();
                 loadAnnouncement();
                 loadRecentScans(); // Load initial recent scans
+                autoSetActionByTime(); // Auto-set Check In/Out based on current time
                 // connectSSE(); // DISABLED: SSE causing 30s timeout and blocking server
             } else {
                 console.log('Waiting for Html5Qrcode...');
                 setTimeout(waitForHtml5Qrcode, 100);
             }
+        }
+        
+        /**
+         * Auto-set action (Check In/Out) based on current time
+         * Morning = Check In, Afternoon = Check Out
+         */
+        function autoSetActionByTime() {
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            const currentTime = currentHour * 60 + currentMinute; // Convert to minutes
+            
+            // Check-out start time (default: 15:00 = 900 minutes)
+            // You can adjust this threshold based on school schedule
+            const checkOutStartTime = 15 * 60; // 15:00 in minutes
+            
+            if (currentTime >= checkOutStartTime) {
+                // Afternoon - auto set to Check Out
+                setAction('check_out');
+                console.log('🌆 Auto-set to Check Out (afternoon mode)');
+            } else {
+                // Morning - auto set to Check In
+                setAction('check_in');
+                console.log('🌅 Auto-set to Check In (morning mode)');
+            }
+            
+            // Update every 5 minutes to keep in sync
+            setInterval(() => {
+                const now = new Date();
+                const currentHour = now.getHours();
+                const currentMinute = now.getMinutes();
+                const currentTime = currentHour * 60 + currentMinute;
+                
+                if (currentTime >= checkOutStartTime && currentAction === 'check_in') {
+                    setAction('check_out');
+                    console.log('🌆 Auto-switched to Check Out');
+                    showToast('info', '🌆 Mode berubah', 'Sekarang mode Check Out', 3000);
+                } else if (currentTime < checkOutStartTime && currentAction === 'check_out') {
+                    setAction('check_in');
+                    console.log('🌅 Auto-switched to Check In');
+                    showToast('info', '🌅 Mode berubah', 'Sekarang mode Check In', 3000);
+                }
+            }, 5 * 60 * 1000); // Check every 5 minutes
         }
 
         // Initialize scanner on page load
@@ -1367,11 +1411,16 @@
             currentAction = action;
             
             // Update button styles
-            document.getElementById('btnCheckIn').classList.toggle('active', action === 'check_in');
-            document.getElementById('btnCheckOut').classList.toggle('active', action === 'check_out');
+            const btnCheckIn = document.getElementById('btnCheckIn');
+            const btnCheckOut = document.getElementById('btnCheckOut');
             
-            // Update title
-            const title = action === 'check_in' ? 'Scan QR Code untuk Check In' : 'Scan QR Code untuk Check Out';
+            btnCheckIn.classList.toggle('active', action === 'check_in');
+            btnCheckOut.classList.toggle('active', action === 'check_out');
+            
+            // Update title with emoji
+            const title = action === 'check_in' 
+                ? '🌅 Scan QR Code untuk Check In' 
+                : '🌆 Scan QR Code untuk Check Out';
             document.getElementById('scannerTitle').textContent = title;
             
             hideResult();
