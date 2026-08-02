@@ -273,10 +273,57 @@
                 console.log('Html5Qrcode loaded successfully');
                 initScanner();
                 loadTodayStats();
+                loadRecentScans(); // Load initial recent scans
+                autoSetActionByTime(); // Auto-set Check In/Out based on current time
             } else {
                 console.log('Waiting for Html5Qrcode...');
                 setTimeout(waitForHtml5Qrcode, 100);
             }
+        }
+        
+        /**
+         * Auto-set action (Check In/Out) based on current time
+         * Morning = Check In, Afternoon = Check Out
+         */
+        function autoSetActionByTime() {
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            const currentTime = currentHour * 60 + currentMinute; // Convert to minutes
+            
+            // Check-out start time (default: 15:00 = 900 minutes)
+            const checkOutStartTime = 15 * 60; // 15:00 in minutes
+            
+            // Determine initial action based on time
+            const initialAction = currentTime >= checkOutStartTime ? 'check_out' : 'check_in';
+            currentAction = initialAction;
+            
+            // Wait for DOM to be fully ready, then set action
+            setTimeout(() => {
+                if (initialAction === 'check_out') {
+                    setAction('check_out');
+                    console.log('🌆 Auto-set to Check Out (afternoon mode)');
+                } else {
+                    setAction('check_in');
+                    console.log('🌅 Auto-set to Check In (morning mode)');
+                }
+            }, 300);
+            
+            // Update every 5 minutes to keep in sync
+            setInterval(() => {
+                const now = new Date();
+                const currentHour = now.getHours();
+                const currentMinute = now.getMinutes();
+                const currentTime = currentHour * 60 + currentMinute;
+                
+                if (currentTime >= checkOutStartTime && currentAction === 'check_in') {
+                    setAction('check_out');
+                    console.log('🌆 Auto-switched to Check Out');
+                } else if (currentTime < checkOutStartTime && currentAction === 'check_out') {
+                    setAction('check_in');
+                    console.log('🌅 Auto-switched to Check In');
+                }
+            }, 5 * 60 * 1000); // Check every 5 minutes
         }
 
         // Initialize scanner on page load
@@ -508,21 +555,51 @@
 
         async function loadTodayStats() {
             try {
-                // This would normally fetch from API - for now use dummy data
-                // In production, create an API endpoint to fetch today's stats
-                const dummyStats = {
-                    hadir: Math.floor(Math.random() * 50) + 20,
-                    terlambat: Math.floor(Math.random() * 10),
-                    alpha: Math.floor(Math.random() * 5),
-                    total: 100
-                };
+                const response = await fetch('/api/attendance/stats/today', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
                 
-                document.getElementById('statHadir').textContent = dummyStats.hadir;
-                document.getElementById('statTerlambat').textContent = dummyStats.terlambat;
-                document.getElementById('statAlpha').textContent = dummyStats.alpha;
-                document.getElementById('statTotal').textContent = dummyStats.total;
+                const result = await response.json();
+                
+                if (result.success) {
+                    const stats = result.data;
+                    
+                    // Update scanner stats
+                    document.getElementById('statHadir').textContent = stats.hadir;
+                    document.getElementById('statTerlambat').textContent = stats.terlambat;
+                    document.getElementById('statAlpha').textContent = stats.alpha;
+                    document.getElementById('statTotal').textContent = stats.total;
+                } else {
+                    console.error('Failed to load stats:', result.message);
+                }
             } catch (error) {
                 console.error('Failed to load stats:', error);
+            }
+        }
+
+        async function loadRecentScans() {
+            try {
+                const response = await fetch('/api/attendance/recent-scans', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    // Replace local recent scans with server data
+                    recentScans = result.data;
+                    updateRecentScansUI();
+                } else {
+                    console.error('Failed to load recent scans:', result.message);
+                }
+            } catch (error) {
+                console.error('Failed to load recent scans:', error);
             }
         }
 
@@ -581,11 +658,13 @@
 
             // Initial load
             loadTodayStats();
+            loadRecentScans(); // Also load recent scans
             
             // Poll every 5 seconds
             pollingInterval = setInterval(() => {
                 if (!isPollingPaused) {
                     loadTodayStats();
+                    loadRecentScans(); // Update recent scans from server
                 }
             }, 5000);
             
@@ -617,6 +696,7 @@
         function resumePolling() {
             isPollingPaused = false;
             loadTodayStats(); // Immediate update
+            loadRecentScans(); // Immediate update for recent scans too
             console.log('▶️ Scanner: Polling resumed');
         }
 
