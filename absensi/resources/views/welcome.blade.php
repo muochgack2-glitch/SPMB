@@ -1415,13 +1415,20 @@
                     try {
                         const formData = new FormData(loginForm);
                         
+                        // Convert FormData to JSON object
+                        const jsonData = {};
+                        formData.forEach((value, key) => {
+                            jsonData[key] = value;
+                        });
+                        
                         const response = await fetch('{{ route("login") }}', {
                             method: 'POST',
                             headers: {
+                                'Content-Type': 'application/json',
                                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                                 'Accept': 'application/json'
                             },
-                            body: formData
+                            body: JSON.stringify(jsonData)
                         });
                         
                         console.log('Response status:', response.status);
