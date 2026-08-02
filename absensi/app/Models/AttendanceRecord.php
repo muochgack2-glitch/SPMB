@@ -2,14 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
-#[Fillable(['student_id', 'date', 'check_in_time', 'check_out_time', 'check_in_photo', 'check_out_photo', 'status', 'notes'])]
 class AttendanceRecord extends Model
 {
     use HasFactory;
@@ -20,6 +18,22 @@ class AttendanceRecord extends Model
      * @var string
      */
     protected $table = 'attendance_records';
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'student_id',
+        'date',
+        'check_in_time',
+        'check_out_time',
+        'check_in_photo',
+        'check_out_photo',
+        'status',
+        'notes',
+    ];
 
     /**
      * Get the attributes that should be cast.
