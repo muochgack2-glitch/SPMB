@@ -209,34 +209,34 @@
 
     {{-- Photo Modal --}}
     <div id="photoModal" class="hidden fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm z-50 flex items-center justify-center p-4" onclick="hidePhotoModal()">
-        <div class="relative max-w-4xl w-full" onclick="event.stopPropagation()">
+        <div class="relative max-w-2xl w-full" onclick="event.stopPropagation()">
             {{-- Close Button --}}
             <button onclick="hidePhotoModal()" 
-                    class="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors">
-                <i class="fas fa-times text-3xl"></i>
+                    class="absolute -top-10 right-0 text-white hover:text-gray-300 transition-colors">
+                <i class="fas fa-times text-2xl"></i>
             </button>
             
             {{-- Photo Container --}}
-            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden">
                 {{-- Header --}}
-                <div class="bg-gradient-to-r from-primary-500 to-purple-600 px-6 py-4 text-white">
-                    <h3 class="text-xl font-bold" id="photoModalTitle">Foto Absensi</h3>
+                <div class="bg-gradient-to-r from-primary-500 to-purple-600 px-4 py-3 text-white">
+                    <h3 class="text-lg font-bold" id="photoModalTitle">Foto Absensi</h3>
                     <p class="text-sm opacity-90" id="photoModalSubtitle"></p>
                 </div>
                 
                 {{-- Photo --}}
-                <div class="p-6 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-                    <img id="photoModalImage" src="" alt="Foto" class="max-w-full max-h-[70vh] rounded-lg shadow-xl object-contain">
+                <div class="p-4 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+                    <img id="photoModalImage" src="" alt="Foto" class="max-w-full max-h-[50vh] rounded-lg shadow-lg object-contain">
                 </div>
                 
                 {{-- Footer --}}
-                <div class="px-6 py-4 bg-gray-100 dark:bg-gray-700 flex justify-between items-center">
-                    <div class="text-sm text-gray-600 dark:text-gray-400">
-                        <i class="fas fa-info-circle mr-2"></i>
+                <div class="px-4 py-3 bg-gray-100 dark:bg-gray-700 flex justify-between items-center">
+                    <div class="text-xs text-gray-600 dark:text-gray-400">
+                        <i class="fas fa-info-circle mr-1"></i>
                         Klik di luar gambar untuk menutup
                     </div>
                     <button onclick="downloadPhoto()" 
-                            class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors flex items-center gap-2">
+                            class="px-3 py-1.5 bg-primary-500 hover:bg-primary-600 text-white text-sm rounded-lg transition-colors flex items-center gap-2">
                         <i class="fas fa-download"></i>
                         Download
                     </button>
