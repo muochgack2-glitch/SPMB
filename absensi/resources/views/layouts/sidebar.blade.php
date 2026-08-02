@@ -1,4 +1,4 @@
-<!-- Sidebar Component -->
+<!-- Sidebar Component with Enhanced UI/UX -->
 <aside 
     data-sidebar
     id="main-sidebar"
@@ -9,6 +9,98 @@
     :class="isInitialLoad ? '' : 'transition-all duration-300'"
     :style="{ width: sidebarOpen ? '16rem' : '5rem' }"
 >
+<style>
+    /* Enhanced Menu Item Styles */
+    .sidebar-menu-item {
+        position: relative;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .sidebar-menu-item:hover {
+        transform: translateX(4px);
+    }
+    
+    .sidebar-menu-item.active {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border-left: 4px solid white;
+        padding-left: calc(1rem - 4px);
+    }
+    
+    .sidebar-menu-item.active::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 4px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.5));
+        box-shadow: 0 0 10px rgba(255,255,255,0.5);
+    }
+    
+    /* Badge Notification */
+    .sidebar-badge {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        min-width: 1.25rem;
+        height: 1.25rem;
+        padding: 0 0.375rem;
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        font-size: 0.625rem;
+        font-weight: 700;
+        border-radius: 9999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+        animation: pulse-badge 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    
+    @keyframes pulse-badge {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: .8;
+        }
+    }
+    
+    /* Divider Style */
+    .sidebar-divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+        margin: 0.75rem 0;
+    }
+    
+    .sidebar-section-label {
+        font-size: 0.625rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: rgba(255, 255, 255, 0.4);
+        padding: 0.5rem 1rem;
+        margin-top: 0.5rem;
+    }
+    
+    /* Custom scrollbar */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 2px;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+</style>
 <script>
 function sidebarData() {
     return {
@@ -16,6 +108,7 @@ function sidebarData() {
         activeMenu: '{{ request()->route()->getName() }}',
         tooltipShow: null,
         isInitialLoad: true,
+        todayAbsentCount: 0, // Will be populated via AJAX
         
         toggleSidebar() {
             this.isInitialLoad = false;
@@ -32,6 +125,21 @@ function sidebarData() {
             window.addEventListener('toggle-sidebar', () => {
                 this.toggleSidebar();
             });
+            
+            // Load badge counts
+            this.loadBadgeCounts();
+        },
+        
+        loadBadgeCounts() {
+            // Fetch today's absent count for badge
+            fetch('/api/attendance/today-stats')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        this.todayAbsentCount = data.absent || 0;
+                    }
+                })
+                .catch(err => console.log('Badge count fetch error:', err));
         }
     }
 }
@@ -51,19 +159,24 @@ function sidebarData() {
             </div>
         </div>
 
-        <!-- Navigation Menu -->
-        <nav class="flex-1 px-3 py-6 space-y-2 overflow-y-auto custom-scrollbar" style="pointer-events: auto !important;">
+        <!-- Navigation Menu with Enhanced UX -->
+        <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto custom-scrollbar" style="pointer-events: auto !important;">
+            
+            <!-- MAIN MENU SECTION -->
+            <div x-show="sidebarOpen" x-transition class="sidebar-section-label">
+                📊 Main Menu
+            </div>
             
             <!-- Dashboard -->
             <a 
                 href="{{ route('attendance.dashboard') }}"
                 @mouseenter="!sidebarOpen && (tooltipShow = 'dashboard')"
                 @mouseleave="tooltipShow = null"
-                class="relative flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 group"
-                :class="activeMenu === 'attendance.dashboard' || activeMenu === 'dashboard' ? 'bg-gradient-to-r from-primary-500 to-primary-600 shadow-lg shadow-primary-500/50' : 'text-primary-200 hover:bg-primary-800/50 hover:text-white'"
+                class="sidebar-menu-item relative flex items-center space-x-3 px-4 py-3 rounded-lg group"
+                :class="(activeMenu === 'attendance.dashboard' || activeMenu === 'dashboard') ? 'active' : 'text-primary-200 hover:bg-primary-800/30 hover:text-white'"
             >
-                <i class="fas fa-home text-lg w-5 text-center" :class="activeMenu === 'attendance.dashboard' || activeMenu === 'dashboard' ? 'text-white' : ''"></i>
-                <span x-show="sidebarOpen" x-transition class="font-medium" :class="activeMenu === 'attendance.dashboard' || activeMenu === 'dashboard' ? 'text-white' : ''">Dashboard</span>
+                <i class="fas fa-home text-lg w-5 text-center flex-shrink-0" :class="(activeMenu === 'attendance.dashboard' || activeMenu === 'dashboard') ? 'text-white' : ''"></i>
+                <span x-show="sidebarOpen" x-transition class="font-medium" :class="(activeMenu === 'attendance.dashboard' || activeMenu === 'dashboard') ? 'text-white' : ''">Dashboard</span>
                 
                 <!-- Tooltip for collapsed state -->
                 <div x-show="!sidebarOpen && tooltipShow === 'dashboard'" 
@@ -78,10 +191,10 @@ function sidebarData() {
                 href="{{ route('attendance.scanner') }}"
                 @mouseenter="!sidebarOpen && (tooltipShow = 'scan')"
                 @mouseleave="tooltipShow = null"
-                class="relative flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 group"
-                :class="activeMenu === 'attendance.scanner' ? 'bg-gradient-to-r from-primary-500 to-primary-600 shadow-lg shadow-primary-500/50' : 'text-primary-200 hover:bg-primary-800/50 hover:text-white'"
+                class="sidebar-menu-item relative flex items-center space-x-3 px-4 py-3 rounded-lg group"
+                :class="activeMenu === 'attendance.scanner' ? 'active' : 'text-primary-200 hover:bg-primary-800/30 hover:text-white'"
             >
-                <i class="fas fa-camera text-lg w-5 text-center" :class="activeMenu === 'attendance.scanner' ? 'text-white' : ''"></i>
+                <i class="fas fa-camera text-lg w-5 text-center flex-shrink-0" :class="activeMenu === 'attendance.scanner' ? 'text-white' : ''"></i>
                 <span x-show="sidebarOpen" x-transition class="font-medium" :class="activeMenu === 'attendance.scanner' ? 'text-white' : ''">QR Scanner</span>
                 
                 <div x-show="!sidebarOpen && tooltipShow === 'scan'" 
@@ -91,15 +204,23 @@ function sidebarData() {
                 </div>
             </a>
 
+            <!-- Divider -->
+            <div class="sidebar-divider"></div>
+
+            <!-- DATA MANAGEMENT SECTION -->
+            <div x-show="sidebarOpen" x-transition class="sidebar-section-label">
+                📁 Data Management
+            </div>
+
             <!-- Data Siswa -->
             <a 
                 href="{{ route('attendance.students.index') }}"
                 @mouseenter="!sidebarOpen && (tooltipShow = 'students')"
                 @mouseleave="tooltipShow = null"
-                class="relative flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 group"
-                :class="activeMenu === 'attendance.students.index' || activeMenu === 'attendance.students.create' || activeMenu === 'attendance.students.edit' ? 'bg-gradient-to-r from-primary-500 to-primary-600 shadow-lg shadow-primary-500/50' : 'text-primary-200 hover:bg-primary-800/50 hover:text-white'"
+                class="sidebar-menu-item relative flex items-center space-x-3 px-4 py-3 rounded-lg group"
+                :class="(activeMenu === 'attendance.students.index' || activeMenu === 'attendance.students.create' || activeMenu === 'attendance.students.edit') ? 'active' : 'text-primary-200 hover:bg-primary-800/30 hover:text-white'"
             >
-                <i class="fas fa-users text-lg w-5 text-center" :class="activeMenu.includes('students') ? 'text-white' : ''"></i>
+                <i class="fas fa-users text-lg w-5 text-center flex-shrink-0" :class="activeMenu.includes('students') ? 'text-white' : ''"></i>
                 <span x-show="sidebarOpen" x-transition class="font-medium" :class="activeMenu.includes('students') ? 'text-white' : ''">Data Siswa</span>
                 
                 <div x-show="!sidebarOpen && tooltipShow === 'students'" 
@@ -114,10 +235,10 @@ function sidebarData() {
                 href="{{ route('attendance.classes.index') }}"
                 @mouseenter="!sidebarOpen && (tooltipShow = 'classes')"
                 @mouseleave="tooltipShow = null"
-                class="relative flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 group"
-                :class="activeMenu === 'attendance.classes.index' || activeMenu === 'attendance.classes.create' || activeMenu === 'attendance.classes.edit' ? 'bg-gradient-to-r from-primary-500 to-primary-600 shadow-lg shadow-primary-500/50' : 'text-primary-200 hover:bg-primary-800/50 hover:text-white'"
+                class="sidebar-menu-item relative flex items-center space-x-3 px-4 py-3 rounded-lg group"
+                :class="(activeMenu === 'attendance.classes.index' || activeMenu === 'attendance.classes.create' || activeMenu === 'attendance.classes.edit') ? 'active' : 'text-primary-200 hover:bg-primary-800/30 hover:text-white'"
             >
-                <i class="fas fa-school text-lg w-5 text-center" :class="activeMenu.includes('classes') ? 'text-white' : ''"></i>
+                <i class="fas fa-school text-lg w-5 text-center flex-shrink-0" :class="activeMenu.includes('classes') ? 'text-white' : ''"></i>
                 <span x-show="sidebarOpen" x-transition class="font-medium" :class="activeMenu.includes('classes') ? 'text-white' : ''">Data Kelas</span>
                 
                 <div x-show="!sidebarOpen && tooltipShow === 'classes'" 
@@ -132,11 +253,14 @@ function sidebarData() {
                 href="{{ route('attendance.reports.index') }}"
                 @mouseenter="!sidebarOpen && (tooltipShow = 'reports')"
                 @mouseleave="tooltipShow = null"
-                class="relative flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 group"
-                :class="activeMenu === 'attendance.reports.index' ? 'bg-gradient-to-r from-primary-500 to-primary-600 shadow-lg shadow-primary-500/50' : 'text-primary-200 hover:bg-primary-800/50 hover:text-white'"
+                class="sidebar-menu-item relative flex items-center space-x-3 px-4 py-3 rounded-lg group"
+                :class="activeMenu === 'attendance.reports.index' ? 'active' : 'text-primary-200 hover:bg-primary-800/30 hover:text-white'"
             >
-                <i class="fas fa-chart-bar text-lg w-5 text-center" :class="activeMenu === 'attendance.reports.index' ? 'text-white' : ''"></i>
+                <i class="fas fa-chart-bar text-lg w-5 text-center flex-shrink-0" :class="activeMenu === 'attendance.reports.index' ? 'text-white' : ''"></i>
                 <span x-show="sidebarOpen" x-transition class="font-medium" :class="activeMenu === 'attendance.reports.index' ? 'text-white' : ''">Laporan</span>
+                
+                <!-- Badge for absent count -->
+                <span x-show="sidebarOpen && todayAbsentCount > 0" x-text="todayAbsentCount" class="sidebar-badge"></span>
                 
                 <div x-show="!sidebarOpen && tooltipShow === 'reports'" 
                      class="absolute left-full ml-2 px-3 py-1.5 bg-gray-900 text-white text-sm rounded-lg shadow-lg whitespace-nowrap z-50"
@@ -145,15 +269,23 @@ function sidebarData() {
                 </div>
             </a>
 
+            <!-- Divider -->
+            <div class="sidebar-divider"></div>
+
+            <!-- INTEGRATION SECTION -->
+            <div x-show="sidebarOpen" x-transition class="sidebar-section-label">
+                📱 Integration
+            </div>
+
             <!-- WhatsApp Gateway -->
             <a 
                 href="{{ route('whatsapp.index') }}"
                 @mouseenter="!sidebarOpen && (tooltipShow = 'whatsapp')"
                 @mouseleave="tooltipShow = null"
-                class="relative flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 group"
-                :class="activeMenu === 'whatsapp.index' || activeMenu.includes('whatsapp.') ? 'bg-gradient-to-r from-green-500 to-green-600 shadow-lg shadow-green-500/50' : 'text-primary-200 hover:bg-primary-800/50 hover:text-white'"
+                class="sidebar-menu-item relative flex items-center space-x-3 px-4 py-3 rounded-lg group"
+                :class="(activeMenu === 'whatsapp.index' || activeMenu.includes('whatsapp.')) ? 'active' : 'text-primary-200 hover:bg-primary-800/30 hover:text-white'"
             >
-                <i class="fab fa-whatsapp text-lg w-5 text-center" :class="activeMenu.includes('whatsapp.') ? 'text-white' : ''"></i>
+                <i class="fab fa-whatsapp text-lg w-5 text-center flex-shrink-0" :class="activeMenu.includes('whatsapp.') ? 'text-white' : ''"></i>
                 <span x-show="sidebarOpen" x-transition class="font-medium" :class="activeMenu.includes('whatsapp.') ? 'text-white' : ''">WA Gateway</span>
                 
                 <div x-show="!sidebarOpen && tooltipShow === 'whatsapp'" 
@@ -163,15 +295,23 @@ function sidebarData() {
                 </div>
             </a>
 
+            <!-- Divider -->
+            <div class="sidebar-divider"></div>
+
+            <!-- SYSTEM SECTION -->
+            <div x-show="sidebarOpen" x-transition class="sidebar-section-label">
+                ⚙️ System
+            </div>
+
             <!-- Settings -->
             <a 
                 href="{{ route('attendance.settings.index') }}"
                 @mouseenter="!sidebarOpen && (tooltipShow = 'settings')"
                 @mouseleave="tooltipShow = null"
-                class="relative flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 group"
-                :class="activeMenu === 'attendance.settings.index' ? 'bg-gradient-to-r from-primary-500 to-primary-600 shadow-lg shadow-primary-500/50' : 'text-primary-200 hover:bg-primary-800/50 hover:text-white'"
+                class="sidebar-menu-item relative flex items-center space-x-3 px-4 py-3 rounded-lg group"
+                :class="activeMenu === 'attendance.settings.index' ? 'active' : 'text-primary-200 hover:bg-primary-800/30 hover:text-white'"
             >
-                <i class="fas fa-cog text-lg w-5 text-center" :class="activeMenu === 'attendance.settings.index' ? 'text-white' : ''"></i>
+                <i class="fas fa-cog text-lg w-5 text-center flex-shrink-0" :class="activeMenu === 'attendance.settings.index' ? 'text-white' : ''"></i>
                 <span x-show="sidebarOpen" x-transition class="font-medium" :class="activeMenu === 'attendance.settings.index' ? 'text-white' : ''">Settings</span>
                 
                 <div x-show="!sidebarOpen && tooltipShow === 'settings'" 

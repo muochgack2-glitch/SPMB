@@ -32,6 +32,10 @@ Route::middleware(['auth'])->group(function () {
     
     Route::get('/attendance/dashboard/refresh', [AttendanceDashboardController::class, 'refresh'])
         ->name('attendance.dashboard.refresh');
+    
+    // API endpoint for sidebar badge
+    Route::get('/api/attendance/today-stats', [AttendanceDashboardController::class, 'todayStats'])
+        ->name('api.attendance.today-stats');
 
     // QR Scanner
     Route::get('/attendance/scanner', [AttendanceScanController::class, 'showScanner'])
