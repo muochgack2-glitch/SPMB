@@ -141,16 +141,31 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    @if($record->check_in_photo)
-                                        <img 
-                                            src="{{ Storage::url($record->check_in_photo) }}" 
-                                            alt="Check In"
-                                            class="w-10 h-10 rounded-lg object-cover cursor-pointer hover:ring-2 hover:ring-primary-500 transition-all"
-                                            onclick="viewPhoto('{{ Storage::url($record->check_in_photo) }}', 'Check In')"
-                                        >
-                                    @else
-                                        <span class="text-gray-400">-</span>
-                                    @endif
+                                    <div class="flex items-center gap-2">
+                                        @if($record->check_in_photo)
+                                            <button onclick="viewPhoto('{{ $record->check_in_photo_url }}', '{{ addslashes($record->student->nama) }}', 'Check In')"
+                                                    class="inline-flex items-center justify-center w-8 h-8 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
+                                                    title="Lihat foto check in">
+                                                <i class="fas fa-sign-in-alt text-sm"></i>
+                                            </button>
+                                        @else
+                                            <div class="inline-flex items-center justify-center w-8 h-8 bg-gray-100 dark:bg-gray-800 text-gray-400 rounded">
+                                                <i class="fas fa-sign-in-alt text-sm"></i>
+                                            </div>
+                                        @endif
+                                        
+                                        @if($record->check_out_photo)
+                                            <button onclick="viewPhoto('{{ $record->check_out_photo_url }}', '{{ addslashes($record->student->nama) }}', 'Check Out')"
+                                                    class="inline-flex items-center justify-center w-8 h-8 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                                                    title="Lihat foto check out">
+                                                <i class="fas fa-sign-out-alt text-sm"></i>
+                                            </button>
+                                        @else
+                                            <div class="inline-flex items-center justify-center w-8 h-8 bg-gray-100 dark:bg-gray-800 text-gray-400 rounded">
+                                                <i class="fas fa-sign-out-alt text-sm"></i>
+                                            </div>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -188,17 +203,38 @@
     </div>
 
     {{-- Photo Modal --}}
-    <div id="photoModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-black bg-opacity-75" onclick="closePhotoModal()">
-        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div class="inline-block align-middle bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full" onclick="event.stopPropagation()">
-                <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white" id="photoModalTitle">Foto Absensi</h3>
-                        <button onclick="closePhotoModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                            <i class="fas fa-times text-xl"></i>
-                        </button>
+    <div id="photoModal" class="hidden fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm z-50 flex items-center justify-center p-4" onclick="closePhotoModal()">
+        <div class="relative max-w-2xl w-full" onclick="event.stopPropagation()">
+            {{-- Close Button --}}
+            <button onclick="closePhotoModal()" 
+                    class="absolute -top-10 right-0 text-white hover:text-gray-300 transition-colors">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+            
+            {{-- Photo Container --}}
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden">
+                {{-- Header --}}
+                <div class="bg-gradient-to-r from-primary-500 to-purple-600 px-4 py-3 text-white">
+                    <h3 class="text-lg font-bold" id="photoModalTitle">Foto Absensi</h3>
+                    <p class="text-sm opacity-90" id="photoModalSubtitle"></p>
+                </div>
+                
+                {{-- Photo --}}
+                <div class="p-4 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+                    <img id="photoModalImage" src="" alt="Foto" class="max-w-full max-h-[50vh] rounded-lg shadow-lg object-contain">
+                </div>
+                
+                {{-- Footer --}}
+                <div class="px-4 py-3 bg-gray-100 dark:bg-gray-700 flex justify-between items-center">
+                    <div class="text-xs text-gray-600 dark:text-gray-400">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Klik di luar gambar untuk menutup
                     </div>
-                    <img id="photoModalImage" src="" alt="Foto" class="w-full rounded-lg">
+                    <button onclick="downloadPhoto()" 
+                            class="px-3 py-1.5 bg-primary-500 hover:bg-primary-600 text-white text-sm rounded-lg transition-colors flex items-center gap-2">
+                        <i class="fas fa-download"></i>
+                        Download
+                    </button>
                 </div>
             </div>
         </div>
@@ -224,24 +260,81 @@
                 .catch(error => console.error('Refresh error:', error));
         }
 
-        function viewPhoto(photoUrl, title) {
-            document.getElementById('photoModalImage').src = photoUrl;
-            document.getElementById('photoModalTitle').textContent = title;
-            document.getElementById('photoModal').classList.remove('hidden');
+        function viewPhoto(photoUrl, studentName, type) {
+            console.log('viewPhoto called:', { photoUrl, studentName, type });
+            
+            const modal = document.getElementById('photoModal');
+            const image = document.getElementById('photoModalImage');
+            const title = document.getElementById('photoModalTitle');
+            const subtitle = document.getElementById('photoModalSubtitle');
+            
+            // Set image source and alt
+            image.src = photoUrl;
+            image.alt = `Foto ${type} - ${studentName}`;
+            image.onerror = function() {
+                console.error('Failed to load image:', photoUrl);
+                this.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23ddd" width="400" height="300"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dominant-baseline="middle" font-family="sans-serif" font-size="18"%3EGagal memuat foto%3C/text%3E%3C/svg%3E';
+            };
+            
+            title.textContent = `Foto ${type}`;
+            subtitle.textContent = studentName;
+            
+            modal.classList.remove('hidden');
+            
+            // Add fade-in animation
+            modal.style.animation = 'fadeIn 0.2s ease-out';
         }
 
         function closePhotoModal() {
-            document.getElementById('photoModal').classList.add('hidden');
+            const modal = document.getElementById('photoModal');
+            modal.style.animation = 'fadeOut 0.2s ease-out';
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+        
+        function downloadPhoto() {
+            const image = document.getElementById('photoModalImage');
+            const link = document.createElement('a');
+            link.href = image.src;
+            link.download = 'foto-absensi-' + Date.now() + '.jpg';
+            link.click();
         }
 
-        // Keyboard shortcut: Alt+R to refresh
+        // Keyboard shortcuts
         document.addEventListener('keydown', function(e) {
+            // Alt+R to refresh
             if (e.altKey && e.key === 'r') {
                 e.preventDefault();
                 refreshDashboard();
             }
+            // ESC to close modal
+            if (e.key === 'Escape') {
+                closePhotoModal();
+            }
         });
     </script>
+    
+    <style>
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+    </style>
     @endpush
 </x-app-layout>
 
