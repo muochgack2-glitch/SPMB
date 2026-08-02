@@ -242,15 +242,8 @@
 
     @push('scripts')
     <script>
-        // ============================================================================
-        // POLLING FOR REAL-TIME DASHBOARD UPDATES
-        // ============================================================================
-        
-        let pollingInterval = null;
-        let isPollingPaused = false;
-
         /**
-         * Refresh dashboard data without page reload
+         * Manual refresh dashboard data
          */
         function refreshDashboard() {
             const url = new URL(window.location.href);
@@ -260,86 +253,11 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Instead of reload, just reload silently in background
-                        // For now keep reload but with polling control
                         location.reload();
                     }
                 })
                 .catch(error => console.error('Refresh error:', error));
         }
-
-        /**
-         * Start polling for dashboard updates
-         * Polls every 5 seconds when tab is active
-         */
-        function startPolling() {
-            if (pollingInterval) {
-                console.log('⚠️ Dashboard: Polling already running');
-                return;
-            }
-
-            // Poll every 5 seconds (reduced from 30 seconds)
-            pollingInterval = setInterval(() => {
-                if (!isPollingPaused) {
-                    refreshDashboard();
-                }
-            }, 5000); // 5 seconds
-            
-            console.log('✅ Dashboard: Polling started (interval: 5s)');
-        }
-
-        /**
-         * Stop polling completely
-         */
-        function stopPolling() {
-            if (pollingInterval) {
-                clearInterval(pollingInterval);
-                pollingInterval = null;
-                console.log('⏹️ Dashboard: Polling stopped');
-            }
-        }
-
-        /**
-         * Pause polling temporarily
-         */
-        function pausePolling() {
-            isPollingPaused = true;
-            console.log('⏸️ Dashboard: Polling paused');
-        }
-
-        /**
-         * Resume polling
-         */
-        function resumePolling() {
-            isPollingPaused = false;
-            console.log('▶️ Dashboard: Polling resumed');
-        }
-
-        // ============================================================================
-        // PAGE VISIBILITY API - Pause polling when tab is hidden
-        // ============================================================================
-        
-        document.addEventListener('visibilitychange', function() {
-            if (document.hidden) {
-                pausePolling();
-                console.log('👁️ Dashboard tab hidden - polling paused');
-            } else {
-                resumePolling();
-                console.log('👁️ Dashboard tab visible - polling resumed');
-            }
-        });
-
-        // ============================================================================
-        // START POLLING ON PAGE LOAD
-        // ============================================================================
-        
-        startPolling();
-
-        window.addEventListener('beforeunload', function() {
-            stopPolling();
-        });
-
-        console.log('📊 Dashboard: Polling system initialized');
 
         // ============================================================================
         // PHOTO MODAL FUNCTIONS
