@@ -166,28 +166,28 @@
 
         {{-- Result Card with Premium Success Animation - Fixed Overlay --}}
         <div id="resultCard" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transform transition-all duration-500 scale-95 opacity-0">
-            <div class="relative max-w-2xl w-full">
-                <div class="absolute inset-0 bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 rounded-3xl blur-2xl transform scale-95"></div>
+            <div class="relative max-w-md w-full">
+                <div class="absolute inset-0 bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl blur-xl transform scale-95"></div>
                 <x-card class="relative backdrop-blur-sm bg-white/90 dark:bg-gray-800/90 border-2 border-green-200 dark:border-green-800/50">
-                    <div class="text-center space-y-6">
+                    <div class="text-center space-y-4">
                         <div id="resultIcon" class="relative inline-block">
                             <div class="absolute inset-0 bg-green-400 rounded-full animate-ping opacity-30"></div>
-                            <div class="relative text-8xl animate-bounce">✅</div>
+                            <div class="relative text-6xl animate-bounce">✅</div>
                         </div>
                         
                         <div>
-                            <h3 id="resultTitle" class="text-3xl font-black text-gray-900 dark:text-white mb-2"></h3>
-                            <p id="resultMessage" class="text-lg text-gray-600 dark:text-gray-400"></p>
+                            <h3 id="resultTitle" class="text-2xl font-black text-gray-900 dark:text-white mb-1"></h3>
+                            <p id="resultMessage" class="text-sm text-gray-600 dark:text-gray-400"></p>
                         </div>
                         
-                        <div id="resultDetails" class="max-w-md mx-auto bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-6 border-2 border-gray-200 dark:border-gray-700 shadow-xl"></div>
+                        <div id="resultDetails" class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700 shadow-lg"></div>
 
-                        <div class="flex justify-center gap-4">
+                        <div class="flex justify-center gap-3 pt-2">
                             <button 
                                 onclick="hideResult()" 
-                                class="group relative px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl font-bold transition-all transform hover:scale-105 shadow-lg hover:shadow-2xl"
+                                class="group relative px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-lg font-bold transition-all transform hover:scale-105 shadow-lg text-sm"
                             >
-                                <i class="fas fa-check mr-2"></i>
+                                <i class="fas fa-check mr-1"></i>
                                 Selesai
                             </button>
                         </div>
@@ -198,25 +198,25 @@
 
         {{-- Error Card with Premium Design - Fixed Overlay --}}
         <div id="errorCard" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transform transition-all duration-500 scale-95 opacity-0">
-            <div class="relative max-w-2xl w-full">
-                <div class="absolute inset-0 bg-gradient-to-br from-red-100 to-pink-100 dark:from-red-900/20 dark:to-pink-900/20 rounded-3xl blur-2xl transform scale-95"></div>
+            <div class="relative max-w-md w-full">
+                <div class="absolute inset-0 bg-gradient-to-br from-red-100 to-pink-100 dark:from-red-900/20 dark:to-pink-900/20 rounded-2xl blur-xl transform scale-95"></div>
                 <x-card class="relative backdrop-blur-sm bg-white/90 dark:bg-gray-800/90 border-2 border-red-200 dark:border-red-800/50">
-                    <div class="text-center space-y-6">
+                    <div class="text-center space-y-4">
                         <div class="relative inline-block">
                             <div class="absolute inset-0 bg-red-400 rounded-full animate-ping opacity-30"></div>
-                            <i class="relative fas fa-exclamation-triangle text-8xl text-red-600 dark:text-red-400"></i>
+                            <i class="relative fas fa-exclamation-triangle text-6xl text-red-600 dark:text-red-400"></i>
                         </div>
                         
                         <div>
-                            <h3 class="text-3xl font-black text-red-800 dark:text-red-300 mb-2">Oops!</h3>
-                            <p id="errorMessage" class="text-lg text-red-700 dark:text-red-400"></p>
+                            <h3 class="text-2xl font-black text-red-800 dark:text-red-300 mb-1">Oops!</h3>
+                            <p id="errorMessage" class="text-sm text-red-700 dark:text-red-400"></p>
                         </div>
                         
                         <button 
                             onclick="hideError()" 
-                            class="group relative px-8 py-4 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-xl font-bold transition-all transform hover:scale-105 shadow-lg hover:shadow-2xl"
+                            class="group relative px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-lg font-bold transition-all transform hover:scale-105 shadow-lg text-sm"
                         >
-                            <i class="fas fa-times mr-2"></i>
+                            <i class="fas fa-times mr-1"></i>
                             Tutup
                         </button>
                     </div>
@@ -645,40 +645,40 @@
                     <!-- Warning Icon -->
                     <div class="relative inline-block">
                         <div class="absolute inset-0 bg-orange-400 rounded-full animate-ping opacity-30"></div>
-                        <i class="relative fas fa-exclamation-circle text-8xl text-orange-600 dark:text-orange-400"></i>
+                        <i class="relative fas fa-exclamation-circle text-6xl text-orange-600 dark:text-orange-400"></i>
                     </div>
                     
                     <!-- Title -->
                     <div>
-                        <h3 class="text-3xl font-black text-orange-800 dark:text-orange-300 mb-2">
+                        <h3 class="text-2xl font-black text-orange-800 dark:text-orange-300 mb-1">
                             ⚠️ SUDAH ABSEN!
                         </h3>
-                        <p class="text-lg text-orange-700 dark:text-orange-400 mb-4">${message}</p>
+                        <p class="text-sm text-orange-700 dark:text-orange-400 mb-3">${message}</p>
                     </div>
                     
                     <!-- Student Info -->
-                    <div class="max-w-md mx-auto bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-6 border-2 border-gray-200 dark:border-gray-700 shadow-xl">
-                        <div class="flex items-center gap-4 mb-4">
-                            <div class="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+                    <div class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-700 shadow-lg">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center text-white text-lg font-bold shadow-lg">
                                 ${errorData.nis.substring(0, 2)}
                             </div>
                             <div class="text-left flex-1">
-                                <p class="text-lg font-bold text-gray-900 dark:text-white">${errorData.nama}</p>
-                                <p class="text-sm text-gray-600 dark:text-gray-400">NIS: ${errorData.nis}</p>
+                                <p class="text-base font-bold text-gray-900 dark:text-white">${errorData.nama}</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">NIS: ${errorData.nis}</p>
                             </div>
                         </div>
                         
-                        <div class="grid grid-cols-3 gap-3 text-sm">
-                            <div class="bg-white dark:bg-gray-700 rounded-lg p-3">
-                                <p class="text-gray-500 dark:text-gray-400 text-xs mb-1">Kelas</p>
+                        <div class="grid grid-cols-3 gap-2 text-xs">
+                            <div class="bg-white dark:bg-gray-700 rounded-lg p-2">
+                                <p class="text-gray-500 dark:text-gray-400 text-[10px] mb-1">Kelas</p>
                                 <p class="font-semibold text-gray-900 dark:text-white">${errorData.kelas}</p>
                             </div>
-                            <div class="bg-white dark:bg-gray-700 rounded-lg p-3">
-                                <p class="text-gray-500 dark:text-gray-400 text-xs mb-1">Waktu ${isCheckIn ? 'Datang' : 'Pulang'}</p>
+                            <div class="bg-white dark:bg-gray-700 rounded-lg p-2">
+                                <p class="text-gray-500 dark:text-gray-400 text-[10px] mb-1">Waktu</p>
                                 <p class="font-semibold text-gray-900 dark:text-white">${errorData.time}</p>
                             </div>
-                            <div class="bg-white dark:bg-gray-700 rounded-lg p-3">
-                                <p class="text-gray-500 dark:text-gray-400 text-xs mb-1">Status</p>
+                            <div class="bg-white dark:bg-gray-700 rounded-lg p-2">
+                                <p class="text-gray-500 dark:text-gray-400 text-[10px] mb-1">Status</p>
                                 <p class="font-semibold text-orange-600">${(errorData.status || 'hadir').toUpperCase()}</p>
                             </div>
                         </div>
@@ -686,9 +686,9 @@
                     
                     <button 
                         onclick="hideError()" 
-                        class="group relative px-8 py-4 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white rounded-xl font-bold transition-all transform hover:scale-105 shadow-lg hover:shadow-2xl"
+                        class="group relative px-6 py-3 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white rounded-lg font-bold transition-all transform hover:scale-105 shadow-lg text-sm"
                     >
-                        <i class="fas fa-times mr-2"></i>
+                        <i class="fas fa-times mr-1"></i>
                         Tutup
                     </button>
                 `;
@@ -697,19 +697,19 @@
                 contentContainer.innerHTML = `
                     <div class="relative inline-block">
                         <div class="absolute inset-0 bg-red-400 rounded-full animate-ping opacity-30"></div>
-                        <i class="relative fas fa-exclamation-triangle text-8xl text-red-600 dark:text-red-400"></i>
+                        <i class="relative fas fa-exclamation-triangle text-6xl text-red-600 dark:text-red-400"></i>
                     </div>
                     
                     <div>
-                        <h3 class="text-3xl font-black text-red-800 dark:text-red-300 mb-2">Oops!</h3>
-                        <p class="text-lg text-red-700 dark:text-red-400">${message || 'Terjadi kesalahan'}</p>
+                        <h3 class="text-2xl font-black text-red-800 dark:text-red-300 mb-1">Oops!</h3>
+                        <p class="text-sm text-red-700 dark:text-red-400">${message || 'Terjadi kesalahan'}</p>
                     </div>
                     
                     <button 
                         onclick="hideError()" 
-                        class="group relative px-8 py-4 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-xl font-bold transition-all transform hover:scale-105 shadow-lg hover:shadow-2xl"
+                        class="group relative px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-lg font-bold transition-all transform hover:scale-105 shadow-lg text-sm"
                     >
-                        <i class="fas fa-times mr-2"></i>
+                        <i class="fas fa-times mr-1"></i>
                         Tutup
                     </button>
                 `;
