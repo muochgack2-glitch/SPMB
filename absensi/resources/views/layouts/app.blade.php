@@ -90,10 +90,7 @@
              @sidebar-toggled.window="sidebarOpen = $event.detail"
              :style="{ marginLeft: sidebarOpen ? '16rem' : '5rem' }">
             
-            <!-- Top Navbar -->
-            @if(!isset($hideDefaultNavbar) || !$hideDefaultNavbar)
-                @include('layouts.navbar')
-            @endif
+            <!-- Top Navbar - REMOVED: All pages now use full screen with sidebar only -->
             
             <!-- Page Content -->
             <main class="p-6 animate-fade-in">

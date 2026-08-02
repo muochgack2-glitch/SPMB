@@ -1,7 +1,6 @@
 <x-app-layout>
     <x-slot name="title">QR Scanner</x-slot>
     <x-slot name="pageTitle">QR Scanner</x-slot>
-    <x-slot name="hideDefaultNavbar">true</x-slot>
     
     {{-- Custom Navbar untuk Scanner (Full Width, di atas content) --}}
     <div class="bg-gradient-to-r from-primary-600 via-purple-600 to-pink-600 shadow-lg -mx-6 -mt-6 mb-6">

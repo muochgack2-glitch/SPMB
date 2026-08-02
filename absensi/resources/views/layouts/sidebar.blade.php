@@ -183,6 +183,54 @@ function sidebarData() {
 
         </nav>
 
+        <!-- User Profile Section -->
+        <div class="px-3 py-4 border-t border-primary-700/50" x-data="{ userMenuOpen: false }">
+            <div class="relative">
+                <button 
+                    @click="userMenuOpen = !userMenuOpen"
+                    @mouseenter="!sidebarOpen && (tooltipShow = 'profile')"
+                    @mouseleave="tooltipShow = null"
+                    class="relative w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-primary-200 hover:bg-primary-800/50 hover:text-white transition-all duration-200"
+                >
+                    <div class="w-8 h-8 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold shadow-lg flex-shrink-0">
+                        {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
+                    </div>
+                    <div x-show="sidebarOpen" x-transition class="flex-1 text-left overflow-hidden">
+                        <p class="text-sm font-medium text-white truncate">{{ auth()->user()->name ?? 'User' }}</p>
+                        <p class="text-xs text-primary-300 truncate">{{ ucfirst(auth()->user()->role ?? 'admin') }}</p>
+                    </div>
+                    <i x-show="sidebarOpen" class="fas fa-chevron-down text-xs transition-transform" :class="{ 'rotate-180': userMenuOpen }"></i>
+                    
+                    <div x-show="!sidebarOpen && tooltipShow === 'profile'" 
+                         class="absolute left-full ml-2 px-3 py-1.5 bg-gray-900 text-white text-sm rounded-lg shadow-lg whitespace-nowrap z-50"
+                         x-transition>
+                        {{ auth()->user()->name ?? 'User' }}
+                    </div>
+                </button>
+                
+                <!-- User Dropdown Menu -->
+                <div 
+                    x-show="userMenuOpen && sidebarOpen" 
+                    @click.away="userMenuOpen = false"
+                    x-transition
+                    class="mt-2 space-y-1"
+                >
+                    <a href="{{ route('profile.edit') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg text-primary-200 hover:bg-primary-800/50 hover:text-white transition-all text-sm">
+                        <i class="fas fa-user-cog w-5"></i>
+                        <span>Profile Saya</span>
+                    </a>
+                    
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="w-full flex items-center space-x-3 px-4 py-2 rounded-lg text-red-300 hover:bg-red-900/30 hover:text-red-200 transition-all text-sm">
+                            <i class="fas fa-sign-out-alt w-5"></i>
+                            <span>Logout</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <!-- Bottom Section: Dark Mode & Collapse Toggle -->
         <div class="px-3 py-4 border-t border-primary-700/50 space-y-2">
             
