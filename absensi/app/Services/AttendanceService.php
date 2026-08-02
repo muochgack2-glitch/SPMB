@@ -171,11 +171,12 @@ class AttendanceService
             'success' => true,
             'message' => "Check-in berhasil! Status: {$this->statusService->getStatusLabel($status)}",
             'data' => [
-                'student' => $student->load('kelas'),
-                'record' => $record->fresh(),
+                'nama' => $student->nama,
+                'nis' => $student->nis,
+                'kelas' => $student->kelas->nama_kelas ?? '-',
                 'status' => $status,
                 'status_label' => $this->statusService->getStatusLabel($status),
-                'time' => $currentTime,
+                'time' => Carbon::parse($currentTime)->format('H:i'),
             ],
         ];
     }
@@ -251,9 +252,11 @@ class AttendanceService
             'success' => true,
             'message' => 'Check-out berhasil!',
             'data' => [
-                'student' => $student->load('kelas'),
-                'record' => $record->fresh(),
-                'time' => $currentTime,
+                'nama' => $student->nama,
+                'nis' => $student->nis,
+                'kelas' => $student->kelas->nama_kelas ?? '-',
+                'status' => $record->status,
+                'time' => Carbon::parse($currentTime)->format('H:i'),
             ],
         ];
     }

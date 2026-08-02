@@ -15,11 +15,11 @@
                 <div class="pt-3 border-t border-white/20 space-y-2">
                     <div class="flex items-center justify-between text-xs">
                         <span class="text-primary-100">⏰ Jam Masuk:</span>
-                        <span class="font-bold">06:30 - 07:00</span>
+                        <span id="jamMasuk" class="font-bold">06:30 - 07:00</span>
                     </div>
                     <div class="flex items-center justify-between text-xs">
                         <span class="text-primary-100">🏠 Jam Pulang:</span>
-                        <span class="font-bold">15:00 - 15:30</span>
+                        <span id="jamPulang" class="font-bold">15:00 - 15:30</span>
                     </div>
                 </div>
             </div>
@@ -703,9 +703,9 @@
                 if (result.success) {
                     const hours = result.data;
                     
-                    // Update jam masuk & pulang di left sidebar
-                    const jamMasukEl = document.querySelector('.text-primary-100:nth-of-type(1)').nextElementSibling;
-                    const jamPulangEl = document.querySelector('.text-primary-100:nth-of-type(2)').nextElementSibling;
+                    // Update jam masuk & pulang di left sidebar menggunakan ID
+                    const jamMasukEl = document.getElementById('jamMasuk');
+                    const jamPulangEl = document.getElementById('jamPulang');
                     
                     if (jamMasukEl) {
                         jamMasukEl.textContent = `${hours.check_in_start} - ${hours.check_in_end}`;
@@ -773,35 +773,60 @@
         }
 
         function connectSSE() {
-            // Connect to Server-Sent Events for real-time updates
-            const eventSource = new EventSource('/api/attendance/sse');
-            
-            eventSource.addEventListener('new-scan', function(event) {
-                try {
-                    const scanData = JSON.parse(event.data);
-                    console.log('🔔 New scan received via SSE:', scanData);
+            // Only try SSE if not already connected
+            if (window.sseConnection && window.sseConnection.readyState !== EventSource.CLOSED) {
+                console.log('SSE already connected');
+                return;
+            }
+
+            try {
+                // Connect to Server-Sent Events for real-time updates
+                const eventSource = new EventSource('/api/attendance/sse');
+                window.sseConnection = eventSource;
+                
+                eventSource.addEventListener('new-scan', function(event) {
+                    try {
+                        const scanData = JSON.parse(event.data);
+                        console.log('🔔 New scan received via SSE:', scanData);
+                        
+                        // Add to recent scans
+                        addToRecentScans(scanData);
+                        
+                        // Update stats
+                        loadTodayStats();
+                        
+                        // Show notification (optional)
+                        showNotification(scanData);
+                    } catch (error) {
+                        console.error('Error parsing SSE data:', error);
+                    }
+                });
+                
+                eventSource.onopen = function() {
+                    console.log('🔌 Connected to SSE for real-time updates');
+                };
+                
+                eventSource.onerror = function(error) {
+                    console.warn('SSE connection error (will auto-reconnect):', error.type);
                     
-                    // Add to recent scans
-                    addToRecentScans(scanData);
-                    
-                    // Update stats
-                    loadTodayStats();
-                    
-                    // Show notification (optional)
-                    showNotification(scanData);
-                } catch (error) {
-                    console.error('Error parsing SSE data:', error);
-                }
-            });
-            
-            eventSource.onerror = function(error) {
-                console.error('SSE connection error:', error);
-                // Reconnect after 5 seconds
-                eventSource.close();
-                setTimeout(connectSSE, 5000);
-            };
-            
-            console.log('🔌 Connected to SSE for real-time updates');
+                    // Close the connection
+                    if (eventSource.readyState === EventSource.CLOSED) {
+                        console.log('SSE connection closed, will retry in 10 seconds...');
+                        // Only retry after 10 seconds to avoid spam
+                        setTimeout(() => {
+                            window.sseConnection = null;
+                            connectSSE();
+                        }, 10000);
+                    }
+                };
+            } catch (error) {
+                console.error('Failed to establish SSE connection:', error);
+                // Retry after 10 seconds
+                setTimeout(() => {
+                    window.sseConnection = null;
+                    connectSSE();
+                }, 10000);
+            }
         }
 
         // ============================================
