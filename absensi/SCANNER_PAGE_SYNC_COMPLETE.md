@@ -154,10 +154,13 @@ git push absensi main
 ```
 
 ## Commit Hash
-`a9da65a` - feat: Sync scanner page with landing page - add auto-toggle and complete polling
+- `a9da65a` - feat: Sync scanner page with landing page - add auto-toggle and complete polling
+- `711c8be` - docs: Add scanner page sync documentation
+- `560ffbe` - fix: Scanner page showError now displays duplicate scan details like landing page
 
 ## Files Modified
-- `resources/views/attendance/scanner.blade.php` (1 file, +92 insertions, -12 deletions)
+- `resources/views/attendance/scanner.blade.php` 
+  - Total: +192 insertions, -16 deletions across all commits
 
 ## Next Steps (Optional Improvements)
 
