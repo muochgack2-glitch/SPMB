@@ -6,8 +6,8 @@ use App\Http\Controllers\Api\AttendanceStatsController;
 use App\Http\Controllers\AttendanceSSEController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
-// AJAX Login API (untuk login modal di landing page)
-Route::post('/auth/login', [AuthenticatedSessionController::class, 'store']);
+// AJAX Login API (dengan session middleware untuk auth)
+Route::middleware(['web'])->post('/auth/login', [AuthenticatedSessionController::class, 'store']);
 
 // Attendance Scan API (untuk scanner frontend)
 Route::prefix('attendance')->group(function () {
