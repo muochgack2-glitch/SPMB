@@ -91,7 +91,9 @@
              :style="{ marginLeft: sidebarOpen ? '16rem' : '5rem' }">
             
             <!-- Top Navbar -->
-            @include('layouts.navbar')
+            @if(!isset($hideDefaultNavbar) || !$hideDefaultNavbar)
+                @include('layouts.navbar')
+            @endif
             
             <!-- Page Content -->
             <main class="p-6 animate-fade-in">
