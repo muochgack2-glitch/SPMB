@@ -18,6 +18,7 @@ Route::prefix('attendance')->group(function () {
     Route::get('/stats/today', [AttendanceStatsController::class, 'todayStats']);
     Route::get('/school-hours', [AttendanceStatsController::class, 'schoolHours']);
     Route::get('/recent-scans', [AttendanceStatsController::class, 'recentScans']);
+    Route::get('/live-data', [AttendanceStatsController::class, 'liveData']);
     
     // SSE for real-time updates
     Route::get('/sse', [AttendanceSSEController::class, 'stream']);

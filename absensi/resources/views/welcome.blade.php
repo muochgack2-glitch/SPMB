@@ -1562,7 +1562,100 @@
                 }
             });
         });
-    </script>
+
+        // ============================================================================
+        // POLLING FOR REAL-TIME UPDATES (Replaces SSE for better performance)
+        // ============================================================================
+        
+        let pollingInterval = null;
+        let isPollingPaused = false;
+
+        /**
+         * Start polling for real-time stats and recent scans updates
+         * Polls every 5 seconds when tab is active
+         */
+        function startPolling() {
+            // Don't start if already polling
+            if (pollingInterval) {
+                console.log('⚠️ Polling already running');
+                return;
+            }
+
+            // Initial load
+            loadTodayStats();
+            loadRecentScans();
+            
+            // Poll every 5 seconds
+            pollingInterval = setInterval(() => {
+                if (!isPollingPaused) {
+                    loadTodayStats();
+                    loadRecentScans();
+                }
+            }, 5000); // 5 seconds
+            
+            console.log('✅ Polling started (interval: 5s)');
+        }
+
+        /**
+         * Stop polling completely
+         */
+        function stopPolling() {
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+                console.log('⏹️ Polling stopped');
+            }
+        }
+
+        /**
+         * Pause polling temporarily (don't clear interval)
+         */
+        function pausePolling() {
+            isPollingPaused = true;
+            console.log('⏸️ Polling paused');
+        }
+
+        /**
+         * Resume polling
+         */
+        function resumePolling() {
+            isPollingPaused = false;
+            // Immediate update when resuming
+            loadTodayStats();
+            loadRecentScans();
+            console.log('▶️ Polling resumed');
+        }
+
+        // ============================================================================
+        // PAGE VISIBILITY API - Pause polling when tab is hidden (save resources)
+        // ============================================================================
+        
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                pausePolling();
+                console.log('👁️ Tab hidden - polling paused to save resources');
+            } else {
+                resumePolling();
+                console.log('👁️ Tab visible - polling resumed with immediate update');
+            }
+        });
+
+        // ============================================================================
+        // START POLLING ON PAGE LOAD
+        // ============================================================================
+        
+        // Start polling after initial data load
+        // Wait for waitForHtml5Qrcode() to finish loading initial data first
+        setTimeout(() => {
+            startPolling();
+        }, 2000); // Wait 2 seconds for initial load to complete
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            stopPolling();
+        });
+
+        console.log('📊 Polling system initialized - will start after initial data load');
     </script>
 
     <style>

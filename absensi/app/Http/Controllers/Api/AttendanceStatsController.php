@@ -184,4 +184,77 @@ class AttendanceStatsController extends Controller
             'data' => $recentScans,
         ]);
     }
+
+    /**
+     * Get complete live data for polling (stats + records + absent students).
+     * 
+     * GET /api/attendance/live-data
+     * 
+     * @return JsonResponse
+     */
+    public function liveData(): JsonResponse
+    {
+        $today = Carbon::today();
+        
+        // Get statistics
+        $hadir = AttendanceRecord::whereDate('date', $today)->where('status', 'hadir')->count();
+        $terlambat = AttendanceRecord::whereDate('date', $today)->where('status', 'terlambat')->count();
+        $izin = AttendanceRecord::whereDate('date', $today)->where('status', 'izin')->count();
+        $sakit = AttendanceRecord::whereDate('date', $today)->where('status', 'sakit')->count();
+        $totalStudents = AttendanceStudent::where('is_active', true)->count();
+        $alpha = max(0, $totalStudents - ($hadir + $terlambat + $izin + $sakit));
+        
+        // Get attendance records
+        $records = AttendanceRecord::with(['student', 'student.kelas'])
+            ->whereDate('date', $today)
+            ->orderBy('check_in_time', 'desc')
+            ->get()
+            ->map(function($record) {
+                return [
+                    'id' => $record->id,
+                    'nis' => $record->student->nis ?? '-',
+                    'nama' => $record->student->nama ?? '-',
+                    'kelas' => $record->student->kelas?->nama_kelas ?? '-',
+                    'check_in_time' => $record->check_in_time ? Carbon::parse($record->check_in_time)->format('H:i') : null,
+                    'check_out_time' => $record->check_out_time ? Carbon::parse($record->check_out_time)->format('H:i') : null,
+                    'status' => $record->status,
+                    'check_in_photo_url' => $record->check_in_photo_url,
+                    'check_out_photo_url' => $record->check_out_photo_url,
+                ];
+            });
+        
+        // Get absent students (not in today's records)
+        $presentStudentIds = AttendanceRecord::whereDate('date', $today)->pluck('student_id');
+        $absentStudents = AttendanceStudent::with('kelas')
+            ->where('is_active', true)
+            ->whereNotIn('id', $presentStudentIds)
+            ->orderBy('nama')
+            ->get()
+            ->map(function($student) {
+                return [
+                    'id' => $student->id,
+                    'nis' => $student->nis,
+                    'nama' => $student->nama,
+                    'kelas' => $student->kelas?->nama_kelas ?? '-',
+                ];
+            });
+        
+        return response()->json([
+            'success' => true,
+            'timestamp' => now()->format('Y-m-d H:i:s'),
+            'data' => [
+                'stats' => [
+                    'hadir' => $hadir,
+                    'terlambat' => $terlambat,
+                    'alpha' => $alpha,
+                    'izin' => $izin,
+                    'sakit' => $sakit,
+                    'total' => $totalStudents,
+                ],
+                'records' => $records,
+                'absent_students' => $absentStudents,
+                'absent_count' => $absentStudents->count(),
+            ],
+        ]);
+    }
 }
