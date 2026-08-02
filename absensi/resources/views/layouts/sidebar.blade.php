@@ -1,4 +1,4 @@
-<!-- Sidebar Component with Enhanced UI/UX -->
+<!-- Sidebar Component with Enhanced UI/UX & Mobile Responsive -->
 <aside 
     data-sidebar
     id="main-sidebar"
@@ -6,10 +6,64 @@
     x-init="initSidebar()"
     style="pointer-events: auto !important;"
     class="fixed top-0 left-0 h-screen bg-gradient-to-b from-primary-900 via-primary-800 to-primary-900 shadow-2xl z-50 overflow-hidden"
-    :class="isInitialLoad ? '' : 'transition-all duration-300'"
+    :class="[
+        isInitialLoad ? '' : 'transition-all duration-300',
+        isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+    ]"
     :style="{ width: sidebarOpen ? '16rem' : '5rem' }"
 >
 <style>
+    /* Mobile Overlay */
+    .mobile-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        z-index: 40;
+        transition: opacity 0.3s ease;
+    }
+    
+    /* Hamburger Menu Button */
+    .hamburger-button {
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 60;
+        width: 3rem;
+        height: 3rem;
+        background: linear-gradient(135deg, #1e40af, #3b82f6);
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .hamburger-button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    }
+    
+    .hamburger-button:active {
+        transform: scale(0.95);
+    }
+    
+    /* Show hamburger only on mobile/tablet */
+    @media (min-width: 1024px) {
+        .hamburger-button {
+            display: none;
+        }
+    }
+    
+    /* Responsive sidebar */
+    @media (max-width: 1023px) {
+        #main-sidebar {
+            width: 16rem !important; /* Force full width on mobile */
+        }
+    }
+
     /* Enhanced Menu Item Styles */
     .sidebar-menu-item {
         position: relative;
@@ -108,7 +162,8 @@ function sidebarData() {
         activeMenu: '{{ request()->route()->getName() }}',
         tooltipShow: null,
         isInitialLoad: true,
-        todayAbsentCount: 0, // Will be populated via AJAX
+        todayAbsentCount: 0,
+        isMobileMenuOpen: false,
         
         toggleSidebar() {
             this.isInitialLoad = false;
@@ -117,13 +172,33 @@ function sidebarData() {
             window.dispatchEvent(new CustomEvent('sidebar-toggled', { detail: this.sidebarOpen }));
         },
         
+        toggleMobileMenu() {
+            this.isMobileMenuOpen = !this.isMobileMenuOpen;
+        },
+        
+        closeMobileMenu() {
+            this.isMobileMenuOpen = false;
+        },
+        
         initSidebar() {
             // Remove transition during initial load
             setTimeout(() => { this.isInitialLoad = false; }, 100);
             
-            // Listen for external toggle events from hamburger button
+            // Listen for external toggle events
             window.addEventListener('toggle-sidebar', () => {
                 this.toggleSidebar();
+            });
+            
+            // Listen for mobile menu toggle
+            window.addEventListener('toggle-mobile-menu', () => {
+                this.toggleMobileMenu();
+            });
+            
+            // Close mobile menu on window resize to desktop
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 1024) {
+                    this.isMobileMenuOpen = false;
+                }
             });
             
             // Load badge counts
@@ -144,6 +219,29 @@ function sidebarData() {
     }
 }
 </script>
+
+    <!-- Mobile Overlay (when menu is open) -->
+    <div 
+        x-show="isMobileMenuOpen" 
+        @click="closeMobileMenu()"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="mobile-overlay lg:hidden"
+    ></div>
+
+    <!-- Hamburger Menu Button (Mobile/Tablet only) -->
+    <button 
+        @click="toggleMobileMenu()"
+        class="hamburger-button lg:hidden"
+        aria-label="Toggle menu"
+    >
+        <i class="fas text-white text-lg" :class="isMobileMenuOpen ? 'fa-times' : 'fa-bars'"></i>
+    </button>
+
     <div class="flex flex-col h-full">
         
         <!-- Logo Section -->
@@ -170,6 +268,7 @@ function sidebarData() {
             <!-- Dashboard -->
             <a 
                 href="{{ route('attendance.dashboard') }}"
+                @click="closeMobileMenu()"
                 @mouseenter="!sidebarOpen && (tooltipShow = 'dashboard')"
                 @mouseleave="tooltipShow = null"
                 class="sidebar-menu-item relative flex items-center space-x-3 px-4 py-3 rounded-lg group"
@@ -189,6 +288,7 @@ function sidebarData() {
             <!-- QR Scanner -->
             <a 
                 href="{{ route('attendance.scanner') }}"
+                @click="closeMobileMenu()"
                 @mouseenter="!sidebarOpen && (tooltipShow = 'scan')"
                 @mouseleave="tooltipShow = null"
                 class="sidebar-menu-item relative flex items-center space-x-3 px-4 py-3 rounded-lg group"
@@ -215,6 +315,7 @@ function sidebarData() {
             <!-- Data Siswa -->
             <a 
                 href="{{ route('attendance.students.index') }}"
+                @click="closeMobileMenu()"
                 @mouseenter="!sidebarOpen && (tooltipShow = 'students')"
                 @mouseleave="tooltipShow = null"
                 class="sidebar-menu-item relative flex items-center space-x-3 px-4 py-3 rounded-lg group"
@@ -233,6 +334,7 @@ function sidebarData() {
             <!-- Data Kelas -->
             <a 
                 href="{{ route('attendance.classes.index') }}"
+                @click="closeMobileMenu()"
                 @mouseenter="!sidebarOpen && (tooltipShow = 'classes')"
                 @mouseleave="tooltipShow = null"
                 class="sidebar-menu-item relative flex items-center space-x-3 px-4 py-3 rounded-lg group"
@@ -251,6 +353,7 @@ function sidebarData() {
             <!-- Laporan -->
             <a 
                 href="{{ route('attendance.reports.index') }}"
+                @click="closeMobileMenu()"
                 @mouseenter="!sidebarOpen && (tooltipShow = 'reports')"
                 @mouseleave="tooltipShow = null"
                 class="sidebar-menu-item relative flex items-center space-x-3 px-4 py-3 rounded-lg group"
@@ -280,6 +383,7 @@ function sidebarData() {
             <!-- WhatsApp Gateway -->
             <a 
                 href="{{ route('whatsapp.index') }}"
+                @click="closeMobileMenu()"
                 @mouseenter="!sidebarOpen && (tooltipShow = 'whatsapp')"
                 @mouseleave="tooltipShow = null"
                 class="sidebar-menu-item relative flex items-center space-x-3 px-4 py-3 rounded-lg group"
@@ -306,6 +410,7 @@ function sidebarData() {
             <!-- Settings -->
             <a 
                 href="{{ route('attendance.settings.index') }}"
+                @click="closeMobileMenu()"
                 @mouseenter="!sidebarOpen && (tooltipShow = 'settings')"
                 @mouseleave="tooltipShow = null"
                 class="sidebar-menu-item relative flex items-center space-x-3 px-4 py-3 rounded-lg group"

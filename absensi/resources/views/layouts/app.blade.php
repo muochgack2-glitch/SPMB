@@ -88,7 +88,10 @@
         <div class="transition-all duration-300" 
              x-data="{ sidebarOpen: localStorage.getItem('sidebarOpen') !== 'false' }" 
              @sidebar-toggled.window="sidebarOpen = $event.detail"
-             :style="{ marginLeft: sidebarOpen ? '16rem' : '5rem' }">
+             :style="$store.breakpoint && $store.breakpoint.current === 'mobile' ? 'margin-left: 0' : (sidebarOpen ? 'margin-left: 16rem' : 'margin-left: 5rem')"
+             :class="$store.breakpoint && $store.breakpoint.current !== 'mobile' ? '' : ''"
+             class="lg:ml-0"
+             :class="sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'">
             
             <!-- Top Navbar - REMOVED: All pages now use full screen with sidebar only -->
             
