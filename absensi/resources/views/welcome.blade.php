@@ -524,12 +524,17 @@
         }
 
         function onScanSuccess(decodedText, decodedResult) {
-            // Prevent duplicate scans
-            if (lastScannedNis === decodedText) {
+            // Prevent duplicate scans within cooldown period
+            const now = Date.now();
+            if (lastScannedNis === decodedText && window.lastScanTime && (now - window.lastScanTime) < 3000) {
+                console.log('Duplicate scan prevented (within 3s cooldown)');
                 return;
             }
             
             lastScannedNis = decodedText;
+            window.lastScanTime = now;
+            
+            console.log('QR Code detected:', decodedText);
             
             // Don't pause scanner - let it continue for high-speed scanning
             // Modal will show for 2-3 seconds then auto-close
@@ -676,10 +681,14 @@
             // 7. Resume scanner after 2.5 seconds (give time for modal to close)
             setTimeout(() => {
                 lastScannedNis = null;
+                window.lastScanTime = null;
+                console.log('Scanner cooldown cleared, ready for next scan');
+                
                 // Try to resume scanner if it was paused
                 try {
                     if (html5QrCode && html5QrCode.resume) {
                         html5QrCode.resume();
+                        console.log('Scanner resumed successfully');
                     }
                 } catch (e) {
                     // Scanner already running or error, ignore
@@ -734,10 +743,14 @@
             // Resume scanner after 3.5 seconds
             setTimeout(() => {
                 lastScannedNis = null;
+                window.lastScanTime = null;
+                console.log('Scanner cooldown cleared after error, ready for next scan');
+                
                 // Try to resume scanner if it was paused
                 try {
                     if (html5QrCode && html5QrCode.resume) {
                         html5QrCode.resume();
+                        console.log('Scanner resumed successfully after error');
                     }
                 } catch (e) {
                     // Scanner already running or error, ignore
