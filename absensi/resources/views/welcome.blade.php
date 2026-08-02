@@ -261,6 +261,13 @@
     {{-- Toast Container --}}
     <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
 
+    {{-- Modal Overlay untuk Success/Error --}}
+    <div id="modalOverlay" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" style="animation: fadeIn 0.2s ease-out;">
+        <div id="modalContent" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full transform" style="animation: scaleIn 0.3s ease-out;">
+            <!-- Modal content will be injected here -->
+        </div>
+    </div>
+
     @push('styles')
     <style>
         /* Toast Notification Styles */
@@ -392,6 +399,55 @@
         .toast.removing {
             animation: slideOutRight 0.3s ease-out forwards;
         }
+
+        /* Modal Overlay Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes scaleOut {
+            from {
+                transform: scale(1);
+                opacity: 1;
+            }
+            to {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+        }
+
+        .modal-fade-out {
+            animation: fadeOut 0.2s ease-out forwards;
+        }
+
+        .modal-scale-out {
+            animation: scaleOut 0.2s ease-out forwards;
+        }
     </style>
     @endpush
 
@@ -513,20 +569,12 @@
                     showError(result.message || 'Gagal memproses absensi');
                 }
 
-                // Resume scanning after 3 seconds
-                setTimeout(() => {
-                    lastScannedNis = null;
-                    html5QrCode.resume();
-                }, 3000);
+                // Note: Scanner resume is handled by showSuccess/showError
+                // No longer pause scanner here for faster throughput
 
             } catch (error) {
                 console.error('Scan processing error:', error);
                 showError('Terjadi kesalahan saat memproses scan');
-                
-                setTimeout(() => {
-                    lastScannedNis = null;
-                    html5QrCode.resume();
-                }, 3000);
             }
         }
 
@@ -537,69 +585,178 @@
         }
 
         function showSuccess(result) {
-            const resultCard = document.getElementById('resultCard');
-            const resultIcon = document.getElementById('resultIcon');
-            const resultTitle = document.getElementById('resultTitle');
-            const resultMessage = document.getElementById('resultMessage');
-            const resultDetails = document.getElementById('resultDetails');
+            // 1. Show toast notification first (instant feedback)
+            showToast(
+                'success',
+                '✅ Berhasil!',
+                result.message || 'Absensi berhasil direkam'
+            );
 
-            resultTitle.textContent = currentAction === 'check_in' ? '✨ Check In Berhasil!' : '👋 Check Out Berhasil!';
-            resultMessage.textContent = result.message || 'Absensi berhasil direkam ke sistem';
-            
-            resultDetails.innerHTML = `
-                <div class="space-y-4">
-                    <div class="flex items-center gap-4">
-                        <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-purple-500 rounded-xl flex items-center justify-center text-white text-2xl font-bold shadow-lg">
-                            ${result.data?.nis?.substring(0, 2) || 'ID'}
+            // 2. Show detailed modal overlay
+            const modalOverlay = document.getElementById('modalOverlay');
+            const modalContent = document.getElementById('modalContent');
+
+            const statusColors = {
+                'hadir': {
+                    bg: 'from-green-400 to-emerald-500',
+                    icon: 'fa-check-circle',
+                    text: 'text-green-600'
+                },
+                'terlambat': {
+                    bg: 'from-yellow-400 to-orange-500',
+                    icon: 'fa-clock',
+                    text: 'text-yellow-600'
+                },
+                'alpha': {
+                    bg: 'from-gray-400 to-gray-500',
+                    icon: 'fa-times-circle',
+                    text: 'text-gray-600'
+                }
+            };
+
+            const status = result.data?.status || 'hadir';
+            const colors = statusColors[status] || statusColors['hadir'];
+
+            modalContent.innerHTML = `
+                <div class="p-6 text-center">
+                    <!-- Success Icon -->
+                    <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br ${colors.bg} rounded-full mb-4 shadow-lg">
+                        <i class="fas ${colors.icon} text-4xl text-white"></i>
+                    </div>
+
+                    <!-- Student Info -->
+                    <h3 class="text-2xl font-black text-gray-900 dark:text-white mb-2">
+                        ${result.data?.nama || '-'}
+                    </h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                        NIS: ${result.data?.nis || '-'}
+                    </p>
+
+                    <!-- Details Grid -->
+                    <div class="grid grid-cols-3 gap-3 mb-4">
+                        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Kelas</p>
+                            <p class="text-sm font-bold text-gray-900 dark:text-white">${result.data?.kelas || '-'}</p>
                         </div>
-                        <div class="text-left flex-1">
-                            <p class="text-lg font-bold text-gray-900 dark:text-white">${result.data?.nama || '-'}</p>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">NIS: ${result.data?.nis || '-'}</p>
+                        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Waktu</p>
+                            <p class="text-sm font-bold text-gray-900 dark:text-white">${result.data?.time || '-'}</p>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Status</p>
+                            <p class="text-sm font-bold ${colors.text}">${(result.data?.status || 'hadir').toUpperCase()}</p>
                         </div>
                     </div>
-                    
-                    <div class="grid grid-cols-2 gap-3 text-sm">
-                        <div class="bg-white dark:bg-gray-700 rounded-lg p-3">
-                            <p class="text-gray-500 dark:text-gray-400 text-xs mb-1">Kelas</p>
-                            <p class="font-semibold text-gray-900 dark:text-white">${result.data?.kelas || '-'}</p>
-                        </div>
-                        <div class="bg-white dark:bg-gray-700 rounded-lg p-3">
-                            <p class="text-gray-500 dark:text-gray-400 text-xs mb-1">Waktu</p>
-                            <p class="font-semibold text-gray-900 dark:text-white">${result.data?.time || '-'}</p>
-                        </div>
-                    </div>
-                    
-                    <div class="text-center pt-2">
-                        <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold ${
-                            result.data?.status === 'hadir' ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-lg' : 
-                            result.data?.status === 'terlambat' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-lg' : 
-                            'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                        }">
-                            <i class="fas ${result.data?.status === 'hadir' ? 'fa-check-circle' : result.data?.status === 'terlambat' ? 'fa-clock' : 'fa-times-circle'}"></i>
-                            ${result.data?.status?.toUpperCase() || '-'}
-                        </span>
-                    </div>
+
+                    <!-- Auto close indicator -->
+                    <p class="text-xs text-gray-400 dark:text-gray-500">
+                        <i class="fas fa-circle-notch fa-spin mr-1"></i>
+                        Auto-close dalam 2 detik...
+                    </p>
                 </div>
             `;
-            
-            resultCard.classList.remove('hidden', 'scale-95', 'opacity-0');
-            resultCard.classList.add('scale-100', 'opacity-100');
-            hideError();
-            
-            // Add to recent scans timeline
+
+            // Show modal
+            modalOverlay.classList.remove('hidden');
+
+            // 3. Add to recent scans
             addToRecentScans(result.data);
-            
-            // Update stats
+
+            // 4. Update stats
             loadTodayStats();
-            
-            // Confetti effect (optional)
-            if (window.confetti) {
-                confetti({
-                    particleCount: 100,
-                    spread: 70,
-                    origin: { y: 0.6 }
-                });
-            }
+
+            // 5. Play sound (if exists)
+            playNotificationSound();
+
+            // 6. Auto-close after 2 seconds
+            setTimeout(() => {
+                hideModal();
+            }, 2000);
+
+            // 7. Resume scanner after 2.5 seconds (give time for modal to close)
+            setTimeout(() => {
+                lastScannedNis = null;
+                if (html5QrCode && html5QrCode.getState() === window.Html5QrcodeScannerState.PAUSED) {
+                    html5QrCode.resume();
+                }
+            }, 2500);
+        }
+
+        function showError(message) {
+            // 1. Show toast notification
+            showToast(
+                'warning',
+                '⚠️ Gagal!',
+                message || 'Terjadi kesalahan'
+            );
+
+            // 2. Show error modal overlay
+            const modalOverlay = document.getElementById('modalOverlay');
+            const modalContent = document.getElementById('modalContent');
+
+            modalContent.innerHTML = `
+                <div class="p-6 text-center">
+                    <!-- Error Icon -->
+                    <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-red-400 to-pink-500 rounded-full mb-4 shadow-lg">
+                        <i class="fas fa-exclamation-triangle text-4xl text-white"></i>
+                    </div>
+
+                    <!-- Error Message -->
+                    <h3 class="text-2xl font-black text-red-800 dark:text-red-300 mb-2">
+                        Oops!
+                    </h3>
+                    <p class="text-base text-gray-700 dark:text-gray-300 mb-4">
+                        ${message || 'Terjadi kesalahan'}
+                    </p>
+
+                    <!-- Auto close indicator -->
+                    <p class="text-xs text-gray-400 dark:text-gray-500">
+                        <i class="fas fa-circle-notch fa-spin mr-1"></i>
+                        Auto-close dalam 3 detik...
+                    </p>
+                </div>
+            `;
+
+            // Show modal
+            modalOverlay.classList.remove('hidden');
+
+            // Auto-close after 3 seconds (longer for error so user can read)
+            setTimeout(() => {
+                hideModal();
+            }, 3000);
+
+            // Resume scanner after 3.5 seconds
+            setTimeout(() => {
+                lastScannedNis = null;
+                if (html5QrCode && html5QrCode.getState() === window.Html5QrcodeScannerState.PAUSED) {
+                    html5QrCode.resume();
+                }
+            }, 3500);
+        }
+
+        function hideModal() {
+            const modalOverlay = document.getElementById('modalOverlay');
+            const modalContent = document.getElementById('modalContent');
+
+            // Add fade-out animation
+            modalOverlay.classList.add('modal-fade-out');
+            modalContent.classList.add('modal-scale-out');
+
+            // Remove after animation
+            setTimeout(() => {
+                modalOverlay.classList.add('hidden');
+                modalOverlay.classList.remove('modal-fade-out');
+                modalContent.classList.remove('modal-scale-out');
+            }, 200);
+        }
+
+        // Legacy functions (keep for compatibility but not used)
+        function hideResult() {
+            hideModal();
+        }
+
+        function hideError() {
+            hideModal();
         }
 
         function addToRecentScans(data) {
