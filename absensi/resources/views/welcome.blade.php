@@ -590,11 +590,17 @@
         }
 
         function showSuccess(result) {
+            // Determine action type
+            const isCheckIn = currentAction === 'check_in';
+            const actionText = isCheckIn ? 'Datang' : 'Pulang';
+            const actionIcon = isCheckIn ? '👋' : '🏃';
+            const actionMessage = isCheckIn ? 'Selamat datang di sekolah!' : 'Hati-hati di jalan!';
+            
             // 1. Show toast notification first (instant feedback)
             showToast(
                 'success',
-                '✅ Berhasil!',
-                result.message || 'Absensi berhasil direkam'
+                `${actionIcon} ${actionText}!`,
+                result.message || actionMessage
             );
 
             // 2. Show detailed modal overlay
@@ -622,17 +628,26 @@
             const status = result.data?.status || 'hadir';
             const colors = statusColors[status] || statusColors['hadir'];
 
+            // Icon based on action
+            const modalIcon = isCheckIn ? 'fa-hand-wave' : 'fa-person-walking-arrow-right';
+            const modalIconAlt = isCheckIn ? '👋' : '🚶‍♂️→';
+
             modalContent.innerHTML = `
                 <div class="p-6 text-center">
-                    <!-- Success Icon -->
+                    <!-- Action Icon -->
                     <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br ${colors.bg} rounded-full mb-4 shadow-lg">
-                        <i class="fas ${colors.icon} text-4xl text-white"></i>
+                        <i class="fas ${modalIcon} text-4xl text-white"></i>
                     </div>
 
-                    <!-- Student Info -->
-                    <h3 class="text-2xl font-black text-gray-900 dark:text-white mb-2">
-                        ${result.data?.nama || '-'}
+                    <!-- Action Title -->
+                    <h3 class="text-2xl font-black mb-2" style="background: linear-gradient(135deg, ${isCheckIn ? '#10b981, #3b82f6' : '#f59e0b, #ef4444'}); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                        ${isCheckIn ? '🌅 SELAMAT DATANG!' : '🌆 SELAMAT JALAN!'}
                     </h3>
+
+                    <!-- Student Info -->
+                    <p class="text-xl font-bold text-gray-900 dark:text-white mb-1">
+                        ${result.data?.nama || '-'}
+                    </p>
                     <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
                         NIS: ${result.data?.nis || '-'}
                     </p>
@@ -652,6 +667,11 @@
                             <p class="text-sm font-bold ${colors.text}">${(result.data?.status || 'hadir').toUpperCase()}</p>
                         </div>
                     </div>
+
+                    <!-- Message based on action -->
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                        ${isCheckIn ? '📚 Semangat belajar hari ini!' : '🎒 Sampai jumpa besok!'}
+                    </p>
 
                     <!-- Auto close indicator -->
                     <p class="text-xs text-gray-400 dark:text-gray-500">
