@@ -215,6 +215,20 @@
 
     @push('styles')
     <style>
+        /* Fix QR Scanner bounds - make all sides equal */
+        #reader__scan_region {
+            border: 3px solid rgba(59, 130, 246, 0.8) !important;
+        }
+        
+        #reader__scan_region video {
+            object-fit: cover !important;
+        }
+        
+        /* Ensure scan box corners are symmetrical */
+        #reader__dashboard_section_csr {
+            padding: 0 !important;
+        }
+
         /* Toast Notification Styles */
         .toast {
             min-width: 300px;
@@ -494,7 +508,7 @@
             
             const config = {
                 fps: 30,                    // Aggressive 30 FPS for instant detection
-                qrbox: 300,                 // Large scan area for easy detection
+                qrbox: { width: 300, height: 300 },  // Square scan area with equal dimensions
                 aspectRatio: 1.0,
                 disableFlip: false,         // Allow flipped QR codes
                 rememberLastUsedCamera: true, // Remember camera selection
