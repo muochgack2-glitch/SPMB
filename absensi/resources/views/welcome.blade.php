@@ -89,7 +89,7 @@
             <button 
                 onclick="setAction('check_in')" 
                 id="btnCheckIn"
-                class="action-btn active group relative px-8 py-3 rounded-xl font-bold text-base transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-2xl"
+                class="action-btn group relative px-8 py-3 rounded-xl font-bold text-base transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-2xl"
             >
                 <div class="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-500 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <div class="relative flex items-center gap-2">
@@ -590,29 +590,20 @@
             // You can adjust this threshold based on school schedule
             const checkOutStartTime = 15 * 60; // 15:00 in minutes
             
-            if (currentTime >= checkOutStartTime) {
-                // Afternoon - auto set to Check Out
-                setAction('check_out');
-                console.log('🌆 Auto-set to Check Out (afternoon mode)');
-            } else {
-                // Morning - auto set to Check In
-                setAction('check_in');
-                console.log('🌅 Auto-set to Check In (morning mode)');
-            }
+            // Determine initial action based on time
+            const initialAction = currentTime >= checkOutStartTime ? 'check_out' : 'check_in';
+            currentAction = initialAction;
             
-            // Force update button visual immediately after DOM is ready
+            // Wait for DOM to be fully ready, then set action
             setTimeout(() => {
-                const btnCheckIn = document.getElementById('btnCheckIn');
-                const btnCheckOut = document.getElementById('btnCheckOut');
-                
-                if (currentTime >= checkOutStartTime) {
-                    btnCheckIn.classList.remove('active');
-                    btnCheckOut.classList.add('active');
+                if (initialAction === 'check_out') {
+                    setAction('check_out');
+                    console.log('🌆 Auto-set to Check Out (afternoon mode)');
                 } else {
-                    btnCheckIn.classList.add('active');
-                    btnCheckOut.classList.remove('active');
+                    setAction('check_in');
+                    console.log('🌅 Auto-set to Check In (morning mode)');
                 }
-            }, 100);
+            }, 300); // Increased delay to ensure DOM is ready
             
             // Update every 5 minutes to keep in sync
             setInterval(() => {
