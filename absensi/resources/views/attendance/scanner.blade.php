@@ -2,88 +2,86 @@
     <x-slot name="title">QR Scanner</x-slot>
     <x-slot name="pageTitle">QR Scanner</x-slot>
     
-    {{-- Custom Navbar untuk Scanner --}}
-    <x-slot name="header">
-        <div class="bg-gradient-to-r from-primary-600 via-purple-600 to-pink-600 shadow-lg">
-            <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center py-3">
-                    {{-- LEFT: Logo & App Name --}}
-                    <div class="flex items-center gap-4">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-white/20 backdrop-blur-lg rounded-lg flex items-center justify-center">
-                                <i class="fas fa-graduation-cap text-white text-xl"></i>
-                            </div>
-                            <div class="text-white">
-                                <h1 class="text-lg font-black leading-tight">SMK PGRI BLORA</h1>
-                                <div class="flex items-center gap-2">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-white/20 backdrop-blur-lg">
-                                        <i class="fas fa-qrcode mr-1"></i>
-                                        QR Scanner
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- CENTER: Clock & Date --}}
-                    <div class="hidden lg:flex flex-col items-center bg-white/10 backdrop-blur-lg rounded-xl px-6 py-2">
-                        <div id="navClock" class="text-3xl font-black text-white">00:00:00</div>
-                        <div id="navDate" class="text-xs text-white/80 font-medium">Loading...</div>
-                    </div>
-
-                    {{-- RIGHT: Stats & Actions --}}
+    {{-- Custom Navbar untuk Scanner (Full Width, di atas content) --}}
+    <div class="bg-gradient-to-r from-primary-600 via-purple-600 to-pink-600 shadow-lg -mx-6 -mt-6 mb-6">
+        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-3">
+                {{-- LEFT: Logo & App Name --}}
+                <div class="flex items-center gap-4">
                     <div class="flex items-center gap-3">
-                        {{-- Live Stats Badge --}}
-                        <div class="hidden md:flex items-center gap-2 bg-white/10 backdrop-blur-lg rounded-xl px-4 py-2">
-                            <div class="flex items-center gap-1 text-white">
-                                <i class="fas fa-check-circle text-green-300"></i>
-                                <span class="text-sm font-bold" id="navStatHadir">0</span>
-                            </div>
-                            <div class="w-px h-4 bg-white/30"></div>
-                            <div class="flex items-center gap-1 text-white">
-                                <i class="fas fa-clock text-yellow-300"></i>
-                                <span class="text-sm font-bold" id="navStatTerlambat">0</span>
-                            </div>
-                            <div class="w-px h-4 bg-white/30"></div>
-                            <div class="flex items-center gap-1 text-white">
-                                <i class="fas fa-times-circle text-red-300"></i>
-                                <span class="text-sm font-bold" id="navStatAlpha">0</span>
+                        <div class="w-10 h-10 bg-white/20 backdrop-blur-lg rounded-lg flex items-center justify-center">
+                            <i class="fas fa-graduation-cap text-white text-xl"></i>
+                        </div>
+                        <div class="text-white">
+                            <h1 class="text-lg font-black leading-tight">SMK PGRI BLORA</h1>
+                            <div class="flex items-center gap-2">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-white/20 backdrop-blur-lg">
+                                    <i class="fas fa-qrcode mr-1"></i>
+                                    QR Scanner
+                                </span>
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        {{-- Back to Dashboard --}}
-                        <a href="{{ route('dashboard') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-lg text-white rounded-xl font-semibold transition-all transform hover:scale-105">
-                            <i class="fas fa-home"></i>
-                            <span class="hidden sm:inline">Dashboard</span>
-                        </a>
+                {{-- CENTER: Clock & Date --}}
+                <div class="hidden lg:flex flex-col items-center bg-white/10 backdrop-blur-lg rounded-xl px-6 py-2">
+                    <div id="navClock" class="text-3xl font-black text-white">00:00:00</div>
+                    <div id="navDate" class="text-xs text-white/80 font-medium">Loading...</div>
+                </div>
 
-                        {{-- User Dropdown --}}
-                        <div class="relative" x-data="{ open: false }">
-                            <button @click="open = !open" class="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-lg text-white rounded-xl font-semibold transition-all">
-                                <i class="fas fa-user-circle text-xl"></i>
-                                <span class="hidden sm:inline">{{ Auth::user()->name }}</span>
-                                <i class="fas fa-chevron-down text-xs"></i>
-                            </button>
-                            
-                            <div x-show="open" @click.away="open = false" x-transition class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl py-2 z-50">
-                                <a href="{{ route('profile.edit') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                    <i class="fas fa-user-cog"></i>
-                                    Profile
-                                </a>
-                                <form method="POST" action="{{ route('logout') }}">
-                                    @csrf
-                                    <button type="submit" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                        <i class="fas fa-sign-out-alt"></i>
-                                        Logout
-                                    </button>
-                                </form>
-                            </div>
+                {{-- RIGHT: Stats & Actions --}}
+                <div class="flex items-center gap-3">
+                    {{-- Live Stats Badge --}}
+                    <div class="hidden md:flex items-center gap-2 bg-white/10 backdrop-blur-lg rounded-xl px-4 py-2">
+                        <div class="flex items-center gap-1 text-white">
+                            <i class="fas fa-check-circle text-green-300"></i>
+                            <span class="text-sm font-bold" id="navStatHadir">0</span>
+                        </div>
+                        <div class="w-px h-4 bg-white/30"></div>
+                        <div class="flex items-center gap-1 text-white">
+                            <i class="fas fa-clock text-yellow-300"></i>
+                            <span class="text-sm font-bold" id="navStatTerlambat">0</span>
+                        </div>
+                        <div class="w-px h-4 bg-white/30"></div>
+                        <div class="flex items-center gap-1 text-white">
+                            <i class="fas fa-times-circle text-red-300"></i>
+                            <span class="text-sm font-bold" id="navStatAlpha">0</span>
+                        </div>
+                    </div>
+
+                    {{-- Back to Dashboard --}}
+                    <a href="{{ route('dashboard') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-lg text-white rounded-xl font-semibold transition-all transform hover:scale-105">
+                        <i class="fas fa-home"></i>
+                        <span class="hidden sm:inline">Dashboard</span>
+                    </a>
+
+                    {{-- User Dropdown --}}
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" class="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-lg text-white rounded-xl font-semibold transition-all">
+                            <i class="fas fa-user-circle text-xl"></i>
+                            <span class="hidden sm:inline">{{ Auth::user()->name }}</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        
+                        <div x-show="open" @click.away="open = false" x-transition class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl py-2 z-50">
+                            <a href="{{ route('profile.edit') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <i class="fas fa-user-cog"></i>
+                                Profile
+                            </a>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    Logout
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </x-slot>
+    </div>
     
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-4" id="scanner-container">
         
