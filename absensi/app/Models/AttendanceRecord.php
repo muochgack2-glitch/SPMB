@@ -103,7 +103,7 @@ class AttendanceRecord extends Model
             return null;
         }
 
-        return Storage::url($this->check_in_photo);
+        return Storage::disk('public')->url($this->check_in_photo);
     }
 
     /**
@@ -117,7 +117,7 @@ class AttendanceRecord extends Model
             return null;
         }
 
-        return Storage::url($this->check_out_photo);
+        return Storage::disk('public')->url($this->check_out_photo);
     }
 
     /**

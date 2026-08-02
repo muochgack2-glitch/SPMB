@@ -81,7 +81,8 @@
                 <x-table>
                     <x-table.header>
                         <th>No</th>
-                        <th>Foto</th>
+                        <th>Foto Check In</th>
+                        <th>Foto Check Out</th>
                         <th>NIS</th>
                         <th>Nama</th>
                         <th>Kelas</th>
@@ -93,17 +94,45 @@
                         @foreach($records as $index => $record)
                         <x-table.row>
                             <x-table.cell>{{ $index + 1 }}</x-table.cell>
+                            
+                            {{-- Foto Check In --}}
                             <x-table.cell>
                                 @if($record->check_in_photo)
-                                    <img src="{{ $record->check_in_photo_url }}" 
-                                         class="w-12 h-12 rounded-full object-cover border-2 border-green-500 dark:border-green-700"
-                                         alt="Foto">
+                                    <button onclick="showPhotoModal('{{ $record->check_in_photo_url }}', '{{ $record->student->nama }}', 'Check In')"
+                                            class="group relative">
+                                        <img src="{{ $record->check_in_photo_url }}" 
+                                             class="w-16 h-16 rounded-lg object-cover border-2 border-green-500 dark:border-green-700 hover:scale-110 hover:shadow-lg transition-all cursor-pointer"
+                                             alt="Foto Check In">
+                                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 rounded-lg transition-all flex items-center justify-center">
+                                            <i class="fas fa-search-plus text-white opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                        </div>
+                                    </button>
                                 @else
-                                    <div class="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                                    <div class="w-16 h-16 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
                                         <i class="fas fa-user text-gray-400"></i>
                                     </div>
                                 @endif
                             </x-table.cell>
+                            
+                            {{-- Foto Check Out --}}
+                            <x-table.cell>
+                                @if($record->check_out_photo)
+                                    <button onclick="showPhotoModal('{{ $record->check_out_photo_url }}', '{{ $record->student->nama }}', 'Check Out')"
+                                            class="group relative">
+                                        <img src="{{ $record->check_out_photo_url }}" 
+                                             class="w-16 h-16 rounded-lg object-cover border-2 border-blue-500 dark:border-blue-700 hover:scale-110 hover:shadow-lg transition-all cursor-pointer"
+                                             alt="Foto Check Out">
+                                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 rounded-lg transition-all flex items-center justify-center">
+                                            <i class="fas fa-search-plus text-white opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                        </div>
+                                    </button>
+                                @else
+                                    <div class="w-16 h-16 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                                        <i class="fas fa-user-slash text-gray-400 text-sm"></i>
+                                    </div>
+                                @endif
+                            </x-table.cell>
+                            
                             <x-table.cell>
                                 <span class="font-medium">{{ $record->student->nis }}</span>
                             </x-table.cell>
@@ -186,4 +215,106 @@
         </x-card>
         @endif
     </div>
+
+    {{-- Photo Modal --}}
+    <div id="photoModal" class="hidden fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm z-50 flex items-center justify-center p-4" onclick="hidePhotoModal()">
+        <div class="relative max-w-4xl w-full" onclick="event.stopPropagation()">
+            {{-- Close Button --}}
+            <button onclick="hidePhotoModal()" 
+                    class="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors">
+                <i class="fas fa-times text-3xl"></i>
+            </button>
+            
+            {{-- Photo Container --}}
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden">
+                {{-- Header --}}
+                <div class="bg-gradient-to-r from-primary-500 to-purple-600 px-6 py-4 text-white">
+                    <h3 class="text-xl font-bold" id="photoModalTitle">Foto Absensi</h3>
+                    <p class="text-sm opacity-90" id="photoModalSubtitle"></p>
+                </div>
+                
+                {{-- Photo --}}
+                <div class="p-6 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+                    <img id="photoModalImage" src="" alt="Foto" class="max-w-full max-h-[70vh] rounded-lg shadow-xl object-contain">
+                </div>
+                
+                {{-- Footer --}}
+                <div class="px-6 py-4 bg-gray-100 dark:bg-gray-700 flex justify-between items-center">
+                    <div class="text-sm text-gray-600 dark:text-gray-400">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Klik di luar gambar untuk menutup
+                    </div>
+                    <button onclick="downloadPhoto()" 
+                            class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors flex items-center gap-2">
+                        <i class="fas fa-download"></i>
+                        Download
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @push('scripts')
+    <script>
+        function showPhotoModal(photoUrl, studentName, type) {
+            const modal = document.getElementById('photoModal');
+            const image = document.getElementById('photoModalImage');
+            const title = document.getElementById('photoModalTitle');
+            const subtitle = document.getElementById('photoModalSubtitle');
+            
+            image.src = photoUrl;
+            title.textContent = `Foto ${type}`;
+            subtitle.textContent = studentName;
+            
+            modal.classList.remove('hidden');
+            
+            // Add fade-in animation
+            modal.style.animation = 'fadeIn 0.2s ease-out';
+        }
+        
+        function hidePhotoModal() {
+            const modal = document.getElementById('photoModal');
+            modal.style.animation = 'fadeOut 0.2s ease-out';
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+        
+        function downloadPhoto() {
+            const image = document.getElementById('photoModalImage');
+            const link = document.createElement('a');
+            link.href = image.src;
+            link.download = 'foto-absensi-' + Date.now() + '.jpg';
+            link.click();
+        }
+        
+        // Close modal on ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                hidePhotoModal();
+            }
+        });
+    </script>
+    
+    <style>
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+    </style>
+    @endpush
 </x-app-layout>
