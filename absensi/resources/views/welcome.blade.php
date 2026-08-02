@@ -909,6 +909,18 @@
                 const actionLabel = isCheckIn ? 'Datang' : 'Pulang';
                 const actionColor = isCheckIn ? 'from-green-500 to-emerald-500' : 'from-blue-500 to-indigo-500';
                 
+                // Status badge only for check-in
+                const statusBadge = isCheckIn ? `
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${
+                        scan.status === 'hadir' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                        scan.status === 'terlambat' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                        'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400'
+                    }">
+                        <i class="fas ${scan.status === 'hadir' ? 'fa-check' : 'fa-clock'} text-[10px]"></i>
+                        ${scan.status}
+                    </span>
+                ` : '';
+                
                 return `
                 <div class="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow">
                     <div class="flex-shrink-0 w-10 h-10 bg-gradient-to-br ${actionColor} rounded-lg flex items-center justify-center text-white text-sm">
@@ -926,14 +938,7 @@
                                 <i class="fas ${actionIcon} text-[10px]"></i>
                                 ${actionLabel}
                             </span>
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${
-                                scan.status === 'hadir' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
-                                scan.status === 'terlambat' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
-                                'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400'
-                            }">
-                                <i class="fas ${scan.status === 'hadir' ? 'fa-check' : 'fa-clock'} text-[10px]"></i>
-                                ${scan.status}
-                            </span>
+                            ${statusBadge}
                             <span class="text-xs text-gray-400 dark:text-gray-500">
                                 <i class="far fa-clock"></i> ${scan.time}
                             </span>
