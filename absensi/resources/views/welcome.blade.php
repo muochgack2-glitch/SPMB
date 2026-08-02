@@ -303,9 +303,16 @@
                                 name="password"
                                 required
                                 autocomplete="current-password"
-                                class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                                class="w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                                 placeholder="••••••••"
                             >
+                            <button 
+                                type="button"
+                                onclick="togglePasswordVisibility()"
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                            >
+                                <i id="passwordToggleIcon" class="fas fa-eye"></i>
+                            </button>
                         </div>
                     </div>
 
@@ -1363,6 +1370,28 @@
             // Reset form
             document.getElementById('loginForm').reset();
             document.getElementById('loginError').classList.add('hidden');
+            
+            // Reset password visibility
+            const passwordInput = document.getElementById('loginPassword');
+            const passwordIcon = document.getElementById('passwordToggleIcon');
+            passwordInput.type = 'password';
+            passwordIcon.classList.remove('fa-eye-slash');
+            passwordIcon.classList.add('fa-eye');
+        }
+
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('loginPassword');
+            const passwordIcon = document.getElementById('passwordToggleIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                passwordIcon.classList.remove('fa-eye');
+                passwordIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                passwordIcon.classList.remove('fa-eye-slash');
+                passwordIcon.classList.add('fa-eye');
+            }
         }
 
         // Handle login form submission
