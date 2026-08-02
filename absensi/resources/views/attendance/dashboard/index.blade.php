@@ -207,31 +207,31 @@
         <div class="relative max-w-2xl w-full" onclick="event.stopPropagation()">
             {{-- Close Button --}}
             <button onclick="closePhotoModal()" 
-                    class="absolute -top-10 right-0 text-white hover:text-gray-300 transition-colors">
-                <i class="fas fa-times text-2xl"></i>
+                    class="absolute -top-8 right-0 text-white hover:text-gray-300 transition-colors">
+                <i class="fas fa-times text-xl"></i>
             </button>
             
             {{-- Photo Container --}}
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl overflow-hidden">
                 {{-- Header --}}
-                <div class="bg-gradient-to-r from-primary-500 to-purple-600 px-4 py-3 text-white">
-                    <h3 class="text-lg font-bold" id="photoModalTitle">Foto Absensi</h3>
-                    <p class="text-sm opacity-90" id="photoModalSubtitle"></p>
+                <div class="bg-gradient-to-r from-primary-500 to-purple-600 px-4 py-2 text-white">
+                    <h3 class="text-base font-bold" id="photoModalTitle">Foto Absensi</h3>
+                    <p class="text-xs opacity-90" id="photoModalSubtitle"></p>
                 </div>
                 
                 {{-- Photo --}}
-                <div class="p-4 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-                    <img id="photoModalImage" src="" alt="Foto" class="max-w-full max-h-[50vh] rounded-lg shadow-lg object-contain">
+                <div class="p-3 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+                    <img id="photoModalImage" src="" alt="Foto" class="max-w-full max-h-[40vh] rounded-lg shadow-lg object-contain">
                 </div>
                 
                 {{-- Footer --}}
-                <div class="px-4 py-3 bg-gray-100 dark:bg-gray-700 flex justify-between items-center">
+                <div class="px-4 py-2 bg-gray-100 dark:bg-gray-700 flex justify-between items-center">
                     <div class="text-xs text-gray-600 dark:text-gray-400">
                         <i class="fas fa-info-circle mr-1"></i>
-                        Klik di luar gambar untuk menutup
+                        Klik di luar untuk menutup
                     </div>
                     <button onclick="downloadPhoto()" 
-                            class="px-3 py-1.5 bg-primary-500 hover:bg-primary-600 text-white text-sm rounded-lg transition-colors flex items-center gap-2">
+                            class="px-3 py-1.5 bg-primary-500 hover:bg-primary-600 text-white text-xs rounded-lg transition-colors flex items-center gap-1.5">
                         <i class="fas fa-download"></i>
                         Download
                     </button>
