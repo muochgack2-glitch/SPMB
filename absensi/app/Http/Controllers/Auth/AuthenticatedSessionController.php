@@ -24,20 +24,34 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse|\Illuminate\Http\JsonResponse
     {
-        $request->authenticate();
+        try {
+            $request->authenticate();
+            $request->session()->regenerate();
 
-        $request->session()->regenerate();
+            // Check if request expects JSON (AJAX request)
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Login berhasil',
+                    'redirect' => route('dashboard', absolute: false)
+                ]);
+            }
 
-        // Check if request expects JSON (AJAX request)
-        if ($request->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Login berhasil',
-                'redirect' => route('dashboard', absolute: false)
-            ]);
+            return redirect()->intended(route('dashboard', absolute: false));
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation error for AJAX requests
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            
+            // Re-throw for normal requests
+            throw $e;
         }
-
-        return redirect()->intended(route('dashboard', absolute: false));
     }
 
     /**
