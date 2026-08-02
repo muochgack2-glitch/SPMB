@@ -600,6 +600,20 @@
                 console.log('🌅 Auto-set to Check In (morning mode)');
             }
             
+            // Force update button visual immediately after DOM is ready
+            setTimeout(() => {
+                const btnCheckIn = document.getElementById('btnCheckIn');
+                const btnCheckOut = document.getElementById('btnCheckOut');
+                
+                if (currentTime >= checkOutStartTime) {
+                    btnCheckIn.classList.remove('active');
+                    btnCheckOut.classList.add('active');
+                } else {
+                    btnCheckIn.classList.add('active');
+                    btnCheckOut.classList.remove('active');
+                }
+            }, 100);
+            
             // Update every 5 minutes to keep in sync
             setInterval(() => {
                 const now = new Date();
