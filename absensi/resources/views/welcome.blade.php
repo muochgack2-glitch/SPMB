@@ -110,10 +110,10 @@
             </button>
             
             {{-- Login Admin Button --}}
-            <a href="{{ route('login') }}" class="group relative px-8 py-3 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-xl font-bold text-base transition-all transform hover:scale-105 shadow-lg hover:shadow-2xl">
+            <button onclick="showLoginModal()" class="group relative px-8 py-3 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-xl font-bold text-base transition-all transform hover:scale-105 shadow-lg hover:shadow-2xl">
                 <i class="fas fa-user-shield text-xl mr-2"></i>
                 Login Admin
-            </a>
+            </button>
         </div>
 
         {{-- Scanner Card with Premium Design --}}
@@ -239,6 +239,111 @@
     <div id="modalOverlay" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" style="animation: fadeIn 0.2s ease-out;">
         <div id="modalContent" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full transform" style="animation: scaleIn 0.3s ease-out;">
             <!-- Modal content will be injected here -->
+        </div>
+    </div>
+
+    {{-- Login Modal --}}
+    <div id="loginModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" style="animation: fadeIn 0.2s ease-out;">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full transform" style="animation: scaleIn 0.3s ease-out;">
+            <div class="p-6">
+                {{-- Header --}}
+                <div class="text-center mb-6">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-gray-600 to-gray-800 rounded-full mb-4 shadow-lg">
+                        <i class="fas fa-user-shield text-3xl text-white"></i>
+                    </div>
+                    <h3 class="text-2xl font-black text-gray-900 dark:text-white mb-1">Login Admin</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Masuk ke dashboard admin</p>
+                </div>
+
+                {{-- Error Alert --}}
+                <div id="loginError" class="hidden mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
+                    <div class="flex items-start gap-2">
+                        <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400 mt-0.5"></i>
+                        <p id="loginErrorMessage" class="text-sm text-red-700 dark:text-red-300"></p>
+                    </div>
+                </div>
+
+                {{-- Login Form --}}
+                <form id="loginForm" class="space-y-4">
+                    @csrf
+                    
+                    {{-- Email Field --}}
+                    <div>
+                        <label for="loginEmail" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                            Email
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-envelope text-gray-400"></i>
+                            </div>
+                            <input 
+                                type="email" 
+                                id="loginEmail" 
+                                name="email"
+                                required
+                                autocomplete="email"
+                                class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                                placeholder="admin@example.com"
+                            >
+                        </div>
+                    </div>
+
+                    {{-- Password Field --}}
+                    <div>
+                        <label for="loginPassword" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                            Password
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-lock text-gray-400"></i>
+                            </div>
+                            <input 
+                                type="password" 
+                                id="loginPassword" 
+                                name="password"
+                                required
+                                autocomplete="current-password"
+                                class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                                placeholder="••••••••"
+                            >
+                        </div>
+                    </div>
+
+                    {{-- Remember Me --}}
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center">
+                            <input 
+                                type="checkbox" 
+                                name="remember" 
+                                class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                            >
+                            <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">Remember me</span>
+                        </label>
+                        <a href="{{ route('password.request') }}" class="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 font-medium">
+                            Lupa password?
+                        </a>
+                    </div>
+
+                    {{-- Buttons --}}
+                    <div class="flex gap-3 pt-2">
+                        <button 
+                            type="button"
+                            onclick="hideLoginModal()"
+                            class="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-semibold transition-colors"
+                        >
+                            Batal
+                        </button>
+                        <button 
+                            type="submit"
+                            id="loginSubmitBtn"
+                            class="flex-1 px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-800 hover:from-gray-700 hover:to-gray-900 text-white rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg"
+                        >
+                            <i class="fas fa-sign-in-alt mr-2"></i>
+                            Login
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -909,18 +1014,6 @@
                 const actionLabel = isCheckIn ? 'Datang' : 'Pulang';
                 const actionColor = isCheckIn ? 'from-green-500 to-emerald-500' : 'from-blue-500 to-indigo-500';
                 
-                // Status badge only for check-in
-                const statusBadge = isCheckIn ? `
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${
-                        scan.status === 'hadir' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
-                        scan.status === 'terlambat' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
-                        'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400'
-                    }">
-                        <i class="fas ${scan.status === 'hadir' ? 'fa-check' : 'fa-clock'} text-[10px]"></i>
-                        ${scan.status}
-                    </span>
-                ` : '';
-                
                 return `
                 <div class="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow">
                     <div class="flex-shrink-0 w-10 h-10 bg-gradient-to-br ${actionColor} rounded-lg flex items-center justify-center text-white text-sm">
@@ -938,7 +1031,6 @@
                                 <i class="fas ${actionIcon} text-[10px]"></i>
                                 ${actionLabel}
                             </span>
-                            ${statusBadge}
                             <span class="text-xs text-gray-400 dark:text-gray-500">
                                 <i class="far fa-clock"></i> ${scan.time}
                             </span>
@@ -1252,6 +1344,101 @@
             hideError();
             lastScannedNis = null;
         }
+
+        // Login Modal Functions
+        function showLoginModal() {
+            const loginModal = document.getElementById('loginModal');
+            loginModal.classList.remove('hidden');
+            
+            // Focus email field
+            setTimeout(() => {
+                document.getElementById('loginEmail').focus();
+            }, 300);
+        }
+
+        function hideLoginModal() {
+            const loginModal = document.getElementById('loginModal');
+            loginModal.classList.add('hidden');
+            
+            // Reset form
+            document.getElementById('loginForm').reset();
+            document.getElementById('loginError').classList.add('hidden');
+        }
+
+        // Handle login form submission
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            
+            if (loginForm) {
+                loginForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const submitBtn = document.getElementById('loginSubmitBtn');
+                    const originalHTML = submitBtn.innerHTML;
+                    
+                    // Show loading state
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Loading...';
+                    
+                    // Hide previous error
+                    document.getElementById('loginError').classList.add('hidden');
+                    
+                    try {
+                        const formData = new FormData(loginForm);
+                        
+                        const response = await fetch('{{ route("login") }}', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Accept': 'application/json'
+                            },
+                            body: formData
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (response.ok && result.success !== false) {
+                            // Login success - redirect to dashboard
+                            window.location.href = result.redirect || '{{ route("dashboard") }}';
+                        } else {
+                            // Login failed - show error
+                            const errorMessage = result.message || result.errors?.email?.[0] || 'Login gagal. Periksa email dan password Anda.';
+                            document.getElementById('loginErrorMessage').textContent = errorMessage;
+                            document.getElementById('loginError').classList.remove('hidden');
+                            
+                            // Reset button
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalHTML;
+                        }
+                    } catch (error) {
+                        console.error('Login error:', error);
+                        document.getElementById('loginErrorMessage').textContent = 'Terjadi kesalahan. Silakan coba lagi.';
+                        document.getElementById('loginError').classList.remove('hidden');
+                        
+                        // Reset button
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalHTML;
+                    }
+                });
+            }
+            
+            // Close modal on ESC key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    const loginModal = document.getElementById('loginModal');
+                    if (!loginModal.classList.contains('hidden')) {
+                        hideLoginModal();
+                    }
+                }
+            });
+            
+            // Close modal on backdrop click
+            document.getElementById('loginModal')?.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    hideLoginModal();
+                }
+            });
+        });
     </script>
     </script>
 
