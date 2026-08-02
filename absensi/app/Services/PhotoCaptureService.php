@@ -58,8 +58,8 @@ class PhotoCaptureService
         // Define storage path: attendance/photos/{NIS}/{date}/{filename}
         $path = "attendance/photos/{$nis}/{$date}/{$filename}";
 
-        // Save to storage
-        Storage::put($path, $compressedImage);
+        // Save to storage (public disk so files are accessible via web)
+        Storage::disk('public')->put($path, $compressedImage);
 
         // Free memory
         imagedestroy($image);
@@ -105,11 +105,11 @@ class PhotoCaptureService
      */
     public function getPhotoUrl(string $path): ?string
     {
-        if (!Storage::exists($path)) {
+        if (!Storage::disk('public')->exists($path)) {
             return null;
         }
         
-        return Storage::url($path);
+        return Storage::disk('public')->url($path);
     }
 
     /**
@@ -120,8 +120,8 @@ class PhotoCaptureService
      */
     public function deletePhoto(string $path): bool
     {
-        if (Storage::exists($path)) {
-            return Storage::delete($path);
+        if (Storage::disk('public')->exists($path)) {
+            return Storage::disk('public')->delete($path);
         }
         
         return true; // Already deleted
@@ -138,8 +138,8 @@ class PhotoCaptureService
     {
         $directory = "attendance/photos/{$nis}/{$date}";
         
-        if (Storage::exists($directory)) {
-            return Storage::deleteDirectory($directory);
+        if (Storage::disk('public')->exists($directory)) {
+            return Storage::disk('public')->deleteDirectory($directory);
         }
         
         return true;
@@ -155,15 +155,15 @@ class PhotoCaptureService
     {
         $directory = "attendance/photos/{$nis}";
         
-        if (!Storage::exists($directory)) {
+        if (!Storage::disk('public')->exists($directory)) {
             return 0;
         }
 
-        $files = Storage::allFiles($directory);
+        $files = Storage::disk('public')->allFiles($directory);
         $totalSize = 0;
 
         foreach ($files as $file) {
-            $totalSize += Storage::size($file);
+            $totalSize += Storage::disk('public')->size($file);
         }
 
         return $totalSize;

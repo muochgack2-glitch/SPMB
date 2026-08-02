@@ -699,9 +699,36 @@
         }
 
         async function capturePhoto() {
-            // Simplified - return dummy base64 or capture from video
-            // For production, implement proper camera capture
-            return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+            try {
+                // Get video element from QR scanner
+                const videoElement = document.querySelector('#reader video');
+                
+                if (!videoElement) {
+                    console.warn('Video element not found, skipping photo capture');
+                    return null;
+                }
+                
+                // Create canvas to capture frame
+                const canvas = document.createElement('canvas');
+                canvas.width = videoElement.videoWidth || 640;
+                canvas.height = videoElement.videoHeight || 480;
+                
+                const ctx = canvas.getContext('2d');
+                
+                // Draw current video frame to canvas
+                ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+                
+                // Convert to base64 (JPEG with 80% quality for smaller size)
+                const photoBase64 = canvas.toDataURL('image/jpeg', 0.8);
+                
+                console.log('📸 Photo captured successfully:', photoBase64.substring(0, 50) + '...');
+                
+                return photoBase64;
+            } catch (error) {
+                console.error('Failed to capture photo:', error);
+                // Return null if photo capture fails - backend will handle it
+                return null;
+            }
         }
 
         function showSuccess(result) {
