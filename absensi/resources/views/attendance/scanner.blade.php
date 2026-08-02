@@ -561,7 +561,92 @@
             hideError();
             lastScannedNis = null;
         }
-    </script>
+
+        // ============================================================================
+        // POLLING FOR REAL-TIME STATS UPDATES
+        // ============================================================================
+        
+        let pollingInterval = null;
+        let isPollingPaused = false;
+
+        /**
+         * Start polling for real-time stats updates
+         * Polls every 5 seconds when tab is active
+         */
+        function startPolling() {
+            if (pollingInterval) {
+                console.log('⚠️ Polling already running');
+                return;
+            }
+
+            // Initial load
+            loadTodayStats();
+            
+            // Poll every 5 seconds
+            pollingInterval = setInterval(() => {
+                if (!isPollingPaused) {
+                    loadTodayStats();
+                }
+            }, 5000);
+            
+            console.log('✅ Scanner: Polling started (interval: 5s)');
+        }
+
+        /**
+         * Stop polling completely
+         */
+        function stopPolling() {
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+                console.log('⏹️ Scanner: Polling stopped');
+            }
+        }
+
+        /**
+         * Pause polling temporarily
+         */
+        function pausePolling() {
+            isPollingPaused = true;
+            console.log('⏸️ Scanner: Polling paused');
+        }
+
+        /**
+         * Resume polling
+         */
+        function resumePolling() {
+            isPollingPaused = false;
+            loadTodayStats(); // Immediate update
+            console.log('▶️ Scanner: Polling resumed');
+        }
+
+        // ============================================================================
+        // PAGE VISIBILITY API - Pause polling when tab is hidden
+        // ============================================================================
+        
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                pausePolling();
+                console.log('👁️ Scanner tab hidden - polling paused');
+            } else {
+                resumePolling();
+                console.log('👁️ Scanner tab visible - polling resumed');
+            }
+        });
+
+        // ============================================================================
+        // START POLLING ON PAGE LOAD
+        // ============================================================================
+        
+        setTimeout(() => {
+            startPolling();
+        }, 2000); // Wait for initial data load
+
+        window.addEventListener('beforeunload', function() {
+            stopPolling();
+        });
+
+        console.log('📊 Scanner: Polling system initialized');
     </script>
 
     <style>
