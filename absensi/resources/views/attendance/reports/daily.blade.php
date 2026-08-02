@@ -78,77 +78,68 @@
             
             @if($records->count() > 0)
             <div class="overflow-x-auto">
-                <x-table>
-                    <x-table.header>
-                        <th class="w-12">No</th>
-                        <th class="w-20">Check In</th>
-                        <th class="w-20">Check Out</th>
-                        <th class="w-28">NIS</th>
-                        <th>Nama</th>
-                        <th class="w-32">Kelas</th>
-                        <th class="w-24">Jam Masuk</th>
-                        <th class="w-24">Jam Pulang</th>
-                        <th class="w-24">Status</th>
-                    </x-table.header>
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700" style="table-layout: auto;">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" style="width: 60px;">No</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" style="width: 100px;">NIS</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" style="min-width: 180px;">Nama</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" style="width: 130px;">Kelas</th>
+                            <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" style="width: 80px;">Masuk</th>
+                            <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" style="width: 80px;">Pulang</th>
+                            <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" style="width: 80px;">Foto</th>
+                            <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" style="width: 100px;">Status</th>
+                        </tr>
+                    </thead>
                     <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                         @foreach($records as $index => $record)
-                        <x-table.row>
-                            <x-table.cell>{{ $index + 1 }}</x-table.cell>
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                            <td class="px-4 py-3 text-center text-sm text-gray-900 dark:text-white">{{ $index + 1 }}</td>
                             
-                            {{-- Foto Check In --}}
-                            <x-table.cell>
-                                @if($record->check_in_photo)
-                                    <button onclick="showPhotoModal('{{ $record->check_in_photo_url }}', '{{ $record->student->nama }}', 'Check In')"
-                                            class="group relative block">
-                                        <img src="{{ $record->check_in_photo_url }}" 
-                                             class="w-12 h-12 rounded-lg object-cover border-2 border-green-500 dark:border-green-700 hover:scale-110 hover:shadow-lg transition-all cursor-pointer"
-                                             alt="Foto Check In">
-                                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 rounded-lg transition-all flex items-center justify-center">
-                                            <i class="fas fa-search-plus text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                            <td class="px-4 py-3 text-sm text-gray-900 dark:text-white font-medium">{{ $record->student->nis }}</td>
+                            
+                            <td class="px-4 py-3 text-sm text-gray-900 dark:text-white font-medium">{{ $record->student->nama }}</td>
+                            
+                            <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{{ $record->student->kelas->nama_kelas }}</td>
+                            
+                            <td class="px-4 py-3 text-center text-sm text-gray-900 dark:text-white font-mono">
+                                {{ $record->check_in_time ? \Carbon\Carbon::parse($record->check_in_time)->format('H:i') : '-' }}
+                            </td>
+                            
+                            <td class="px-4 py-3 text-center text-sm text-gray-900 dark:text-white font-mono">
+                                {{ $record->check_out_time ? \Carbon\Carbon::parse($record->check_out_time)->format('H:i') : '-' }}
+                            </td>
+                            
+                            {{-- Foto Icons --}}
+                            <td class="px-4 py-3 text-center">
+                                <div class="flex items-center justify-center gap-1">
+                                    @if($record->check_in_photo)
+                                        <button onclick="showPhotoModal('{{ $record->check_in_photo_url }}', '{{ addslashes($record->student->nama) }}', 'Check In')"
+                                                class="inline-flex items-center justify-center w-7 h-7 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
+                                                title="Lihat foto check in">
+                                            <i class="fas fa-sign-in-alt text-xs"></i>
+                                        </button>
+                                    @else
+                                        <div class="inline-flex items-center justify-center w-7 h-7 bg-gray-100 dark:bg-gray-800 text-gray-400 rounded">
+                                            <i class="fas fa-sign-in-alt text-xs"></i>
                                         </div>
-                                    </button>
-                                @else
-                                    <div class="w-12 h-12 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                                        <i class="fas fa-user text-gray-400 text-xs"></i>
-                                    </div>
-                                @endif
-                            </x-table.cell>
-                            
-                            {{-- Foto Check Out --}}
-                            <x-table.cell>
-                                @if($record->check_out_photo)
-                                    <button onclick="showPhotoModal('{{ $record->check_out_photo_url }}', '{{ $record->student->nama }}', 'Check Out')"
-                                            class="group relative block">
-                                        <img src="{{ $record->check_out_photo_url }}" 
-                                             class="w-12 h-12 rounded-lg object-cover border-2 border-blue-500 dark:border-blue-700 hover:scale-110 hover:shadow-lg transition-all cursor-pointer"
-                                             alt="Foto Check Out">
-                                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 rounded-lg transition-all flex items-center justify-center">
-                                            <i class="fas fa-search-plus text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                    @endif
+                                    
+                                    @if($record->check_out_photo)
+                                        <button onclick="showPhotoModal('{{ $record->check_out_photo_url }}', '{{ addslashes($record->student->nama) }}', 'Check Out')"
+                                                class="inline-flex items-center justify-center w-7 h-7 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                                                title="Lihat foto check out">
+                                            <i class="fas fa-sign-out-alt text-xs"></i>
+                                        </button>
+                                    @else
+                                        <div class="inline-flex items-center justify-center w-7 h-7 bg-gray-100 dark:bg-gray-800 text-gray-400 rounded">
+                                            <i class="fas fa-sign-out-alt text-xs"></i>
                                         </div>
-                                    </button>
-                                @else
-                                    <div class="w-12 h-12 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                                        <i class="fas fa-user-slash text-gray-400 text-xs"></i>
-                                    </div>
-                                @endif
-                            </x-table.cell>
+                                    @endif
+                                </div>
+                            </td>
                             
-                            <x-table.cell>
-                                <span class="font-medium">{{ $record->student->nis }}</span>
-                            </x-table.cell>
-                            <x-table.cell>{{ $record->student->nama }}</x-table.cell>
-                            <x-table.cell>{{ $record->student->kelas->nama_kelas }}</x-table.cell>
-                            <x-table.cell>
-                                <span class="font-mono">
-                                    {{ $record->check_in_time ? \Carbon\Carbon::parse($record->check_in_time)->format('H:i') : '-' }}
-                                </span>
-                            </x-table.cell>
-                            <x-table.cell>
-                                <span class="font-mono">
-                                    {{ $record->check_out_time ? \Carbon\Carbon::parse($record->check_out_time)->format('H:i') : '-' }}
-                                </span>
-                            </x-table.cell>
-                            <x-table.cell>
+                            <td class="px-4 py-3 text-center">
                                 @php
                                     $statusVariants = [
                                         'hadir' => 'success',
@@ -162,11 +153,11 @@
                                 <x-badge :variant="$variant">
                                     {{ ucfirst($record->status) }}
                                 </x-badge>
-                            </x-table.cell>
-                        </x-table.row>
+                            </td>
+                        </tr>
                         @endforeach
                     </tbody>
-                </x-table>
+                </table>
             </div>
             @else
             <x-empty-state
