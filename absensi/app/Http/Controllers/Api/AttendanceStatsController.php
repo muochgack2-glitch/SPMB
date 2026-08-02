@@ -111,7 +111,7 @@ class AttendanceStatsController extends Controller
     }
 
     /**
-     * Get recent attendance scans (last 10 for today).
+     * Get recent attendance scans (last 10 for today - both check-in and check-out).
      * 
      * GET /api/attendance/recent-scans
      * 
@@ -121,30 +121,63 @@ class AttendanceStatsController extends Controller
     {
         $today = Carbon::today();
         
-        // Get last 10 attendance records with check-in time from today
-        $recentScans = AttendanceRecord::with(['student', 'student.kelas'])
+        // Get records with check-in or check-out from today
+        $records = AttendanceRecord::with(['student', 'student.kelas'])
             ->whereDate('date', $today)
-            ->whereNotNull('check_in_time')
-            ->orderBy('check_in_time', 'desc')
-            ->limit(10)
-            ->get()
-            ->map(function ($record) {
-                $student = $record->student;
-                
-                // Parse check_in_time if it's a string
-                $checkInTime = $record->check_in_time;
-                if (is_string($checkInTime)) {
-                    $checkInTime = Carbon::parse($checkInTime);
-                }
-                
-                return [
+            ->where(function($query) {
+                $query->whereNotNull('check_in_time')
+                      ->orWhereNotNull('check_out_time');
+            })
+            ->orderBy('updated_at', 'desc')
+            ->limit(20) // Get more to ensure we have enough after filtering
+            ->get();
+        
+        // Build scan events for both check-in and check-out
+        $scanEvents = collect();
+        
+        foreach ($records as $record) {
+            $student = $record->student;
+            
+            // Add check-out event if exists
+            if ($record->check_out_time) {
+                $checkOutTime = is_string($record->check_out_time) 
+                    ? Carbon::parse($record->check_out_time) 
+                    : $record->check_out_time;
+                    
+                $scanEvents->push([
+                    'nama' => $student->nama ?? '-',
+                    'nis' => $student->nis ?? '-',
+                    'kelas' => $student->kelas?->nama_kelas ?? '-',
+                    'status' => $record->status,
+                    'time' => $checkOutTime->format('H:i'),
+                    'action' => 'check_out',
+                    'timestamp' => $checkOutTime->timestamp,
+                ]);
+            }
+            
+            // Add check-in event if exists
+            if ($record->check_in_time) {
+                $checkInTime = is_string($record->check_in_time) 
+                    ? Carbon::parse($record->check_in_time) 
+                    : $record->check_in_time;
+                    
+                $scanEvents->push([
                     'nama' => $student->nama ?? '-',
                     'nis' => $student->nis ?? '-',
                     'kelas' => $student->kelas?->nama_kelas ?? '-',
                     'status' => $record->status,
                     'time' => $checkInTime->format('H:i'),
-                ];
-            });
+                    'action' => 'check_in',
+                    'timestamp' => $checkInTime->timestamp,
+                ]);
+            }
+        }
+        
+        // Sort by timestamp descending and take 10 most recent
+        $recentScans = $scanEvents
+            ->sortByDesc('timestamp')
+            ->take(10)
+            ->values();
         
         return response()->json([
             'success' => true,
