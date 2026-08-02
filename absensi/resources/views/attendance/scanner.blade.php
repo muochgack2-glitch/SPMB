@@ -164,9 +164,9 @@
             </x-card>
         </div>
 
-        {{-- Result Card with Premium Success Animation --}}
-        <div id="resultCard" class="hidden transform transition-all duration-500 scale-95 opacity-0">
-            <div class="relative">
+        {{-- Result Card with Premium Success Animation - Fixed Overlay --}}
+        <div id="resultCard" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transform transition-all duration-500 scale-95 opacity-0">
+            <div class="relative max-w-2xl w-full">
                 <div class="absolute inset-0 bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 rounded-3xl blur-2xl transform scale-95"></div>
                 <x-card class="relative backdrop-blur-sm bg-white/90 dark:bg-gray-800/90 border-2 border-green-200 dark:border-green-800/50">
                     <div class="text-center space-y-6">
@@ -196,9 +196,9 @@
             </div>
         </div>
 
-        {{-- Error Card with Premium Design --}}
-        <div id="errorCard" class="hidden transform transition-all duration-500 scale-95 opacity-0">
-            <div class="relative">
+        {{-- Error Card with Premium Design - Fixed Overlay --}}
+        <div id="errorCard" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transform transition-all duration-500 scale-95 opacity-0">
+            <div class="relative max-w-2xl w-full">
                 <div class="absolute inset-0 bg-gradient-to-br from-red-100 to-pink-100 dark:from-red-900/20 dark:to-pink-900/20 rounded-3xl blur-2xl transform scale-95"></div>
                 <x-card class="relative backdrop-blur-sm bg-white/90 dark:bg-gray-800/90 border-2 border-red-200 dark:border-red-800/50">
                     <div class="text-center space-y-6">
