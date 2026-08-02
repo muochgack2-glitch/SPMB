@@ -4,15 +4,15 @@
     
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-4" id="scanner-container">
         
-        {{-- LEFT SIDEBAR: Stats Cards --}}
+        {{-- LEFT SIDEBAR: Logo + Stats Cards --}}
         <div class="lg:col-span-3 space-y-3">
-            {{-- Header with Clock --}}
+            {{-- Logo & School Name --}}
             <div class="bg-gradient-to-br from-primary-600 to-purple-600 rounded-xl shadow-lg p-4 text-white text-center">
-                <div class="inline-flex items-center justify-center w-10 h-10 bg-white/20 backdrop-blur-lg rounded-lg mb-2">
-                    <i class="fas fa-clock text-xl"></i>
+                <div class="inline-flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-lg rounded-lg mb-2">
+                    <i class="fas fa-graduation-cap text-2xl"></i>
                 </div>
-                <div id="currentTime" class="text-2xl font-black mb-1">00:00:00</div>
-                <div id="currentDate" class="text-xs text-primary-100">Loading...</div>
+                <h2 class="text-lg font-black mb-1">SMK PGRI BLORA</h2>
+                <p class="text-xs text-primary-100">Sistem Absensi QR Code</p>
             </div>
 
             {{-- Stats Cards --}}
@@ -59,10 +59,19 @@
             </div>
         </div>
 
-        {{-- CENTER: Scanner Area --}}
+        {{-- CENTER: Clock + Scanner Area --}}
         <div class="lg:col-span-6 space-y-4">
 
-        {{-- Action Toggle with Modern Design + Login Button --}}
+        {{-- Real-time Clock --}}
+        <div class="bg-gradient-to-br from-primary-600 to-purple-600 rounded-xl shadow-lg p-4 text-white text-center">
+            <div class="inline-flex items-center justify-center w-10 h-10 bg-white/20 backdrop-blur-lg rounded-lg mb-2">
+                <i class="fas fa-clock text-xl"></i>
+            </div>
+            <div id="currentTime" class="text-3xl font-black mb-1">00:00:00</div>
+            <div id="currentDate" class="text-sm text-primary-100">Loading...</div>
+        </div>
+
+        {{-- Action Toggle with Modern Design --}}
         <div class="flex justify-center items-center gap-4">
             <button 
                 onclick="setAction('check_in')" 
@@ -172,17 +181,8 @@
         {{-- Old Error Card removed - using modal overlay system now --}}
         </div>
 
-        {{-- RIGHT SIDEBAR: Branding + Recent Scans --}}
+        {{-- RIGHT SIDEBAR: Recent Scans --}}
         <div class="lg:col-span-3 flex flex-col gap-4">
-            {{-- Logo & School Name --}}
-            <div class="bg-gradient-to-br from-primary-600 to-purple-600 rounded-xl shadow-lg p-4 text-white text-center">
-                <div class="inline-flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-lg rounded-lg mb-2">
-                    <i class="fas fa-graduation-cap text-2xl"></i>
-                </div>
-                <h2 class="text-lg font-black mb-1">SMK PGRI BLORA</h2>
-                <p class="text-xs text-primary-100">Sistem Absensi QR Code</p>
-            </div>
-
             {{-- Recent Scans Timeline --}}
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-3 border border-gray-200 dark:border-gray-700">
                 <div class="flex items-center gap-2 mb-3">
@@ -192,9 +192,8 @@
                     <h3 class="text-base font-bold text-gray-900 dark:text-white">Recent Scans</h3>
                 </div>
 
-                <div id="recentScansTimeline" class="space-y-2 overflow-y-auto" style="max-height: calc(5 * 88px);">
+                <div id="recentScansTimeline" class="space-y-2 overflow-y-auto" style="max-height: calc(100vh - 250px);">
                     {{-- Timeline items will be added here dynamically --}}
-                    {{-- Each item is approximately 88px tall (72px content + 16px gap) --}}
                     <div class="text-center text-gray-400 dark:text-gray-500 py-4">
                         <i class="fas fa-qrcode text-2xl mb-2"></i>
                         <p class="text-xs">Belum ada scan</p>
