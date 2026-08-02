@@ -45,9 +45,9 @@ class AttendanceScanController extends Controller
         }
 
         // Return response
-        $statusCode = $result['success'] ? 200 : 422;
-
-        return response()->json($result, $statusCode);
+        // Use 200 for all responses (success/business logic errors)
+        // Use 422 only for validation errors (handled by FormRequest)
+        return response()->json($result, 200);
     }
 
     /**

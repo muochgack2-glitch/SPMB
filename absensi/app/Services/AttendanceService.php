@@ -25,15 +25,19 @@ class AttendanceService
      * @param string $action 'check_in' or 'check_out'
      * @return array Response with success status and data
      */
-    public function processScan(string $nis, string $photoBase64, string $action): array
+    public function processScan(string $nis, ?string $photoBase64, string $action): array
     {
+        $startTime = microtime(true);
         DB::beginTransaction();
         
         try {
-            // 1. Find student
-            $student = AttendanceStudent::where('nis', $nis)
+            // 1. Find student with eager loading to prevent N+1 queries
+            $t1 = microtime(true);
+            $student = AttendanceStudent::with('kelas')
+                ->where('nis', $nis)
                 ->where('is_active', true)
                 ->first();
+            \Log::info('Query student took: ' . round((microtime(true) - $t1) * 1000, 2) . 'ms');
             
             if (!$student) {
                 $this->logAction(null, 'qr_scan', "Student not found: {$nis}", null, 'failed');
@@ -45,15 +49,17 @@ class AttendanceService
                 ];
             }
 
-            // 2. Validate photo data
-            if (!$this->photoCaptureService->validatePhotoData($photoBase64)) {
-                $this->logAction($student->id, 'qr_scan', 'Invalid photo data', null, 'failed');
-                
-                return [
-                    'success' => false,
-                    'message' => 'Data foto tidak valid',
-                    'data' => null,
-                ];
+            // 2. Validate photo data (skip validation if photo is nullable/empty for performance)
+            if ($photoBase64 && !empty(trim($photoBase64))) {
+                if (!$this->photoCaptureService->validatePhotoData($photoBase64)) {
+                    $this->logAction($student->id, 'qr_scan', 'Invalid photo data', null, 'failed');
+                    
+                    return [
+                        'success' => false,
+                        'message' => 'Data foto tidak valid',
+                        'data' => null,
+                    ];
+                }
             }
 
             // 3. Get or create today's attendance record
@@ -99,7 +105,7 @@ class AttendanceService
     /**
      * Process check-in action.
      */
-    private function processCheckIn(AttendanceStudent $student, AttendanceRecord $record, string $photoBase64): array
+    private function processCheckIn(AttendanceStudent $student, AttendanceRecord $record, ?string $photoBase64): array
     {
         // Check if already checked in
         if ($record->check_in_time !== null) {
@@ -147,8 +153,11 @@ class AttendanceService
             ];
         }
 
-        // Save photo
-        $photoPath = $this->photoCaptureService->savePhoto($photoBase64, $student->nis, 'check_in');
+        // Save photo (skip if empty for performance)
+        $photoPath = null;
+        if ($photoBase64 && !empty(trim($photoBase64))) {
+            $photoPath = $this->photoCaptureService->savePhoto($photoBase64, $student->nis, 'check_in');
+        }
 
         // Determine status
         $status = $this->statusService->determineStatus($currentTime);
@@ -188,7 +197,7 @@ class AttendanceService
     /**
      * Process check-out action.
      */
-    private function processCheckOut(AttendanceStudent $student, AttendanceRecord $record, string $photoBase64): array
+    private function processCheckOut(AttendanceStudent $student, AttendanceRecord $record, ?string $photoBase64): array
     {
         // Check if checked in first
         if ($record->check_in_time === null) {
@@ -235,9 +244,12 @@ class AttendanceService
             ];
         }
 
-        // Save photo
+        // Save photo (skip if empty for performance)
         $currentTime = Carbon::now()->format('H:i:s');
-        $photoPath = $this->photoCaptureService->savePhoto($photoBase64, $student->nis, 'check_out');
+        $photoPath = null;
+        if ($photoBase64 && !empty(trim($photoBase64))) {
+            $photoPath = $this->photoCaptureService->savePhoto($photoBase64, $student->nis, 'check_out');
+        }
 
         // Update record
         $record->update([

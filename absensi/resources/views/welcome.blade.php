@@ -456,7 +456,7 @@
                 loadSchoolHours();
                 loadAnnouncement();
                 loadRecentScans(); // Load initial recent scans
-                connectSSE(); // Connect to SSE for real-time updates
+                // connectSSE(); // DISABLED: SSE causing 30s timeout and blocking server
             } else {
                 console.log('Waiting for Html5Qrcode...');
                 setTimeout(waitForHtml5Qrcode, 100);
@@ -474,14 +474,14 @@
             html5QrCode = new Html5Qrcode("reader");
             
             const config = {
-                fps: 30,                    // Increase from 10 to 30 FPS for faster detection
-                qrbox: 300,                 // Increase from 250 to 300 for larger scan area
+                fps: 10,                    // Reduced from 30 to 10 - prevent spam scanning
+                qrbox: 300,                 // Large scan area for easy detection
                 aspectRatio: 1.0,
                 disableFlip: false,         // Allow flipped QR codes
                 rememberLastUsedCamera: true, // Remember camera selection
                 videoConstraints: {
                     facingMode: "environment",
-                    width: { ideal: 1280, max: 1920 },   // Higher resolution
+                    width: { ideal: 1280, max: 1920 },   // Higher resolution for better detection
                     height: { ideal: 720, max: 1080 }
                 }
             };
@@ -500,28 +500,23 @@
         function onScanSuccess(decodedText, decodedResult) {
             const now = Date.now();
             
-            // Check if this is same QR within cooldown period
-            if (lastScannedNis === decodedText && window.lastScanTime && (now - window.lastScanTime) < 3000) {
-                console.log('Duplicate scan prevented (within 3s cooldown)');
-                return;
-            }
-            
-            // Check if currently processing a scan
+            // IMMEDIATE LOCK: Block all scans if processing or within cooldown
             if (window.isProcessingScan) {
-                console.log('Already processing a scan, please wait...');
-                return;
+                return; // Silent block - no log spam
             }
             
+            if (lastScannedNis === decodedText && window.lastScanTime && (now - window.lastScanTime) < 3000) {
+                return; // Silent block - within cooldown
+            }
+            
+            // LOCK IMMEDIATELY before any async operation
+            window.isProcessingScan = true;
             lastScannedNis = decodedText;
             window.lastScanTime = now;
-            window.isProcessingScan = true;
             
-            console.log('QR Code detected:', decodedText);
+            console.log('✅ QR Code detected:', decodedText);
             
-            // Don't pause scanner - let it continue for high-speed scanning
-            // Modal will show for 2-3 seconds then auto-close
-            
-            // Process the scan
+            // Process the scan (lock is already set)
             processScan(decodedText);
         }
 
@@ -549,6 +544,24 @@
                         photo_base64: photoBase64
                     })
                 });
+
+                console.log('Response status:', response.status, response.statusText);
+                
+                // Check if response is OK (200-299)
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Server error response:', errorText);
+                    window.isProcessingScan = false;
+                    
+                    // Try to parse as JSON for better error message
+                    try {
+                        const errorJson = JSON.parse(errorText);
+                        showError(errorJson.message || 'Server error: ' + response.status, errorJson.data);
+                    } catch (e) {
+                        showError('Server error: ' + response.status + ' - ' + errorText.substring(0, 100), null);
+                    }
+                    return;
+                }
 
                 const result = await response.json();
                 console.log('Server response:', result);

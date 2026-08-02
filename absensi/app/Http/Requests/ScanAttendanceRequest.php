@@ -21,7 +21,7 @@ class ScanAttendanceRequest extends FormRequest
     {
         return [
             'nis' => 'required|string|max:20',
-            'photo_base64' => 'required|string',
+            'photo_base64' => 'nullable|string', // Changed to nullable - photo is optional
             'action' => 'required|in:check_in,check_out'
         ];
     }
