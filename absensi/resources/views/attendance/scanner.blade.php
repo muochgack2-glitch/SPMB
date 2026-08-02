@@ -2,91 +2,6 @@
     <x-slot name="title">QR Scanner</x-slot>
     <x-slot name="pageTitle">QR Scanner</x-slot>
     
-    {{-- Custom Navbar untuk Scanner (Full Width, di atas content) --}}
-    <div class="bg-gradient-to-r from-primary-600 via-purple-600 to-pink-600 shadow-lg -mx-6 -mt-6 mb-6">
-        <div class="max-w-full mx-auto px-2 sm:px-4 lg:px-8">
-            <div class="flex justify-between items-center py-2 sm:py-3">
-                {{-- LEFT: Logo & App Name --}}
-                <div class="flex items-center gap-2 sm:gap-4">
-                    <div class="flex items-center gap-2 sm:gap-3">
-                        <div class="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 backdrop-blur-lg rounded-lg flex items-center justify-center">
-                            <i class="fas fa-graduation-cap text-white text-lg sm:text-xl"></i>
-                        </div>
-                        <div class="text-white">
-                            <h1 class="text-sm sm:text-base lg:text-lg font-black leading-tight">SMK PGRI BLORA</h1>
-                            <div class="flex items-center gap-1 sm:gap-2">
-                                <span class="inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-md text-xs font-semibold bg-white/20 backdrop-blur-lg">
-                                    <i class="fas fa-qrcode mr-1 text-xs"></i>
-                                    <span class="hidden xs:inline">QR </span>Scanner
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- CENTER: Clock & Date (Hidden on mobile & tablet) --}}
-                <div class="hidden xl:flex flex-col items-center bg-white/10 backdrop-blur-lg rounded-xl px-4 lg:px-6 py-2">
-                    <div id="navClock" class="text-2xl lg:text-3xl font-black text-white">00:00:00</div>
-                    <div id="navDate" class="text-xs text-white/80 font-medium">Loading...</div>
-                </div>
-
-                {{-- RIGHT: Stats & Actions --}}
-                <div class="flex items-center gap-1.5 sm:gap-2 lg:gap-3">
-                    {{-- Live Stats Badge (Hidden on small mobile) --}}
-                    <div class="hidden sm:flex items-center gap-1.5 lg:gap-2 bg-white/10 backdrop-blur-lg rounded-lg lg:rounded-xl px-2 lg:px-4 py-1.5 lg:py-2">
-                        <div class="flex items-center gap-0.5 lg:gap-1 text-white">
-                            <i class="fas fa-check-circle text-green-300 text-xs lg:text-sm"></i>
-                            <span class="text-xs lg:text-sm font-bold" id="navStatHadir">0</span>
-                        </div>
-                        <div class="w-px h-3 lg:h-4 bg-white/30"></div>
-                        <div class="flex items-center gap-0.5 lg:gap-1 text-white">
-                            <i class="fas fa-clock text-yellow-300 text-xs lg:text-sm"></i>
-                            <span class="text-xs lg:text-sm font-bold" id="navStatTerlambat">0</span>
-                        </div>
-                        <div class="w-px h-3 lg:h-4 bg-white/30"></div>
-                        <div class="flex items-center gap-0.5 lg:gap-1 text-white">
-                            <i class="fas fa-times-circle text-red-300 text-xs lg:text-sm"></i>
-                            <span class="text-xs lg:text-sm font-bold" id="navStatAlpha">0</span>
-                        </div>
-                    </div>
-
-                    {{-- Back to Dashboard --}}
-                    <a href="{{ route('dashboard') }}" class="inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 bg-white/20 hover:bg-white/30 backdrop-blur-lg text-white rounded-lg lg:rounded-xl text-xs sm:text-sm font-semibold transition-all transform hover:scale-105">
-                        <i class="fas fa-home text-sm"></i>
-                        <span class="hidden md:inline">Dashboard</span>
-                    </a>
-
-                    {{-- User Dropdown --}}
-                    <div class="relative" x-data="{ open: false }">
-                        <button @click="open = !open" class="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 bg-white/20 hover:bg-white/30 backdrop-blur-lg text-white rounded-lg lg:rounded-xl text-xs sm:text-sm font-semibold transition-all">
-                            <i class="fas fa-user-circle text-base sm:text-lg lg:text-xl"></i>
-                            <span class="hidden lg:inline max-w-[100px] truncate">{{ Auth::user()->name }}</span>
-                            <i class="fas fa-chevron-down text-xs"></i>
-                        </button>
-                        
-                        <div x-show="open" @click.away="open = false" x-transition class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl py-2 z-50">
-                            <div class="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-                                <p class="text-sm font-semibold text-gray-800 dark:text-white truncate">{{ Auth::user()->name }}</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ ucfirst(Auth::user()->role ?? 'admin') }}</p>
-                            </div>
-                            <a href="{{ route('profile.edit') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                <i class="fas fa-user-cog w-4"></i>
-                                Profile
-                            </a>
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button type="submit" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                    <i class="fas fa-sign-out-alt w-4"></i>
-                                    Logout
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-4" id="scanner-container">
         
         {{-- LEFT SIDEBAR: Stats Cards --}}
@@ -499,12 +414,6 @@
             // Update sidebar clock
             document.getElementById('currentTime').textContent = timeString;
             document.getElementById('currentDate').textContent = dateString;
-            
-            // Update navbar clock
-            const navClockEl = document.getElementById('navClock');
-            const navDateEl = document.getElementById('navDate');
-            if (navClockEl) navClockEl.textContent = timeString;
-            if (navDateEl) navDateEl.textContent = dateString;
         }
 
         // Update clock every second
@@ -1093,14 +1002,6 @@
                     document.getElementById('statTerlambat').textContent = stats.terlambat;
                     document.getElementById('statAlpha').textContent = stats.alpha;
                     document.getElementById('statTotal').textContent = stats.total;
-                    
-                    // Update navbar stats
-                    const navStatHadirEl = document.getElementById('navStatHadir');
-                    const navStatTerlambatEl = document.getElementById('navStatTerlambat');
-                    const navStatAlphaEl = document.getElementById('navStatAlpha');
-                    if (navStatHadirEl) navStatHadirEl.textContent = stats.hadir;
-                    if (navStatTerlambatEl) navStatTerlambatEl.textContent = stats.terlambat;
-                    if (navStatAlphaEl) navStatAlphaEl.textContent = stats.alpha;
                 } else {
                     console.error('Failed to load stats:', result.message);
                 }
