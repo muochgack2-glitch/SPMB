@@ -474,7 +474,7 @@
             html5QrCode = new Html5Qrcode("reader");
             
             const config = {
-                fps: 10,                    // Reduced from 30 to 10 - prevent spam scanning
+                fps: 30,                    // Aggressive 30 FPS for instant detection
                 qrbox: 300,                 // Large scan area for easy detection
                 aspectRatio: 1.0,
                 disableFlip: false,         // Allow flipped QR codes
