@@ -197,33 +197,7 @@
             </div>
         </div>
 
-        {{-- Error Card with Premium Design --}}
-        <div id="errorCard" class="hidden transform transition-all duration-500 scale-95 opacity-0">
-            <div class="relative">
-                <div class="absolute inset-0 bg-gradient-to-br from-red-100 to-pink-100 dark:from-red-900/20 dark:to-pink-900/20 rounded-3xl blur-2xl transform scale-95"></div>
-                <x-card class="relative backdrop-blur-sm bg-white/90 dark:bg-gray-800/90 border-2 border-red-200 dark:border-red-800/50">
-                    <div class="text-center space-y-6">
-                        <div class="relative inline-block">
-                            <div class="absolute inset-0 bg-red-400 rounded-full animate-ping opacity-30"></div>
-                            <i class="relative fas fa-exclamation-triangle text-8xl text-red-600 dark:text-red-400"></i>
-                        </div>
-                        
-                        <div>
-                            <h3 class="text-3xl font-black text-red-800 dark:text-red-300 mb-2">Oops!</h3>
-                            <p id="errorMessage" class="text-lg text-red-700 dark:text-red-400"></p>
-                        </div>
-                        
-                        <button 
-                            onclick="hideError()" 
-                            class="group relative px-8 py-4 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-xl font-bold transition-all transform hover:scale-105 shadow-lg hover:shadow-2xl"
-                        >
-                            <i class="fas fa-times mr-2"></i>
-                            Tutup
-                        </button>
-                    </div>
-                </x-card>
-            </div>
-        </div>
+        {{-- Old Error Card removed - using modal overlay system now --}}
         </div>
 
         {{-- RIGHT SIDEBAR: Branding + Recent Scans --}}
@@ -734,6 +708,8 @@
         }
 
         function showError(message, errorData = null) {
+            console.log('showError called:', { message, errorData });
+            
             // 1. Show toast notification
             showToast(
                 'warning',
@@ -747,6 +723,7 @@
 
             // Check if this is a duplicate scan with student data
             const isDuplicate = errorData && errorData.duplicate;
+            console.log('isDuplicate:', isDuplicate, 'errorData:', errorData);
             
             if (isDuplicate && errorData.nama) {
                 // Show detailed duplicate info (similar to success but with warning style)
@@ -1224,25 +1201,7 @@
         }
 
 
-        function showError(message) {
-            const errorCard = document.getElementById('errorCard');
-            document.getElementById('errorMessage').textContent = message;
-            errorCard.classList.remove('hidden', 'scale-95', 'opacity-0');
-            errorCard.classList.add('scale-100', 'opacity-100');
-            hideResult();
-        }
-
-        function hideResult() {
-            const resultCard = document.getElementById('resultCard');
-            resultCard.classList.add('scale-95', 'opacity-0');
-            setTimeout(() => resultCard.classList.add('hidden'), 300);
-        }
-
-        function hideError() {
-            const errorCard = document.getElementById('errorCard');
-            errorCard.classList.add('scale-95', 'opacity-0');
-            setTimeout(() => errorCard.classList.add('hidden'), 300);
-        }
+        // OLD showError, hideResult, hideError functions removed - using new modal-based functions above
 
         function setAction(action) {
             currentAction = action;
