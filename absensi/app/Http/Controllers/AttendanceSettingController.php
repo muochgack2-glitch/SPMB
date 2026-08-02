@@ -25,9 +25,6 @@ class AttendanceSettingController extends Controller
      */
     public function update(Request $request)
     {
-        // Log incoming request data for debugging
-        \Log::info('Settings Update Request:', $request->all());
-        
         // Validate all settings
         $rules = [
             'settings.check_in_time' => 'required|date_format:H:i',
@@ -60,7 +57,6 @@ class AttendanceSettingController extends Controller
         $validator = Validator::make($request->all(), $rules, $messages);
 
         if ($validator->fails()) {
-            \Log::warning('Settings Validation Failed:', $validator->errors()->toArray());
             return back()
                 ->withErrors($validator)
                 ->withInput();
@@ -70,17 +66,12 @@ class AttendanceSettingController extends Controller
         $validated = $validator->validated();
         $settingsData = $validated['settings'];
 
-        \Log::info('Updating settings:', $settingsData);
-
         foreach ($settingsData as $key => $value) {
-            $result = AttendanceSetting::set($key, $value);
-            \Log::info("Setting {$key} = {$value}, result: " . ($result ? 'success' : 'failed'));
+            AttendanceSetting::set($key, $value);
         }
 
         // Clear settings cache
         AttendanceSetting::clearCache();
-
-        \Log::info('Settings saved successfully');
 
         return redirect()
             ->route('attendance.settings.index')

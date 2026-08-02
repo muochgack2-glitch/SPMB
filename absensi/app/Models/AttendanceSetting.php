@@ -2,12 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
-#[Fillable(['key', 'value', 'group_name', 'description'])]
 class AttendanceSetting extends Model
 {
     use HasFactory;
@@ -18,6 +16,18 @@ class AttendanceSetting extends Model
      * @var string
      */
     protected $table = 'attendance_settings';
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'key',
+        'value',
+        'group_name',
+        'description',
+    ];
 
     /**
      * Cache duration in seconds (1 hour).
@@ -57,22 +67,23 @@ class AttendanceSetting extends Model
     public static function set(string $key, $value, ?string $groupName = null, ?string $description = null): bool
     {
         try {
-            $data = ['value' => $value];
-            
-            // Only update group_name and description if provided
-            if ($groupName !== null) {
-                $data['group_name'] = $groupName;
-            }
-            if ($description !== null) {
-                $data['description'] = $description;
-            }
-
-            // Get existing setting to preserve group_name if not provided
+            // Get existing setting first
             $existing = self::where('key', $key)->first();
             
-            if (!$existing && $groupName === null) {
+            $data = ['value' => $value];
+            
+            // Preserve existing group_name if not provided
+            if ($existing && $groupName === null) {
+                $data['group_name'] = $existing->group_name;
+            } elseif ($groupName !== null) {
+                $data['group_name'] = $groupName;
+            } else {
                 // New setting without group_name, set default
                 $data['group_name'] = 'general';
+            }
+            
+            if ($description !== null) {
+                $data['description'] = $description;
             }
 
             self::updateOrCreate(
@@ -85,6 +96,7 @@ class AttendanceSetting extends Model
 
             return true;
         } catch (\Exception $e) {
+            \Log::error("AttendanceSetting::set({$key}) FAILED: " . $e->getMessage());
             return false;
         }
     }
