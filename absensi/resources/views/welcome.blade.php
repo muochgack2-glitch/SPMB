@@ -531,8 +531,8 @@
             
             lastScannedNis = decodedText;
             
-            // Stop scanner temporarily
-            html5QrCode.pause(true);
+            // Don't pause scanner - let it continue for high-speed scanning
+            // Modal will show for 2-3 seconds then auto-close
             
             // Process the scan
             processScan(decodedText);
@@ -676,8 +676,14 @@
             // 7. Resume scanner after 2.5 seconds (give time for modal to close)
             setTimeout(() => {
                 lastScannedNis = null;
-                if (html5QrCode && html5QrCode.getState() === window.Html5QrcodeScannerState.PAUSED) {
-                    html5QrCode.resume();
+                // Try to resume scanner if it was paused
+                try {
+                    if (html5QrCode && html5QrCode.resume) {
+                        html5QrCode.resume();
+                    }
+                } catch (e) {
+                    // Scanner already running or error, ignore
+                    console.log('Scanner resume skipped:', e.message);
                 }
             }, 2500);
         }
@@ -728,8 +734,14 @@
             // Resume scanner after 3.5 seconds
             setTimeout(() => {
                 lastScannedNis = null;
-                if (html5QrCode && html5QrCode.getState() === window.Html5QrcodeScannerState.PAUSED) {
-                    html5QrCode.resume();
+                // Try to resume scanner if it was paused
+                try {
+                    if (html5QrCode && html5QrCode.resume) {
+                        html5QrCode.resume();
+                    }
+                } catch (e) {
+                    // Scanner already running or error, ignore
+                    console.log('Scanner resume skipped:', e.message);
                 }
             }, 3500);
         }
