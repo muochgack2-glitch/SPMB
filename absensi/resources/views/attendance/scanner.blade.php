@@ -401,7 +401,8 @@
                 if (result.success) {
                     showSuccess(result);
                 } else {
-                    showError(result.message || 'Gagal memproses absensi');
+                    // Pass error data (including student info if duplicate)
+                    showError(result.message || 'Gagal memproses absensi', result.data);
                 }
 
                 // Resume scanning after 3 seconds
@@ -412,7 +413,7 @@
 
             } catch (error) {
                 console.error('Scan processing error:', error);
-                showError('Terjadi kesalahan saat memproses scan');
+                showError('Terjadi kesalahan saat memproses scan', null);
                 
                 setTimeout(() => {
                     lastScannedNis = null;
@@ -603,12 +604,107 @@
             }
         }
 
-        function showError(message) {
+        function showError(message, errorData = null) {
+            console.log('showError called:', { message, errorData });
+            
             const errorCard = document.getElementById('errorCard');
-            document.getElementById('errorMessage').textContent = message;
+            const errorCardContent = errorCard.querySelector('x-card') || errorCard.querySelector('.relative');
+            
+            // Check if this is a duplicate scan with student data
+            const isDuplicate = errorData && errorData.duplicate;
+            console.log('isDuplicate:', isDuplicate, 'errorData:', errorData);
+            
+            if (isDuplicate && errorData.nama) {
+                // Show detailed duplicate info (similar to success but with warning style)
+                const isCheckIn = currentAction === 'check_in';
+                
+                errorCardContent.innerHTML = `
+                    <div class="text-center space-y-6">
+                        <!-- Warning Icon -->
+                        <div class="relative inline-block">
+                            <div class="absolute inset-0 bg-orange-400 rounded-full animate-ping opacity-30"></div>
+                            <i class="relative fas fa-exclamation-circle text-8xl text-orange-600 dark:text-orange-400"></i>
+                        </div>
+                        
+                        <!-- Title -->
+                        <div>
+                            <h3 class="text-3xl font-black text-orange-800 dark:text-orange-300 mb-2">
+                                ⚠️ SUDAH ABSEN!
+                            </h3>
+                            <p class="text-lg text-orange-700 dark:text-orange-400 mb-4">${message}</p>
+                        </div>
+                        
+                        <!-- Student Info -->
+                        <div class="max-w-md mx-auto bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-6 border-2 border-gray-200 dark:border-gray-700 shadow-xl">
+                            <div class="flex items-center gap-4 mb-4">
+                                <div class="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+                                    ${errorData.nis.substring(0, 2)}
+                                </div>
+                                <div class="text-left flex-1">
+                                    <p class="text-lg font-bold text-gray-900 dark:text-white">${errorData.nama}</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">NIS: ${errorData.nis}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-3 gap-3 text-sm">
+                                <div class="bg-white dark:bg-gray-700 rounded-lg p-3">
+                                    <p class="text-gray-500 dark:text-gray-400 text-xs mb-1">Kelas</p>
+                                    <p class="font-semibold text-gray-900 dark:text-white">${errorData.kelas}</p>
+                                </div>
+                                <div class="bg-white dark:bg-gray-700 rounded-lg p-3">
+                                    <p class="text-gray-500 dark:text-gray-400 text-xs mb-1">Waktu ${isCheckIn ? 'Datang' : 'Pulang'}</p>
+                                    <p class="font-semibold text-gray-900 dark:text-white">${errorData.time}</p>
+                                </div>
+                                <div class="bg-white dark:bg-gray-700 rounded-lg p-3">
+                                    <p class="text-gray-500 dark:text-gray-400 text-xs mb-1">Status</p>
+                                    <p class="font-semibold text-orange-600">${(errorData.status || 'hadir').toUpperCase()}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button 
+                            onclick="hideError()" 
+                            class="group relative px-8 py-4 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white rounded-xl font-bold transition-all transform hover:scale-105 shadow-lg hover:shadow-2xl"
+                        >
+                            <i class="fas fa-times mr-2"></i>
+                            Tutup
+                        </button>
+                    </div>
+                `;
+            } else {
+                // Generic error without student data
+                errorCardContent.innerHTML = `
+                    <div class="text-center space-y-6">
+                        <div class="relative inline-block">
+                            <div class="absolute inset-0 bg-red-400 rounded-full animate-ping opacity-30"></div>
+                            <i class="relative fas fa-exclamation-triangle text-8xl text-red-600 dark:text-red-400"></i>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-3xl font-black text-red-800 dark:text-red-300 mb-2">Oops!</h3>
+                            <p class="text-lg text-red-700 dark:text-red-400">${message || 'Terjadi kesalahan'}</p>
+                        </div>
+                        
+                        <button 
+                            onclick="hideError()" 
+                            class="group relative px-8 py-4 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-xl font-bold transition-all transform hover:scale-105 shadow-lg hover:shadow-2xl"
+                        >
+                            <i class="fas fa-times mr-2"></i>
+                            Tutup
+                        </button>
+                    </div>
+                `;
+            }
+            
             errorCard.classList.remove('hidden', 'scale-95', 'opacity-0');
             errorCard.classList.add('scale-100', 'opacity-100');
             hideResult();
+            
+            // Resume scanner after 3 seconds
+            setTimeout(() => {
+                lastScannedNis = null;
+                hideError();
+            }, 3000);
         }
 
         function hideResult() {
