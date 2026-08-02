@@ -571,7 +571,8 @@
                 if (result.success) {
                     showSuccess(result);
                 } else {
-                    showError(result.message || 'Gagal memproses absensi');
+                    // Pass error data (including student info if duplicate)
+                    showError(result.message || 'Gagal memproses absensi', result.data);
                 }
 
                 // Note: Scanner resume is handled by showSuccess/showError
@@ -579,7 +580,7 @@
 
             } catch (error) {
                 console.error('Scan processing error:', error);
-                showError('Terjadi kesalahan saat memproses scan');
+                showError('Terjadi kesalahan saat memproses scan', null);
             }
         }
 
@@ -717,7 +718,7 @@
             }, 2500);
         }
 
-        function showError(message) {
+        function showError(message, errorData = null) {
             // 1. Show toast notification
             showToast(
                 'warning',
@@ -729,28 +730,86 @@
             const modalOverlay = document.getElementById('modalOverlay');
             const modalContent = document.getElementById('modalContent');
 
-            modalContent.innerHTML = `
-                <div class="p-6 text-center">
-                    <!-- Error Icon -->
-                    <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-red-400 to-pink-500 rounded-full mb-4 shadow-lg">
-                        <i class="fas fa-exclamation-triangle text-4xl text-white"></i>
+            // Check if this is a duplicate scan with student data
+            const isDuplicate = errorData && errorData.duplicate;
+            
+            if (isDuplicate && errorData.nama) {
+                // Show detailed duplicate info (similar to success but with warning style)
+                const isCheckIn = currentAction === 'check_in';
+                
+                modalContent.innerHTML = `
+                    <div class="p-6 text-center">
+                        <!-- Warning Icon -->
+                        <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-400 to-red-500 rounded-full mb-4 shadow-lg">
+                            <i class="fas fa-exclamation-circle text-4xl text-white"></i>
+                        </div>
+
+                        <!-- Title -->
+                        <h3 class="text-2xl font-black text-orange-800 dark:text-orange-300 mb-2">
+                            ⚠️ SUDAH ABSEN!
+                        </h3>
+
+                        <!-- Student Info -->
+                        <p class="text-xl font-bold text-gray-900 dark:text-white mb-1">
+                            ${errorData.nama}
+                        </p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                            NIS: ${errorData.nis}
+                        </p>
+
+                        <!-- Details Grid -->
+                        <div class="grid grid-cols-3 gap-3 mb-4">
+                            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Kelas</p>
+                                <p class="text-sm font-bold text-gray-900 dark:text-white">${errorData.kelas}</p>
+                            </div>
+                            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Waktu ${isCheckIn ? 'Datang' : 'Pulang'}</p>
+                                <p class="text-sm font-bold text-gray-900 dark:text-white">${errorData.time}</p>
+                            </div>
+                            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Status</p>
+                                <p class="text-sm font-bold text-orange-600">${(errorData.status || 'hadir').toUpperCase()}</p>
+                            </div>
+                        </div>
+
+                        <!-- Message -->
+                        <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                            ${message}
+                        </p>
+
+                        <!-- Auto close indicator -->
+                        <p class="text-xs text-gray-400 dark:text-gray-500">
+                            <i class="fas fa-circle-notch fa-spin mr-1"></i>
+                            Auto-close dalam 3 detik...
+                        </p>
                     </div>
+                `;
+            } else {
+                // Generic error without student data
+                modalContent.innerHTML = `
+                    <div class="p-6 text-center">
+                        <!-- Error Icon -->
+                        <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-red-400 to-pink-500 rounded-full mb-4 shadow-lg">
+                            <i class="fas fa-exclamation-triangle text-4xl text-white"></i>
+                        </div>
 
-                    <!-- Error Message -->
-                    <h3 class="text-2xl font-black text-red-800 dark:text-red-300 mb-2">
-                        Oops!
-                    </h3>
-                    <p class="text-base text-gray-700 dark:text-gray-300 mb-4">
-                        ${message || 'Terjadi kesalahan'}
-                    </p>
+                        <!-- Error Message -->
+                        <h3 class="text-2xl font-black text-red-800 dark:text-red-300 mb-2">
+                            Oops!
+                        </h3>
+                        <p class="text-base text-gray-700 dark:text-gray-300 mb-4">
+                            ${message || 'Terjadi kesalahan'}
+                        </p>
 
-                    <!-- Auto close indicator -->
-                    <p class="text-xs text-gray-400 dark:text-gray-500">
-                        <i class="fas fa-circle-notch fa-spin mr-1"></i>
-                        Auto-close dalam 3 detik...
-                    </p>
-                </div>
-            `;
+                        <!-- Auto close indicator -->
+                        <p class="text-xs text-gray-400 dark:text-gray-500">
+                            <i class="fas fa-circle-notch fa-spin mr-1"></i>
+                            Auto-close dalam 3 detik...
+                        </p>
+                    </div>
+                `;
+            }
 
             // Show modal
             modalOverlay.classList.remove('hidden');

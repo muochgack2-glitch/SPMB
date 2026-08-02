@@ -117,8 +117,12 @@ class AttendanceService
                 'success' => false,
                 'message' => 'Anda sudah melakukan check-in hari ini',
                 'data' => [
-                    'student' => $student,
-                    'record' => $record,
+                    'nama' => $student->nama,
+                    'nis' => $student->nis,
+                    'kelas' => $student->kelas->nama_kelas ?? '-',
+                    'status' => $record->status,
+                    'time' => Carbon::parse($record->check_in_time)->format('H:i'),
+                    'duplicate' => true,
                 ],
             ];
         }
@@ -221,8 +225,12 @@ class AttendanceService
                 'success' => false,
                 'message' => 'Anda sudah melakukan check-out hari ini',
                 'data' => [
-                    'student' => $student,
-                    'record' => $record,
+                    'nama' => $student->nama,
+                    'nis' => $student->nis,
+                    'kelas' => $student->kelas->nama_kelas ?? '-',
+                    'status' => $record->status,
+                    'time' => Carbon::parse($record->check_out_time)->format('H:i'),
+                    'duplicate' => true,
                 ],
             ];
         }
