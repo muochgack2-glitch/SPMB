@@ -62,16 +62,7 @@
         {{-- CENTER: Clock + Scanner Area --}}
         <div class="lg:col-span-6 space-y-4">
 
-        {{-- Real-time Clock --}}
-        <div class="bg-gradient-to-br from-primary-600 to-purple-600 rounded-xl shadow-lg p-4 text-white text-center">
-            <div class="inline-flex items-center justify-center w-10 h-10 bg-white/20 backdrop-blur-lg rounded-lg mb-2">
-                <i class="fas fa-clock text-xl"></i>
-            </div>
-            <div id="currentTime" class="text-3xl font-black mb-1">00:00:00</div>
-            <div id="currentDate" class="text-sm text-primary-100">Loading...</div>
-        </div>
-
-        {{-- Action Toggle with Modern Design --}}
+        {{-- Action Toggle + Clock - All in one row --}}
         <div class="flex justify-center items-center gap-4">
             <button 
                 onclick="setAction('check_in')" 
@@ -95,6 +86,15 @@
                     <span>Check Out</span>
                 </div>
             </button>
+            
+            {{-- Real-time Clock - Same size as buttons --}}
+            <div class="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-xl px-8 py-3 font-bold text-base shadow-lg flex items-center gap-3">
+                <i class="fas fa-clock text-xl"></i>
+                <div class="text-left">
+                    <div id="currentTime" class="font-black leading-tight">00:00:00</div>
+                    <div id="currentDate" class="text-xs opacity-90 leading-tight">Loading...</div>
+                </div>
+            </div>
         </div>
 
         {{-- Scanner Card with Premium Design --}}
