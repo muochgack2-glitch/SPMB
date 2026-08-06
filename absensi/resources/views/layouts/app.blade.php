@@ -16,8 +16,11 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
+    <!-- Bootstrap CSS (Required for Tooltips) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <!-- Assets via Vite -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/sidebar.js', 'resources/js/navbar.js'])
     
     <!-- Additional Styles -->
     @stack('styles')
@@ -85,18 +88,79 @@
         @include('layouts.sidebar')
         
         <!-- Main Content Area -->
-        <div class="transition-all duration-300" 
-             x-data="{ sidebarOpen: localStorage.getItem('sidebarOpen') !== 'false' }" 
-             @sidebar-toggled.window="sidebarOpen = $event.detail"
-             :style="$store.breakpoint && $store.breakpoint.current === 'mobile' ? 'margin-left: 0' : (sidebarOpen ? 'margin-left: 16rem' : 'margin-left: 5rem')"
-             :class="$store.breakpoint && $store.breakpoint.current !== 'mobile' ? '' : ''"
-             class="lg:ml-0"
-             :class="sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'">
+        <div id="mainContent" class="main-content transition-all duration-300">
             
-            <!-- Top Navbar - REMOVED: All pages now use full screen with sidebar only -->
+            <!-- Mobile Menu Button (SPMB Style) - Only visible on mobile -->
+            <button 
+                onclick="toggleMobileMenu()" 
+                class="mobile-menu-btn"
+                aria-label="Toggle menu"
+            >
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <!-- Modern Floating Navbar (Dynamic) -->
+            <nav id="dynamicNavbar" class="dynamic-navbar">
+                <div class="navbar-container">
+                    <!-- Left: Breadcrumb / Page Title -->
+                    <div class="navbar-left">
+                        <div class="breadcrumb">
+                            <i class="fas fa-home text-primary-500"></i>
+                            <span class="separator">/</span>
+                            <span class="page-title">{{ $pageTitle ?? 'Dashboard' }}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Center: Search Bar (Optional) -->
+                    <div class="navbar-center hidden lg:block">
+                        <div class="search-container">
+                            <i class="fas fa-search search-icon"></i>
+                            <input 
+                                type="text" 
+                                placeholder="Cari siswa, kelas, atau laporan..." 
+                                class="search-input"
+                            >
+                            <kbd class="search-shortcut">Ctrl+K</kbd>
+                        </div>
+                    </div>
+                    
+                    <!-- Right: Quick Actions -->
+                    <div class="navbar-right">
+                        <!-- Notifications -->
+                        <button class="navbar-icon-btn" title="Notifikasi">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-badge">3</span>
+                        </button>
+                        
+                        <!-- Dark Mode Toggle -->
+                        <button 
+                            id="navbarDarkModeToggle"
+                            onclick="toggleDarkMode()" 
+                            class="navbar-icon-btn" 
+                            title="Toggle Dark Mode"
+                        >
+                            <i class="fas fa-moon" id="navbar-icon-moon"></i>
+                            <i class="fas fa-sun hidden" id="navbar-icon-sun"></i>
+                        </button>
+                        
+                        <!-- User Profile -->
+                        <div class="user-profile">
+                            <img 
+                                src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name ?? 'User') }}&background=3b82f6&color=fff" 
+                                alt="User" 
+                                class="user-avatar"
+                            >
+                            <div class="user-info hidden lg:block">
+                                <p class="user-name">{{ auth()->user()->name ?? 'User' }}</p>
+                                <p class="user-role">Admin</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
             
             <!-- Page Content -->
-            <main class="p-6 animate-fade-in">
+            <main class="p-6 animate-fade-in" style="padding-top: 6rem;">
                 <!-- Alerts/Flash Messages -->
                 @if (session('success'))
                     <div x-data="{ show: true }" x-show="show" x-transition class="mb-6">
@@ -133,6 +197,9 @@
 
     <!-- Toast Container (Fixed bottom-right) -->
     <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+
+    <!-- Bootstrap JS (Required for Tooltips) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Additional Scripts -->
     @stack('scripts')

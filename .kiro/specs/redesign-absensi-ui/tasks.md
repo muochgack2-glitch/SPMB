@@ -32,6 +32,7 @@ This implementation plan covers the complete UI/UX redesign of the Student Atten
     - Add tooltips for collapsed state using Alpine.js
     - Add dark mode toggle at sidebar bottom with moon/sun icon
     - _Requirements: 19.2, 19.3, 19.4, 19.5, 19.6, 19.7, 19.8, 19.15, 7.1, 7.2, 7.3, 7.9_
+    - ✅ **UPDATED 2026-08-02**: Migrated to SPMB technology (Vanilla JS + Bootstrap Tooltips + Hover Expand)
 
   - [x] 2.3 Create top navbar component (resources/views/layouts/navbar.blade.php)
   - ✅ **COMPLETED**: All layout components created with dark mode support
@@ -527,6 +528,45 @@ This implementation plan covers the complete UI/UX redesign of the Student Atten
     - Add logging for API errors (scanner, reports, CRUD operations)
     - Setup monitoring for slow database queries (>1000ms)
     - _Requirements: 15.1, 15.2_
+
+- [x] 20.5 SPMB Sidebar Technology Adoption (Added 2026-08-02)
+  - [x] 20.5.1 Create vanilla JavaScript sidebar module
+    - Create resources/js/sidebar.js with pure vanilla JS (no Alpine.js)
+    - Implement sidebar toggle with localStorage persistence
+    - Implement Bootstrap tooltip initialization for collapsed state
+    - Implement mobile menu functionality (hamburger, overlay)
+    - Implement dark mode toggle integration
+    - Add badge count loading from API
+    - _Spec: spmb-sidebar-adoption.md_
+
+  - [x] 20.5.2 Rebuild sidebar component with SPMB technology
+    - Remove all Alpine.js directives (x-data, x-init, x-show, :class, :style)
+    - Add Bootstrap tooltip attributes (data-bs-toggle, data-bs-placement, title)
+    - Implement CSS hover expand feature (.sidebar.collapsed:hover)
+    - Relocate toggle button from bottom to sidebar brand (top-right)
+    - Implement no-flash-on-load (inline width style)
+    - Keep 100% of Absensi visual design (blue gradient, menu items, styling)
+    - Create backup of original sidebar (sidebar.blade.php.backup)
+    - _Spec: spmb-sidebar-adoption.md_
+
+  - [x] 20.5.3 Update build configuration
+    - Add resources/js/sidebar.js to vite.config.js input array
+    - Add sidebar.js to @vite directive in app.blade.php
+    - Build production assets with npm run build
+    - Verify sidebar chunk generated successfully (sidebar-*.js)
+    - _Build Output: 2.85 kB (gzipped 0.98 kB)_
+
+  - [x] 20.5.4 Documentation and completion
+    - Create SPMB_SIDEBAR_MIGRATION_COMPLETE.md with full documentation
+    - Update task 2.2 to note SPMB technology migration
+    - Document testing checklist (desktop, mobile, tooltips, hover)
+    - Document deployment steps and rollback plan
+    - _Status: ✅ COMPLETED 2026-08-02_
+  - ✅ **COMPLETED**: SPMB sidebar technology successfully adopted
+    - Technology: Vanilla JS + Bootstrap Tooltips + CSS Hover Expand
+    - Design: 100% Absensi visual design preserved
+    - Features: Click toggle, hover expand, no flash, localStorage persistence
+    - Build: Successful (4.62s, 2.85 kB gzipped)
 
 - [ ] 21. Final checkpoint and polish
   - Perform full regression testing on all features

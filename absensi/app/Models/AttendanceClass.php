@@ -41,14 +41,6 @@ class AttendanceClass extends Model
     }
 
     /**
-     * Get the wali kelas (homeroom teacher) for the class.
-     */
-    public function waliKelas(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'wali_kelas_id');
-    }
-
-    /**
      * Scope a query to only include active classes.
      *
      * @param \Illuminate\Database\Eloquent\Builder $query
