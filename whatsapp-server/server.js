@@ -284,6 +284,131 @@ app.post('/send', async (req, res) => {
     }
 });
 
+// Send media (image) with caption
+app.post('/send-media', async (req, res) => {
+    try {
+        const multer = require('multer');
+        const upload = multer({ storage: multer.memoryStorage() });
+        const fs = require('fs');
+        const path = require('path');
+        const { promisify } = require('util');
+        const writeFile = promisify(fs.writeFile);
+        const unlink = promisify(fs.unlink);
+
+        // Parse multipart form data
+        upload.single('media')(req, res, async (err) => {
+            if (err) {
+                logger.error('Multer error:', err);
+                return res.status(400).json({
+                    success: false,
+                    message: 'Failed to upload media',
+                    error: err.message
+                });
+            }
+
+            try {
+                const { phone, caption } = req.body;
+                const mediaFile = req.file;
+
+                if (!phone) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Phone is required'
+                    });
+                }
+
+                if (!mediaFile) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Media file is required'
+                    });
+                }
+
+                if (connectionState !== 'connected') {
+                    return res.status(503).json({
+                        success: false,
+                        message: 'WhatsApp not connected',
+                        status: connectionState
+                    });
+                }
+
+                const formattedPhone = formatPhoneNumber(phone);
+
+                // Save temp file
+                const tempDir = path.join(__dirname, 'temp');
+                if (!fs.existsSync(tempDir)) {
+                    fs.mkdirSync(tempDir, { recursive: true });
+                }
+
+                const tempFilePath = path.join(tempDir, `${Date.now()}_${mediaFile.originalname}`);
+                await writeFile(tempFilePath, mediaFile.buffer);
+
+                try {
+                    // Determine media type
+                    const mimeType = mediaFile.mimetype;
+                    let mediaType = 'image'; // default
+
+                    if (mimeType.startsWith('video/')) {
+                        mediaType = 'video';
+                    } else if (mimeType.startsWith('audio/')) {
+                        mediaType = 'audio';
+                    } else if (mimeType === 'application/pdf') {
+                        mediaType = 'document';
+                    }
+
+                    // Send media
+                    const messageOptions = {
+                        [mediaType]: { url: tempFilePath }
+                    };
+
+                    if (caption) {
+                        messageOptions.caption = caption;
+                    }
+
+                    const result = await sock.sendMessage(formattedPhone, messageOptions);
+
+                    logger.info(`Media sent to ${phone}, type: ${mediaType}`);
+
+                    // Clean up temp file
+                    await unlink(tempFilePath);
+
+                    res.json({
+                        success: true,
+                        message: 'Media sent successfully',
+                        to: phone,
+                        mediaType: mediaType,
+                        messageId: result.key.id,
+                        timestamp: new Date().toISOString()
+                    });
+
+                } catch (sendError) {
+                    // Clean up temp file on error
+                    if (fs.existsSync(tempFilePath)) {
+                        await unlink(tempFilePath);
+                    }
+                    throw sendError;
+                }
+
+            } catch (error) {
+                logger.error('Failed to send media:', error);
+                res.status(500).json({
+                    success: false,
+                    message: 'Failed to send media',
+                    error: error.message
+                });
+            }
+        });
+
+    } catch (error) {
+        logger.error('Send media endpoint error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+            error: error.message
+        });
+    }
+});
+
 // Send bulk messages
 app.post('/send-bulk', async (req, res) => {
     try {
