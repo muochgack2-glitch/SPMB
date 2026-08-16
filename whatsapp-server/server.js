@@ -616,10 +616,10 @@ app.get('/groups', async (req, res) => {
         const groups = await sock.groupFetchAllParticipating();
         const groupList = Object.values(groups).map(g => ({
             id: g.id,
-            name: g.subject,
+            name: g.subject || g.id,
             participants: g.participants?.length || 0,
             creation: g.creation
-        }));
+        })).sort((a, b) => a.name.localeCompare(b.name));
         
         res.json({ success: true, groups: groupList });
     } catch (error) {
