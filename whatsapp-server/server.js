@@ -16,6 +16,21 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public')); // Serve static files from public folder
 
+// API Key authentication middleware
+const API_KEY = process.env.API_KEY || '';
+function authenticateApiKey(req, res, next) {
+    // Skip auth for health check and QR endpoints
+    if (req.path === '/' || req.path === '/qr') return next();
+    
+    if (!API_KEY) return next(); // No API key configured = open access
+    
+    const providedKey = req.headers['x-api-key'] || req.query.api_key;
+    if (providedKey === API_KEY) return next();
+    
+    return res.status(401).json({ success: false, message: 'Invalid or missing API key' });
+}
+app.use(authenticateApiKey);
+
 // Global variables
 let sock = null;
 let qrCodeData = null;
@@ -588,6 +603,60 @@ app.post('/logout', async (req, res) => {
             message: 'Failed to logout',
             error: error.message
         });
+    }
+});
+
+// Get list of groups
+app.get('/groups', async (req, res) => {
+    try {
+        if (connectionState !== 'connected') {
+            return res.status(503).json({ success: false, message: 'WhatsApp not connected' });
+        }
+        
+        const groups = await sock.groupFetchAllParticipating();
+        const groupList = Object.values(groups).map(g => ({
+            id: g.id,
+            name: g.subject,
+            participants: g.participants?.length || 0,
+            creation: g.creation
+        }));
+        
+        res.json({ success: true, groups: groupList });
+    } catch (error) {
+        logger.error('Failed to fetch groups:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Send message to group
+app.post('/send-group', async (req, res) => {
+    try {
+        const { groupId, message } = req.body;
+        
+        if (!groupId || !message) {
+            return res.status(400).json({ success: false, message: 'groupId and message are required' });
+        }
+        
+        if (connectionState !== 'connected') {
+            return res.status(503).json({ success: false, message: 'WhatsApp not connected' });
+        }
+        
+        // Ensure groupId ends with @g.us
+        const gid = groupId.endsWith('@g.us') ? groupId : groupId + '@g.us';
+        
+        await sock.sendMessage(gid, { text: message });
+        
+        logger.info('Group message sent to ' + gid);
+        
+        res.json({
+            success: true,
+            message: 'Group message sent successfully',
+            to: gid,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        logger.error('Failed to send group message:', error);
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 
