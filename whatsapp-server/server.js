@@ -20,7 +20,7 @@ app.use(express.static('public')); // Serve static files from public folder
 const API_KEY = process.env.API_KEY || '';
 function authenticateApiKey(req, res, next) {
     // Skip auth for health check and QR endpoints
-    if (req.path === '/' || req.path === '/qr') return next();
+    if (req.path === '/' || req.path === '/qr' || req.path === '/status' || req.path === '/health') return next();
     
     if (!API_KEY) return next(); // No API key configured = open access
     
