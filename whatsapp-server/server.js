@@ -64,7 +64,7 @@ async function connectToWhatsApp() {
             logger: pino({ level: 'silent' }),
             printQRInTerminal: true,
             auth: state,
-            browser: ['SPMB Gateway', 'Chrome', '1.0.0'],
+            browser: ['WhatsApp Web', 'Chrome', '2.2426.0'],
             defaultQueryTimeoutMs: undefined,
         });
 
@@ -471,7 +471,9 @@ app.post('/send-bulk', async (req, res) => {
                 logger.info(`Bulk message sent to ${phone}`);
 
                 // Delay between messages to avoid spam detection
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                // Delay acak 3-7 detik agar tidak terdeteksi bot
+                const _delay = Math.floor(Math.random() * 4000) + 3000;
+                await new Promise(resolve => setTimeout(resolve, _delay));
 
             } catch (error) {
                 results.push({
