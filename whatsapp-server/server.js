@@ -39,6 +39,11 @@ let reconnectAttempts = 0;
 let manualLogout = false; // Flag untuk manual logout
 const MAX_RECONNECT_ATTEMPTS = parseInt(process.env.MAX_RECONNECT_ATTEMPTS) || 5;
 const RECONNECT_INTERVAL = parseInt(process.env.RECONNECT_INTERVAL) || 5000;
+const LARAVEL_ACK_URL = process.env.LARAVEL_API_URL ? process.env.LARAVEL_API_URL.replace(/\/$/, '') + '/api/wa-ack' : null;
+const LARAVEL_API_KEY = process.env.LARAVEL_API_KEY || '';
+
+// Map untuk melacak messageId -> phone (maks 1000 entri, FIFO)
+const sentMessageMap = new Map();
 
 // Logger
 const logger = pino({ 
@@ -132,6 +137,25 @@ async function connectToWhatsApp() {
 
         // Credentials update handler
         sock.ev.on('creds.update', saveCreds);
+
+        // ── ACK Tracking ──
+        sock.ev.on('messages.update', async (updates) => {
+            if (!LARAVEL_ACK_URL) return;
+            for (const update of updates) {
+                const msgId = update.key?.id;
+                const ack = update.update?.status;
+                if (!msgId || ack == null) continue;
+                if (!sentMessageMap.has(msgId)) continue;
+                try {
+                    const headers = LARAVEL_API_KEY ? { 'Authorization': 'Bearer ' + LARAVEL_API_KEY } : {};
+                    await axios.post(LARAVEL_ACK_URL, { message_id: msgId, ack: ack }, { headers, timeout: 5000 });
+                    logger.info('ACK update: msgId=' + msgId + ' ack=' + ack);
+                    if (ack >= 3) sentMessageMap.delete(msgId);
+                } catch (ackErr) {
+                    logger.warn('ACK webhook failed (non-fatal): ' + ackErr.message);
+                }
+            }
+        });
 
         // Messages handler (optional - for receiving messages)
         sock.ev.on('messages.upsert', async ({ messages }) => {
@@ -290,13 +314,19 @@ app.post('/send', async (req, res) => {
         }
         // ---------------------
 
-        await sock.sendMessage(formattedPhone, { text: message });
+        const sendResult = await sock.sendMessage(formattedPhone, { text: message });
+        const messageId = sendResult?.key?.id ?? null;
+        if (messageId) {
+            if (sentMessageMap.size >= 1000) sentMessageMap.delete(sentMessageMap.keys().next().value);
+            sentMessageMap.set(messageId, formattedPhone);
+        }
         
         logger.info(`Message sent to ${phone} (typing_delay: ${delay}ms)`);
         
         res.json({
             success: true,
             message: 'Message sent successfully',
+            messageId: messageId,
             to: phone,
             typing_delay: delay,
             timestamp: new Date().toISOString()
