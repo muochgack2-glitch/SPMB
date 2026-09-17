@@ -1,4 +1,4 @@
-require('dotenv').config();
+﻿require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -259,7 +259,7 @@ app.get('/qr', (req, res) => {
 // Send single message
 app.post('/send', async (req, res) => {
     try {
-        const { phone, message } = req.body;
+        const { phone, message, typing_delay } = req.body;
 
         if (!phone || !message) {
             return res.status(400).json({
@@ -278,14 +278,27 @@ app.post('/send', async (req, res) => {
 
         const formattedPhone = formatPhoneNumber(phone);
         
+
+        // -- Simulasi Typing --
+        const delay = Math.max(1500, Math.min(parseInt(typing_delay) || 2000, 6000));
+        try {
+            await sock.sendPresenceUpdate('composing', formattedPhone);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            await sock.sendPresenceUpdate('paused', formattedPhone);
+        } catch (presenceErr) {
+            logger.warn(`Presence update failed (non-fatal): ${presenceErr.message}`);
+        }
+        // ---------------------
+
         await sock.sendMessage(formattedPhone, { text: message });
         
-        logger.info(`Message sent to ${phone}`);
+        logger.info(`Message sent to ${phone} (typing_delay: ${delay}ms)`);
         
         res.json({
             success: true,
             message: 'Message sent successfully',
             to: phone,
+            typing_delay: delay,
             timestamp: new Date().toISOString()
         });
 
@@ -676,4 +689,4 @@ process.on('SIGINT', async () => {
         await sock.end();
     }
     process.exit(0);
-});
+        logger.info(`Message sent to ${phone} (typing_delay: ${delay}ms)`);
