@@ -689,4 +689,4 @@ process.on('SIGINT', async () => {
         await sock.end();
     }
     process.exit(0);
-        logger.info(`Message sent to ${phone} (typing_delay: ${delay}ms)`);
+});
